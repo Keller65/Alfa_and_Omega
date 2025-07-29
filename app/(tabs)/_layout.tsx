@@ -1,45 +1,67 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
+import ProtectedLayout from '../ProtectedLayout';
 import { Platform } from 'react-native';
 
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import HomeIcon from '@/assets/icons/HomeIcon';
+import InvoicesIcon from '@/assets/icons/InvoicesIcon';
+import SettingsIcon from '@/assets/icons/SettingsIcon';
+import OrderIcon from '@/assets/icons/OrdeIcon'
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import {
+  BottomSheetModalProvider,
+} from '@gorhom/bottom-sheet';
 
+export default function Layout() {
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
+    <GestureHandlerRootView>
+      <BottomSheetModalProvider>
+        <ProtectedLayout>
+          <Tabs
+            screenOptions={{
+              // tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+              tabBarActiveTintColor: "#09f", // Blue-800
+              headerShown: false,
+              tabBarStyle: Platform.select({
+                ios: {
+                  position: 'absolute',
+                },
+                default: {},
+              }),
+            }}>
+            <Tabs.Screen
+              name="index"
+              options={{
+                title: 'Inicio',
+                tabBarIcon: ({ color }) => <HomeIcon size={26} color={color} />,
+              }}
+            />
+            <Tabs.Screen
+              name="explore"
+              options={{
+                title: 'Pedidos',
+                tabBarIcon: ({ color }) => <OrderIcon size={26} color={color} />,
+              }}
+            />
+
+            <Tabs.Screen
+              name="invoices"
+              options={{
+                title: 'Facturas',
+                tabBarIcon: ({ color }) => <InvoicesIcon size={26} color={color} />,
+              }}
+            />
+
+            <Tabs.Screen
+              name="settings"
+              options={{
+                title: 'Ajustes',
+                tabBarIcon: ({ color }) => <SettingsIcon size={26} color={color} />,
+              }}
+            />
+          </Tabs>
+        </ProtectedLayout>
+      </BottomSheetModalProvider>
+    </GestureHandlerRootView>
   );
 }
