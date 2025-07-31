@@ -1,64 +1,72 @@
-import { Tabs } from 'expo-router';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 import ProtectedLayout from '../ProtectedLayout';
 import { Platform } from 'react-native';
 
 import HomeIcon from '@/assets/icons/HomeIcon';
 import InvoicesIcon from '@/assets/icons/InvoicesIcon';
 import SettingsIcon from '@/assets/icons/SettingsIcon';
-import OrderIcon from '@/assets/icons/OrdeIcon'
+import OrderIcon from '@/assets/icons/OrdeIcon';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import {
-  BottomSheetModalProvider,
-} from '@gorhom/bottom-sheet';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+
+import IndexScreen from './index';
+import ExploreScreen from './explore';
+import InvoicesScreen from './invoices';
+import SettingsScreen from './settings';
+
+const Drawer = createDrawerNavigator();
 
 export default function Layout() {
   return (
-    <GestureHandlerRootView>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
         <ProtectedLayout>
-          <Tabs
+          <Drawer.Navigator
             screenOptions={{
-              tabBarActiveTintColor: "#000",
-              headerShown: false,
-              tabBarStyle: Platform.select({
+              headerShown: true,
+              drawerActiveTintColor: '#000',
+              drawerStyle: Platform.select({
                 ios: {
-                  position: 'absolute',
+                  backgroundColor: '#fff',
                 },
-                default: {},
+                android: {},
               }),
-            }}>
-            <Tabs.Screen
+            }}
+          >
+            <Drawer.Screen
               name="index"
+              component={IndexScreen}
               options={{
                 title: 'Inicio',
-                tabBarIcon: ({ color }) => <HomeIcon size={26} color={color} />,
+                drawerIcon: ({ color }) => <HomeIcon size={26} color={color} />,
               }}
             />
-            <Tabs.Screen
+            <Drawer.Screen
               name="explore"
+              component={ExploreScreen}
               options={{
                 title: 'Pedidos',
-                tabBarIcon: ({ color }) => <OrderIcon size={26} color={color} />,
+                drawerIcon: ({ color }) => <OrderIcon size={26} color={color} />,
               }}
             />
-
-            <Tabs.Screen
+            <Drawer.Screen
               name="invoices"
+              component={InvoicesScreen}
               options={{
                 title: 'Facturas',
-                tabBarIcon: ({ color }) => <InvoicesIcon size={26} color={color} />,
+                drawerIcon: ({ color }) => <InvoicesIcon size={26} color={color} />,
               }}
             />
-
-            <Tabs.Screen
+            <Drawer.Screen
               name="settings"
+              component={SettingsScreen}
               options={{
                 title: 'Ajustes',
-                tabBarIcon: ({ color }) => <SettingsIcon size={26} color={color} />,
+                drawerIcon: ({ color }) => <SettingsIcon size={26} color={color} />,
               }}
             />
-          </Tabs>
+          </Drawer.Navigator>
         </ProtectedLayout>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>

@@ -57,20 +57,19 @@ export default function TopTabNavigatorLayout() {
             const parsedClient: SelectedClient = JSON.parse(cachedClientData);
             setClientPriceList(parsedClient.priceListNum);
             console.log('Cliente cargado de AsyncStorage', parsedClient.cardName);
+          } else {
+            // Si no hay cliente guardado, set default priceListNum
+            setClientPriceList('1');
           }
         } catch (err) {
           console.error('Error al cargar cliente de AsyncStorage:', err);
+          setClientPriceList('1');
         }
-      }
-
-      // Establecer lista de precios por defecto si no hay ninguna
-      if (!clientPriceList) {
-        setClientPriceList(selectedCustomer?.priceListNum?.toString() || '1');
       }
     };
 
     storeAndLoadClientData();
-  }, [selectedCustomer, clientPriceList]);
+  }, [selectedCustomer]);
 
   const headers = useMemo(() => ({
     Authorization: `Bearer ${user?.token}`,
@@ -130,8 +129,10 @@ export default function TopTabNavigatorLayout() {
     fetchCategories();
   }, [fetchCategories]);
 
-  const tabScreens = useMemo(() => (
-    categories.map((category) => (
+  const tabScreens = useMemo(() => {
+    if (!clientPriceList) return null;
+
+    return categories.map((category) => (
       <Tab.Screen
         key={category.code}
         name={category.slug}
@@ -145,8 +146,8 @@ export default function TopTabNavigatorLayout() {
           priceListNum: clientPriceList, // Usamos clientPriceList del estado
         }}
       />
-    ))
-  ), [categories, clientPriceList]);
+    ));
+  }, [categories, clientPriceList]);
 
   if (!user?.token) {
     return (
@@ -185,32 +186,39 @@ export default function TopTabNavigatorLayout() {
 
   return (
     <View style={{ flex: 1 }}>
-      <Tab.Navigator
-        initialRouteName={categories[0]?.slug || 'todas'}
-        screenOptions={{
-          tabBarActiveTintColor: '#000',
-          tabBarInactiveTintColor: 'gray',
-          tabBarIndicatorStyle: {
-            backgroundColor: '#000',
-            height: 2
-          },
-          tabBarStyle: {
-            backgroundColor: 'white',
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 0
-          },
-          tabBarLabelStyle: {
-            fontSize: 12,
-            width: 230,
-            fontWeight: 'bold',
-          },
-          tabBarPressColor: 'transparent',
-          tabBarScrollEnabled: true,
-        }}
-      >
-        {tabScreens}
-      </Tab.Navigator>
+      {tabScreens ? (
+        <Tab.Navigator
+          initialRouteName={categories[0]?.slug || 'todas'}
+          screenOptions={{
+            tabBarActiveTintColor: '#000',
+            tabBarInactiveTintColor: 'gray',
+            tabBarIndicatorStyle: {
+              backgroundColor: '#000',
+              height: 2
+            },
+            tabBarStyle: {
+              backgroundColor: 'white',
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0
+            },
+            tabBarLabelStyle: {
+              fontSize: 12,
+              width: 230,
+              fontWeight: 'bold',
+            },
+            tabBarPressColor: 'transparent',
+            tabBarScrollEnabled: true,
+          }}
+        >
+          {tabScreens}
+        </Tab.Navigator>
+      ) : (
+        <View style={styles.fullScreenCenter}>
+          <ActivityIndicator size="large" color="#007bff" />
+          <Text style={styles.loadingText}>Cargando datos del cliente y categorías...</Text>
+        </View>
+      )}
     </View>
   );
 }
