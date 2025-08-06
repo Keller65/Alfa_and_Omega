@@ -164,7 +164,7 @@ export default function Login() {
 
       <View className='w-full items-center justify-center mt-16'>
         <TouchableOpacity
-          onPress={() => router.push('/(modal)')}
+          onPress={() => router.push('/settings')}
         >
           <Text className='font-[Poppins-Medium] tracking-[-0.3px] text-[#3b82f6]'>Configuraciones</Text>
         </TouchableOpacity>

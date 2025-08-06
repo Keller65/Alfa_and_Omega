@@ -12,9 +12,9 @@ export default function RootLayout() {
         }
       }}
     >
-      <Stack.Screen name="index" options={{ headerShown: true, presentation: 'modal', headerTitle: 'Configuraciones' }} />
-      <Stack.Screen name="success" options={{ headerShown: false, presentation: 'modal', }} />
-      <Stack.Screen name="error" options={{ headerShown: false, presentation: 'modal', }} />
+      <Stack.Screen name="index" options={{ headerShown: true, headerTitle: 'Configuraciones' }} />
+      <Stack.Screen name="success" options={{ headerShown: false, }} />
+      <Stack.Screen name="error" options={{ headerShown: false, }} />
     </Stack>
   );
 }

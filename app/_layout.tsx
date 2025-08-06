@@ -78,7 +78,8 @@ export default function RootLayout() {
             <Stack.Screen name="client" options={{ headerShown: true, headerTitle: 'Seleccionar Cliente' }} />
             <Stack.Screen name="order" options={{ headerShown: true, headerTitle: 'Detalles del Pedido' }} />
             <Stack.Screen name="invoicesDetails" options={{ headerShown: true, headerTitle: 'Detalles de Cobros' }} />
-            <Stack.Screen name="(modal)" options={{ headerShown: false, presentation: 'modal' }} />
+            <Stack.Screen name="settings" options={{ headerShown: true, headerTitle: 'Configuraciones' }} />
+            <Stack.Screen name="(modal)" options={{ headerShown: false }} />
 
             <Stack.Screen
               name="shop"
