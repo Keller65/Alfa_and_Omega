@@ -32,6 +32,20 @@ export default function Layout() {
                 },
                 android: {},
               }),
+              headerStyle: {
+                shadowColor: 'transparent',
+                elevation: 0,
+                borderBottomWidth: 0,
+              },
+              headerTitleStyle: {
+                fontFamily: 'Poppins-SemiBold', 
+                letterSpacing: -0.6
+              },
+              drawerLabelStyle: {
+                fontFamily: 'Poppins-Medium', 
+                fontSize: 16,
+                letterSpacing: -0.6
+              },
             }}
           >
             <Drawer.Screen
@@ -54,7 +68,7 @@ export default function Layout() {
               name="invoices"
               component={InvoicesScreen}
               options={{
-                title: 'Facturas',
+                title: 'Cobros',
                 drawerIcon: ({ color }) => <InvoicesIcon size={26} color={color} />,
               }}
             />

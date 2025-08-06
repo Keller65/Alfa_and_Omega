@@ -6,6 +6,7 @@ module.exports = {
     "./app/**/*.{js,jsx,ts,tsx}",
     "./app/(tabs)/*.{js,jsx,ts,tsx}",
     "./app/(top-tabs)/*.{js,jsx,ts,tsx}",
+    "./app/(modal)/*.{js,jsx,ts,tsx}",
   ],
   presets: [require("nativewind/preset")],
   theme: {

@@ -7,6 +7,8 @@ import axios from 'axios';
 import { useAppStore } from '@/state/index';
 import { Customer } from '@/types/types';
 import { FlashList } from '@shopify/flash-list';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Constants from 'expo-constants'
 
 const ClientScreen = memo(() => {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -151,7 +153,7 @@ const ClientScreen = memo(() => {
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <SafeAreaView style={{ paddingTop: -Constants.statusBarHeight }} className="flex-1 bg-white">
       <View className="px-4">
         <TextInput
           value={search}
@@ -174,7 +176,7 @@ const ClientScreen = memo(() => {
           </View>
         }
       />
-    </View>
+    </SafeAreaView>
   );
 });
 

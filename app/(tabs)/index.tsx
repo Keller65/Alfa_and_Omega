@@ -1,14 +1,18 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/auth';
+import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Constants from 'expo-constants';
 import "../../global.css"
 
 export default function App() {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     bottomSheetRef.current?.present();
@@ -19,7 +23,19 @@ export default function App() {
   };
 
   return (
-    <View className="flex-1 justify-center items-center bg-white p-6">
+    <SafeAreaView style={{ paddingTop: -Constants.statusBarHeight }} className="flex-1 justify-center items-center bg-white p-6">
+      <TouchableOpacity
+        onPress={() => router.push('/(modal)/success')}
+      >
+        <Text>Pantalla de Pedido realizado</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => router.push('/(modal)/error')}
+      >
+        <Text>Pantalla de Error</Text>
+      </TouchableOpacity>
+
       <BottomSheetModal
         ref={bottomSheetRef}
         snapPoints={['60%']}
@@ -83,6 +99,6 @@ export default function App() {
           </View>
         </BottomSheetView>
       </BottomSheetModal>
-    </View >
+    </SafeAreaView>
   );
 }

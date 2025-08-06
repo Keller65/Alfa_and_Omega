@@ -203,7 +203,7 @@ export default function BottomSheetCart() {
         itemCode: p.itemCode,
         quantity: p.quantity,
         priceList: p.originalPrice, // es el precio real de la lista
-        priceAfterVAT: price, // precio de descuento is existe
+        priceAfterVAT: price, // precio de descuento si existe
         taxCode: p.taxType,
       };
     });
@@ -227,12 +227,12 @@ export default function BottomSheetCart() {
         },
       });
 
-      Alert.alert('Éxito', 'Pedido enviado correctamente.');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       closeCart();
       clearCart();
       setComments('');
-      console.log("Pedido enviado", payload)
+      console.log("Pedido enviado", payload);
+      router.push('/(modal)/success');
 
       if (res.data.docEntry) {
         setLastOrderDocEntry(res.data.docEntry);
@@ -248,6 +248,13 @@ export default function BottomSheetCart() {
       } else {
         Alert.alert('Error', 'No se pudo enviar el pedido. Intenta nuevamente.');
       }
+      router.push({
+        pathname: '/(modal)/error',
+        params: {
+          errorCode: '401',
+          errorMessage: 'Sesión expirada',
+        }
+      });
     } finally {
       setIsLoading(false);
     }

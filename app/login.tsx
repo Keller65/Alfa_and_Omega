@@ -1,19 +1,22 @@
 import axios from 'axios';
 import * as Location from 'expo-location';
 import * as LocalAuthentication from 'expo-local-authentication';
-import { Redirect } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, ActivityIndicator } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth, User } from "../context/auth";
 import "../global.css"
+import { useAppStore } from '@/state';
 
 export default function Login() {
   const { user, setUser } = useAuth();
   const [salesPersonCode, setSalesPersonCode] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const FETCH_URL = process.env.EXPO_PUBLIC_API_URL + "/auth/employee";
+  const router = useRouter();
+  const { fetchUrl } = useAppStore()
+  const FETCH_URL = fetchUrl + "/auth/employee";
 
   useEffect(() => {
     (async () => {
@@ -77,7 +80,6 @@ export default function Login() {
         token: data.token
       };
 
-
       await AsyncStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
 
@@ -112,7 +114,7 @@ export default function Login() {
     }
   };
 
-  if (user) return <Redirect href="/" />;
+  if (user) return <Redirect href="/(tabs)" />;
 
   return (
     <View style={styles.container}>
@@ -159,6 +161,14 @@ export default function Login() {
           <Text style={{ color: 'white', textAlign: 'center', fontFamily: 'Poppins-Bold', lineHeight: 12 }}>Iniciar Sesión</Text>
         )}
       </TouchableOpacity>
+
+      <View className='w-full items-center justify-center mt-16'>
+        <TouchableOpacity
+          onPress={() => router.push('/(modal)')}
+        >
+          <Text className='font-[Poppins-Medium] tracking-[-0.3px] text-[#3b82f6]'>Configuraciones</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }

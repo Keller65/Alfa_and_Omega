@@ -81,3 +81,38 @@ export interface OrderDataType {
   salesPersonCode: number;
   lines: OrderLineType[];
 }
+
+export interface PaymentData {
+  docEntry: number;
+  docNum: number;
+  cardCode: string;
+  cardName: string;
+  docDate: string; // ISO date string
+  total: number;
+  paymentMeans: 'Tarjeta' | 'Efectivo' | 'Transferencia' | 'Cheque';
+  cash: number;
+  transfer: number;
+  check: number;
+  credit: number;
+  payment: {
+    transferDate: string | null;
+    transferReference: string | null;
+    transferAccountName: string;
+    dueDate: string | null;
+    checkNumber: string | null;
+    bankCode: string | null;
+    checkSum: number | null;
+    cardVoucherNum: string | null;
+    cardCreditSum: number;
+  }[];
+  invoices: {
+    invoiceDocEntry: number;
+    invoiceDocNum: number;
+    appliedAmount: number;
+    invoiceDate: string; // ISO date string
+    numAtCard: string;
+    docTotal: number;
+    saldoAnterior: number;
+    pendiente: number;
+  }[];
+}
