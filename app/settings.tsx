@@ -2,6 +2,7 @@ import { View, TextInput, Text, TouchableOpacity, ActivityIndicator } from 'reac
 import { Picker } from '@react-native-picker/picker'
 import { useEffect, useState } from 'react'
 import { useAppStore } from '@/state/index'
+import { useRouter } from 'expo-router'
 
 const Settings = () => {
   const { appHost, appPort, setAppHost, setAppPort } = useAppStore();
@@ -9,6 +10,7 @@ const Settings = () => {
   const [ip, setIp] = useState('')
   const [port, setPort] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     if (appHost) {
@@ -82,8 +84,15 @@ const Settings = () => {
         {isSaving ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text className="text-white font-semibold text-base">Guardar configuración</Text>
+          <Text className="text-white font-[Poppins-SemiBold] text-base">Guardar configuración</Text>
         )}
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        className='rounded-2xl py-3 items-center justify-center h-[50px] bg-blue-600'
+        onPress={() => router.push('/login')}
+      >
+        <Text className='text-white font-[Poppins-SemiBold] text-base'>Regresar</Text>
       </TouchableOpacity>
     </View>
   )

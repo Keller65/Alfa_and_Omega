@@ -232,7 +232,7 @@ export default function BottomSheetCart() {
       clearCart();
       setComments('');
       console.log("Pedido enviado", payload);
-      router.push('/(modal)/success');
+      router.push('/modal/error');
 
       if (res.data.docEntry) {
         setLastOrderDocEntry(res.data.docEntry);
@@ -249,7 +249,7 @@ export default function BottomSheetCart() {
         Alert.alert('Error', 'No se pudo enviar el pedido. Intenta nuevamente.');
       }
       router.push({
-        pathname: '/(modal)/error',
+        pathname: '/modal/error',
         params: {
           errorCode: '401',
           errorMessage: 'Sesión expirada',

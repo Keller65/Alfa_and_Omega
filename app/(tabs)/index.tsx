@@ -25,13 +25,13 @@ export default function App() {
   return (
     <SafeAreaView style={{ paddingTop: -Constants.statusBarHeight }} className="flex-1 justify-center items-center bg-white p-6">
       <TouchableOpacity
-        onPress={() => router.push('/(modal)/success')}
+        onPress={() => router.push('/modal/success')}
       >
         <Text>Pantalla de Pedido realizado</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        onPress={() => router.push('/(modal)/error')}
+        onPress={() => router.push('/modal/error')}
       >
         <Text>Pantalla de Error</Text>
       </TouchableOpacity>
