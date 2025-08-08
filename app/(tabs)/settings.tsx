@@ -48,8 +48,9 @@ const Settings = () => {
         onPress: async () => {
           setLoading(true);
           await AsyncStorage.clear();
+          // await AsyncStorage.multiRemove(['biometricUser', 'user', 'user_acept_start']);
           setLoading(false);
-          Alert.alert('Éxito', 'Los datos han sido eliminados');
+          Alert.alert('Éxito', 'Los datos se han eliminado correctamente. Reinicia la app para que los cambios se apliquen.');
         },
       },
     ]);
@@ -83,7 +84,7 @@ const Settings = () => {
         <FingerSprint />
         <NotificationsToggle />
       </View>
-      
+
       <View className="h-px bg-gray-200 mx-4" />
 
       <View className="p-4">

@@ -11,6 +11,7 @@ import { useAuth } from '@/context/auth';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { OrderDataType } from '@/types/types';
+import { useAppStore } from '@/state';
 
 const OrderDetails = () => {
   const route = useRoute();
@@ -18,7 +19,8 @@ const OrderDetails = () => {
   const [orderData, setOrderData] = useState<OrderDataType | null>(null);
   const [loading, setLoading] = useState(true);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const FETCH_URL = process.env.EXPO_PUBLIC_API_URL + "/api/Quotations/";
+  const { fetchUrl } = useAppStore();
+  const FETCH_URL = fetchUrl + "/api/Quotations/";
 
   const { user } = useAuth();
 

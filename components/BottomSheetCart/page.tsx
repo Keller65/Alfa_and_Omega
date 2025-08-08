@@ -157,7 +157,8 @@ export default function BottomSheetCart() {
   const [isLoading, setIsLoading] = useState(false);
   const [comments, setComments] = useState('');
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const FETCH_URL_CREATE_ORDER = process.env.EXPO_PUBLIC_API_URL + "/sap/orders";
+  const { fetchUrl } = useAppStore();
+  const FETCH_URL_CREATE_ORDER = fetchUrl + "/sap/orders";
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -232,7 +233,7 @@ export default function BottomSheetCart() {
       clearCart();
       setComments('');
       console.log("Pedido enviado", payload);
-      router.push('/modal/error');
+      router.push('/modal/success');
 
       if (res.data.docEntry) {
         setLastOrderDocEntry(res.data.docEntry);

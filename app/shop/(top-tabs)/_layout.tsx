@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import slugify from 'slugify';
 import { useAuth } from '@/context/auth';
-import { useAppStore } from '@/state'; // Importamos el store
+import { useAppStore } from '@/state';
 
 const Tab = createMaterialTopTabNavigator();
 import CategoryProductScreen from './category-product-list';
@@ -25,12 +25,12 @@ interface SelectedClient {
 
 export default function TopTabNavigatorLayout() {
   const { user } = useAuth();
-  const { selectedCustomer } = useAppStore(); // Obtenemos el cliente seleccionado del store
+  const { selectedCustomer, fetchUrl } = useAppStore();
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [clientPriceList, setClientPriceList] = useState<string | undefined>(undefined);
-  const FETCH_URL = process.env.EXPO_PUBLIC_API_URL + "/sap/items/categories";
+  const FETCH_URL = fetchUrl + "/sap/items/categories";
 
   useEffect(() => {
     const storeAndLoadClientData = async () => {
@@ -143,7 +143,7 @@ export default function TopTabNavigatorLayout() {
         initialParams={{
           groupName: category.name,
           groupCode: category.code,
-          priceListNum: clientPriceList, // Usamos clientPriceList del estado
+          priceListNum: clientPriceList,
         }}
       />
     ));

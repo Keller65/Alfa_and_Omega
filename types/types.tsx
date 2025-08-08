@@ -116,3 +116,21 @@ export interface PaymentData {
     pendiente: number;
   }[];
 }
+
+export interface Invoice {
+  docDate: string;
+  numAtCard: string;
+  docTotal: number;
+  balanceDue: number;
+  docDueDate: string;
+};
+
+export interface Banks {
+  bankCode: string;
+  bankName: string;
+}
+
+export interface AccountTransderencia {
+  code: string;
+  name: string;
+}

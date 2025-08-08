@@ -56,7 +56,7 @@ const CategoryProductScreen = memo(() => {
   const updateQuantity = useAppStore(state => state.updateQuantity);
   const productsInCart = useAppStore(state => state.products);
   const debouncedSearchText = useAppStore(state => state.debouncedSearchText);
-  const { products } = useAppStore()
+  const { products, fetchUrl } = useAppStore()
 
   const pagesCacheRef = useRef<Map<number, ProductDiscount[]>>(new Map());
   const [items, setItems] = useState<ProductDiscount[]>([]);
@@ -78,8 +78,8 @@ const CategoryProductScreen = memo(() => {
   const [page, setPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
-  const FETCH_URL = process.env.EXPO_PUBLIC_API_URL + "/sap/items/";
-  const FETCH_URL_DISCOUNT = process.env.EXPO_PUBLIC_API_URL + "/sap/items/discounted";
+  const FETCH_URL = fetchUrl + "/sap/items/";
+  const FETCH_URL_DISCOUNT = fetchUrl + "/sap/items/discounted";
   const insets = useSafeAreaInsets();
   const snapPoints = useMemo(() => ['85%', '100%'], []);
 

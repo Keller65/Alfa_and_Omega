@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useState, memo } from 'react';
-import { View, Text, ActivityIndicator, TouchableOpacity, Alert, TextInput, RefreshControl, } from 'react-native';
+import { View, Text, ActivityIndicator, TouchableOpacity, Alert, TextInput, RefreshControl } from 'react-native';
 import { useAuth } from '@/context/auth';
 import { useRouter } from 'expo-router';
 import { useAppStore } from '@/state/index';
 import { Customer } from '@/types/types';
 import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import ClientIcon from '../assets/icons/ClientIcon';
+import ClientIcon from '@/assets/icons/ClientIcon';
 import Constants from 'expo-constants';
-import axios from 'axios';
+import api from '@/lib/api';
 
 const PAGE_SIZE = 20;
 
-const ClientScreen = memo(() => {
+const InvoicesClientScreen = memo(() => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState('');
@@ -26,29 +26,36 @@ const ClientScreen = memo(() => {
   const { user } = useAuth();
   const router = useRouter();
   const setSelectedCustomer = useAppStore((state) => state.setSelectedCustomer);
-  const { fetchUrl } = useAppStore();
-  const FETCH_URL = fetchUrl + "/sap/customers/";
+  const fetchUrl = useAppStore((state) => state.fetchUrl); // baseURL dinámico aquí
 
   const fetchCustomers = async (pageNumber: number) => {
-    if (!user?.salesPersonCode || !user?.token) return;
+    if (!user?.salesPersonCode || !user?.token || !fetchUrl) return;
 
     try {
       if (pageNumber === 1 && !refreshing) setLoading(true);
       if (pageNumber > 1) setLoadingMore(true);
 
-      const res = await axios.get(
-        `${FETCH_URL}by-salesperson?slpCode=${user.salesPersonCode}&page=${pageNumber}&pageSize=${PAGE_SIZE}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${user.token}`,
-          },
-        }
-      );
+      const res = await api.get(`sap/customers/by-salesperson`, {
+        baseURL: fetchUrl, // baseURL dinámico inyectado aquí
+        params: {
+          slpCode: user.salesPersonCode,
+          page: pageNumber,
+          pageSize: PAGE_SIZE,
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.token}`,
+        },
+        cache: {
+          ttl: 1000 * 60 * 60 * 8, // 8 horas
+        },
+      });
+
+      console.log(res.cached ? 'Respuesta desde CACHE' : 'Respuesta desde RED');
 
       const newCustomers = res.data.items || [];
 
-      setCustomers(prev =>
+      setCustomers((prev) =>
         pageNumber === 1 ? newCustomers : [...prev, ...newCustomers]
       );
 
@@ -65,7 +72,7 @@ const ClientScreen = memo(() => {
 
   useEffect(() => {
     fetchCustomers(1);
-  }, [user?.salesPersonCode, user?.token]);
+  }, [user?.salesPersonCode, user?.token, fetchUrl]);
 
   useEffect(() => {
     if (!search.trim()) {
@@ -89,21 +96,16 @@ const ClientScreen = memo(() => {
     async (customer: Customer) => {
       try {
         setSelectedCustomer(customer);
-        console.log('Cliente seleccionado en Zustand:', customer);
-
         router.push({
-          pathname: '/shop',
+          pathname: '/modal',
           params: {
             cardCode: customer.cardCode,
-            priceListNum: customer.priceListNum,
+            cardName: customer.cardName,
           },
         });
       } catch (err) {
         console.error('Error al navegar:', err);
-        Alert.alert(
-          'Error de navegación',
-          'No se pudo abrir la pantalla de pedido. Por favor, inténtalo de nuevo.'
-        );
+        Alert.alert('Error de navegación', 'No se pudo abrir la pantalla de pedido.');
       }
     },
     [router, setSelectedCustomer]
@@ -126,12 +128,10 @@ const ClientScreen = memo(() => {
 
           <View className="flex-row gap-2">
             <Text className="text-gray-600 font-[Poppins-SemiBold] tracking-[-0.3px]">
-              Código:{' '}
-              <Text className="font-[Poppins-Regular]">{item.cardCode}</Text>
+              Código: <Text className="font-[Poppins-Regular]">{item.cardCode}</Text>
             </Text>
             <Text className="text-gray-600 font-[Poppins-SemiBold] tracking-[-0.3px]">
-              RTN:{' '}
-              <Text className="font-[Poppins-Regular]">{item.federalTaxID}</Text>
+              RTN: <Text className="font-[Poppins-Regular]">{item.federalTaxID}</Text>
             </Text>
           </View>
         </View>
@@ -157,9 +157,7 @@ const ClientScreen = memo(() => {
   if (!user?.token) {
     return (
       <View className="flex-1 justify-center items-center bg-white px-5">
-        <Text className="text-center text-red-500 text-base font-normal">
-          No has iniciado sesión o tu sesión ha expirado.
-        </Text>
+        <Text className="text-center text-red-500 text-base">No has iniciado sesión o tu sesión ha expirado.</Text>
       </View>
     );
   }
@@ -168,9 +166,7 @@ const ClientScreen = memo(() => {
     return (
       <View className="flex-1 justify-center items-center bg-white">
         <ActivityIndicator size="large" color="#000" />
-        <Text className="mt-3 text-gray-700 text-base font-normal">
-          Cargando clientes...
-        </Text>
+        <Text className="mt-3 text-gray-700 text-base">Cargando clientes...</Text>
       </View>
     );
   }
@@ -178,12 +174,8 @@ const ClientScreen = memo(() => {
   if (error) {
     return (
       <View className="flex-1 justify-center items-center bg-white px-5">
-        <Text className="text-red-500 text-base font-normal text-center mb-2">
-          {error}
-        </Text>
-        <Text className="text-gray-500 text-sm text-center">
-          Tu sesión ha expirado. Por favor, inicia sesión nuevamente
-        </Text>
+        <Text className="text-red-500 text-base text-center mb-2">{error}</Text>
+        <Text className="text-gray-500 text-sm text-center">Inicia sesión nuevamente.</Text>
       </View>
     );
   }
@@ -191,18 +183,13 @@ const ClientScreen = memo(() => {
   if (customers.length === 0 && !loading) {
     return (
       <View className="flex-1 justify-center items-center bg-white px-5">
-        <Text className="text-gray-500 text-base font-normal text-center">
-          No se encontraron clientes asociados a tu cuenta.
-        </Text>
+        <Text className="text-gray-500 text-base text-center">No se encontraron clientes asociados a tu cuenta.</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView
-      style={{ paddingTop: -Constants.statusBarHeight }}
-      className="flex-1 bg-white"
-    >
+    <SafeAreaView style={{ paddingTop: -Constants.statusBarHeight }} className="flex-1 bg-white">
       <View className="px-4">
         <TextInput
           value={search}
@@ -239,9 +226,7 @@ const ClientScreen = memo(() => {
         }
         ListEmptyComponent={
           <View className="justify-center items-center py-10">
-            <Text className="text-gray-500 text-base font-normal text-center">
-              No se encontraron clientes con ese criterio.
-            </Text>
+            <Text className="text-gray-500 text-base text-center">No se encontraron clientes con ese criterio.</Text>
           </View>
         }
       />
@@ -249,4 +234,4 @@ const ClientScreen = memo(() => {
   );
 });
 
-export default ClientScreen;
+export default InvoicesClientScreen;

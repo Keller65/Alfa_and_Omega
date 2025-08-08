@@ -5,9 +5,9 @@ import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, ActivityIndicator } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuth, User } from "../context/auth";
-import "../global.css"
+import { useAuth } from "../context/auth";
 import { useAppStore } from '@/state';
+import "../global.css"
 
 export default function Login() {
   const { user, setUser } = useAuth();
@@ -17,6 +17,8 @@ export default function Login() {
   const router = useRouter();
   const { fetchUrl } = useAppStore()
   const FETCH_URL = fetchUrl + "/auth/employee";
+
+  const isFormValid = salesPersonCode !== "" && password !== "";
 
   useEffect(() => {
     (async () => {
@@ -43,6 +45,8 @@ export default function Login() {
           const biometricAuth = await LocalAuthentication.authenticateAsync({
             promptMessage: 'Inicia sesión con tu huella o Face ID',
             fallbackLabel: 'Ingresar manualmente',
+            biometricsSecurityLevel: 'strong',
+            cancelLabel: 'Ingresar manualmente',
           });
 
           if (biometricAuth.success) {
@@ -56,7 +60,7 @@ export default function Login() {
   }, [user]);
 
   const handleLogin = async () => {
-    if (loading) return;
+    if (loading || !isFormValid) return;
     setLoading(true);
 
     try {
@@ -73,7 +77,7 @@ export default function Login() {
 
       const data = response.data;
 
-      const userData: User = {
+      const userData = {
         employeeCode: data.salesPersonCode,
         salesPersonCode: data.salesPersonCode,
         fullName: data.fullName,
@@ -127,7 +131,7 @@ export default function Login() {
         <View>
           <Text style={{ fontFamily: 'Poppins-Medium', letterSpacing: -0.8, fontSize: 15 }}>Código de Vendedor</Text>
           <TextInput
-            style={{ height: 56, backgroundColor: '#f3f4f6', color: '#6b7280', paddingHorizontal: 24, borderRadius: 24, fontFamily: 'Poppins-Medium' }}
+            style={styles.input}
             placeholder="Ingrese su Código de Vendedor"
             value={salesPersonCode}
             onChangeText={setSalesPersonCode}
@@ -139,7 +143,7 @@ export default function Login() {
         <View>
           <Text style={{ fontFamily: 'Poppins-Medium', letterSpacing: -0.8, fontSize: 15 }}>Contraseña</Text>
           <TextInput
-            style={{ height: 56, backgroundColor: '#f3f4f6', color: '#6b7280', paddingHorizontal: 24, borderRadius: 24, fontFamily: 'Poppins-Medium' }}
+            style={styles.input}
             placeholder="Ingrese su Contraseña"
             value={password}
             onChangeText={setPassword}
@@ -151,9 +155,17 @@ export default function Login() {
       </View>
 
       <TouchableOpacity
-        style={{ marginTop: 16, backgroundColor: '#3b82f6', padding: 16, height: 56, borderRadius: 24, alignItems: 'center', justifyContent: 'center' }}
+        style={{
+          marginTop: 16,
+          backgroundColor: isFormValid && !loading ? '#3b82f6' : '#9ca3af',
+          padding: 16,
+          height: 56,
+          borderRadius: 24,
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
         onPress={handleLogin}
-        disabled={loading}
+        disabled={!isFormValid || loading}
       >
         {loading ? (
           <ActivityIndicator color="#fff" size="small" />
@@ -180,4 +192,12 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "white"
   },
+  input: {
+    height: 56,
+    backgroundColor: '#f3f4f6',
+    color: '#6b7280',
+    paddingHorizontal: 24,
+    borderRadius: 24,
+    fontFamily: 'Poppins-Medium'
+  }
 });

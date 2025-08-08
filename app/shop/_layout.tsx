@@ -21,7 +21,8 @@ export default function TopTabNavigatorLayout() {
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const FETCH_URL = process.env.EXPO_PUBLIC_API_URL + "/sap/items/categories";
+  const { fetchUrl } = useAppStore();
+  const FETCH_URL = fetchUrl + "/sap/items/categories";
 
   const priceListNum = selectedCustomer?.priceListNum?.toString() || '1';
 

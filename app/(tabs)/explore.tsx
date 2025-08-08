@@ -10,8 +10,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import BottomSheetCart from '@/components/BottomSheetCart/page';
 import Constants from 'expo-constants';
-import '../../global.css';
 import axios from 'axios';
+import '../../global.css';
 
 export default function PedidosScreen() {
   const router = useRouter();
@@ -24,8 +24,9 @@ export default function PedidosScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [isLastPage, setIsLastPage] = useState(false);
+  const { fetchUrl } = useAppStore();
 
-  const FETCH_URL = process.env.EXPO_PUBLIC_API_URL + "/api/Quotations/open";
+  const FETCH_URL = fetchUrl + "/api/Quotations/open";
   const PAGE_SIZE = 20;
 
   const fetchOrders = useCallback(async (pageToFetch: number, initialLoad = false) => {

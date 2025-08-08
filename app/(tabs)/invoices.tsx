@@ -6,21 +6,23 @@ import { FlashList } from '@shopify/flash-list';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Constants from 'expo-constants'
+import Constants from 'expo-constants';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
+import PlusIcon from '@/assets/icons/PlusIcon';
 
 const PAGE_SIZE = 20;
 
 const Invoices = () => {
   const { fetchUrl } = useAppStore();
   const { user } = useAuth();
+  const router = useRouter();
 
   const [data, setData] = useState<PaymentData[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const router = useRouter()
 
   const salesPersonCode = user?.salesPersonCode;
 
@@ -45,25 +47,51 @@ const Invoices = () => {
     }
   }, [salesPersonCode, fetchUrl, page, loading, hasMore]);
 
+  const handleRefresh = async () => {
+    if (!salesPersonCode) return;
+
+    setRefreshing(true);
+    setPage(1);
+    setHasMore(true);
+    try {
+      const url = `${fetchUrl}/api/Payments/received/${salesPersonCode}?page=1&pageSize=${PAGE_SIZE}`;
+      const response = await axios.get<PaymentData[]>(url);
+
+      setData(response.data);
+      if (response.data.length < PAGE_SIZE) {
+        setHasMore(false);
+      }
+      setPage(2);
+    } catch (error) {
+      console.error('Error refreshing invoices:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   useEffect(() => {
     fetchInvoices();
   }, []);
 
   const renderItem = ({ item }: { item: PaymentData }) => (
     <TouchableOpacity
-      onPress={() => router.push({
-        pathname: '/invoicesDetails',
-        params: {
-          invoiceData: JSON.stringify(item)
-        }
-      })}
-      className="bg-white rounded-3xl mb-4 overflow-hidden border border-gray-200 shadow-sm">
-      {/* Parte superior amarilla */}
+      onPress={() =>
+        router.push({
+          pathname: '/invoicesDetails',
+          params: {
+            docEntry: item.docEntry,
+          },
+        })
+      }
+      className="bg-white rounded-3xl mb-4 overflow-hidden border border-gray-200 shadow-sm"
+    >
       <View className="bg-blue-100 p-4 rounded-t-3xl">
         <View className="flex-row justify-between items-center mb-2">
           <View className="flex-row items-center space-x-2">
             <View className="bg-yellow-300 px-2 py-0.5 rounded-full">
-              <Text className="text-xs text-blue-800 font-[Poppins-SemiBold]">#{item.docNum}</Text>
+              <Text className="text-xs text-blue-800 font-[Poppins-SemiBold]">
+                #{item.docNum}
+              </Text>
             </View>
           </View>
           <View className="bg-blue-100 px-2 py-0.5 rounded-full">
@@ -84,11 +112,12 @@ const Invoices = () => {
         </View>
       </View>
 
-      {/* Línea de pago */}
       <View className="bg-yellow-300 px-4 py-2 flex-row justify-between items-center">
         <View className="flex-row items-center gap-2">
           <FontAwesome name="credit-card" size={14} color="#374151" />
-          <Text className="text-sm font-[Poppins-Regular] text-gray-700">{item.paymentMeans}</Text>
+          <Text className="text-sm font-[Poppins-Regular] text-gray-700">
+            {item.paymentMeans}
+          </Text>
         </View>
         <Text className="text-sm font-[Poppins-SemiBold] text-gray-700">
           L. {item.total.toLocaleString()}
@@ -100,12 +129,21 @@ const Invoices = () => {
   const renderFooter = () =>
     loading ? (
       <View className="py-4">
-        <ActivityIndicator size="small" color="#2563eb" />
+        <ActivityIndicator size="small" color="#000" />
       </View>
     ) : null;
 
   return (
-    <SafeAreaView style={{ paddingTop: -Constants.statusBarHeight }} className="flex-1 bg-white px-4 pt-4">
+    <SafeAreaView style={{ paddingTop: -Constants.statusBarHeight }} className="flex-1 bg-white px-4 pt-4 relative">
+      <View className="absolute bottom-8 right-8 gap-3 items-end z-10">
+        <TouchableOpacity
+          className="rounded-full flex items-center justify-center h-[50px] w-[50px] bg-black"
+          onPress={() => router.push('/InvoiceClient')}
+        >
+          <PlusIcon color="white" />
+        </TouchableOpacity>
+      </View>
+
       <FlashList
         data={data}
         keyExtractor={(item) => item.docEntry.toString()}
@@ -114,6 +152,8 @@ const Invoices = () => {
         onEndReached={fetchInvoices}
         onEndReachedThreshold={0.3}
         ListFooterComponent={renderFooter}
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
