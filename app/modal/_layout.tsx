@@ -14,8 +14,10 @@ export default function RootLayout() {
     >
       <Stack.Screen name="index" options={{ headerShown: true, headerTitle: 'Facturas Pendientes' }} />
       <Stack.Screen name="success" options={{ headerShown: false, }} />
+      <Stack.Screen name="successCobro" options={{ headerShown: false }} />
       <Stack.Screen name="error" options={{ headerShown: false, }} />
       <Stack.Screen name="payment" options={{ headerShown: true, headerTitle: 'Informacion de pago' }} />
+      <Stack.Screen name="cobro" options={{ headerShown: true, headerTitle: 'Cobro' }} />
     </Stack>
   );
 }

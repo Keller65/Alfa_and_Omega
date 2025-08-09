@@ -118,6 +118,7 @@ export interface PaymentData {
 }
 
 export interface Invoice {
+  docEntry: string;
   docDate: string;
   numAtCard: string;
   docTotal: number;
@@ -130,7 +131,116 @@ export interface Banks {
   bankName: string;
 }
 
-export interface AccountTransderencia {
+export interface AccountPayTransderencia {
   code: string;
   name: string;
+}
+
+export interface AccountPayCheque {
+  bankCode: string;
+  bankName: string;
+}
+
+export interface AccountPayEfectivo {
+  slpCode: string;
+  CashAccount: string;
+}
+
+export interface AccountPayCreditCards {
+  creditCardCode: string;
+  creditCardName: string;
+}
+
+// POST de Cobros
+
+export interface POSTPayment {
+  cardCode: string;
+  u_SlpCode: string,
+  u_Latitud: string,
+  u_Longitud: string,
+  docDate: string,
+  cashAccount: string,
+  cashSum: number,
+  checkAccount: string,
+  transferAccount: string,
+  transferSum: number,
+  transferDate: string,
+  transferReference: string,
+  paymentChecks: [
+    {
+      dueDate: string
+      checkNumber: number,
+      countryCode: string,
+      bankCode: string,
+      checkSum: number
+    }
+  ],
+  paymentInvoices: [
+    {
+      docEntry: number,
+      sumApplied: number,
+      BalanceDue: number
+    }
+  ],
+  paymentCreditCards: [
+    {
+      creditCard: number,
+      voucherNum: string,
+      firstPaymentDue: string,
+      creditSum: number
+    }
+  ]
+}
+
+export interface IncomingPayment {
+  CardCode: string;
+  U_SlpCode: string;
+  u_Latitud?: string;
+  U_Latitud?: string;
+  u_Longitud?: string;
+  U_Longitud?: string;
+  DocDate: string;
+
+  // Efectivo
+  CashAccount?: string;
+  CashSum?: number;
+
+  // Cheque
+  CheckAccount?: string;
+  paymentChecks?: PaymentCheck[];
+
+  // Transferencia
+  TransferAccount?: string;
+  TransferSum?: number;
+  TransferDate?: string;
+  TransferReference?: string;
+
+  // Facturas asociadas
+  paymentInvoices?: PaymentInvoice[];
+
+  // Tarjeta
+  paymentCreditCards?: PaymentCreditCard[];
+}
+
+export interface PaymentCheck {
+  dueDate: string;
+  checkNumber: number;
+  CountryCode: string;
+  bankCode: string;
+  checkSum: number;
+}
+
+export interface PaymentInvoice {
+  docEntry?: number;
+  DocEntry?: number;
+  sumApplied?: number;
+  SumApplied?: number;
+  BalanceDue: number;
+}
+
+export interface PaymentCreditCard {
+  creditCard: number;
+  voucherNum: string;
+  firstPaymentDue: string;
+  creditSum: number;
 }

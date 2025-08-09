@@ -1,18 +1,21 @@
-import { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, RefreshControl, Pressable, Modal, TextInput, TouchableOpacity, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Invoice } from '@/types/types';
-import { useAppStore } from '@/state';
-import { useAuth } from '@/context/auth';
-import { FlashList } from '@shopify/flash-list';
 import ClientIcon from '@/assets/icons/ClientIcon';
+import InvoicesIcon from '@/assets/icons/InvoicesIcon';
+import TrashIcon from '@/assets/icons/TrashIcon';
+import { useAuth } from '@/context/auth';
+import { SelectedInvoice, useAppStore } from '@/state';
+import { Invoice } from '@/types/types';
+import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal } from '@gorhom/bottom-sheet';
+import { FlashList } from '@shopify/flash-list';
 import axios from 'axios';
-import BottomSheetInvoices from '@/components/BottomSheetInvoices/page';
+import Constants from 'expo-constants';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Modal, Pressable, RefreshControl, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const IndexScreen = () => {
   const params = useLocalSearchParams();
   const { cardCode, cardName } = params as { cardCode: string, cardName: string };
-  const { fetchUrl, addInvoice, selectedInvoices } = useAppStore();
+  const { fetchUrl, addInvoice, selectedInvoices, removeInvoice } = useAppStore();
   const { user } = useAuth();
   const FETCH_URL = `${fetchUrl}/sap/customers`;
   const [openInvoices, setOpenInvoices] = useState<Invoice[]>([]);
@@ -23,6 +26,8 @@ const IndexScreen = () => {
   const [amount, setAmount] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const snapPoints = ['50%'];
 
   const fetchInvoices = async () => {
     if (!user?.token || !cardCode) return;
@@ -53,13 +58,21 @@ const IndexScreen = () => {
     fetchInvoices();
   }, [cardCode, user?.token]);
 
-  const formatDate = (isoDate: string): string => {
+  const formatDate = useCallback((isoDate: string): string => {
     const date = new Date(isoDate);
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
-  };
+  }, []);
+
+  const formatCurrency = useCallback((amount: number): string => {
+    return amount.toLocaleString('es-HN', {
+      style: 'decimal',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  }, []);
 
   const handleSelectInvoice = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
@@ -79,13 +92,12 @@ const IndexScreen = () => {
       return;
     }
     if (selectedInvoice) {
-      addInvoice(selectedInvoice);
+      addInvoice(selectedInvoice, numAmount);
       setModalVisible(false);
-      console.log('Factura Guardada en Zustand: ', selectedInvoice)
     }
   };
 
-  const renderItem = ({ item }: { item: Invoice }) => {
+  const renderOpenInvoiceItem = ({ item }: { item: Invoice }) => {
     const isSelected = selectedInvoices.some(inv => inv.numAtCard === item.numAtCard);
 
     return (
@@ -102,37 +114,65 @@ const IndexScreen = () => {
           <View className="mb-2 flex-1 w-full px-4">
             <Text className="text-gray-600 text-sm font-[Poppins-Regular]">Total factura:</Text>
             <Text className="text-base font-[Poppins-SemiBold] text-black">
-              L. {item.docTotal.toLocaleString()}
+              L. {formatCurrency(item.docTotal)}
             </Text>
           </View>
           <View className="mb-2 flex-1 w-full px-4">
             <Text className="text-gray-600 text-sm font-[Poppins-Regular]">Saldo pendiente:</Text>
             <Text className="text-base font-[Poppins-SemiBold] text-red-600">
-              L. {item.balanceDue.toLocaleString()}
+              L. {formatCurrency(item.balanceDue)}
             </Text>
           </View>
         </View>
-        <View className="flex-row justify-between mt-2 gap-2">
-          <View className='flex-1 w-full bg-gray-100 p-4 rounded-xl'>
-            <Text className="text-xs text-gray-500">Fecha emisión</Text>
-            <Text className="text-sm text-black">{formatDate(item.docDate)}</Text>
+        <View className="flex-row justify-between gap-2">
+          <View className='flex-1 w-full bg-gray-100 py-2 px-4 rounded-xl'>
+            <Text className="text-xs text-gray-500 font-[Poppins-Regular] tracking-[-0.3px]">Fecha emisión</Text>
+            <Text className="text-sm text-black font-[Poppins-Medium] tracking-[-0.3px]">{formatDate(item.docDate)}</Text>
           </View>
-          <View className='flex-1 w-full bg-gray-100 p-4 rounded-xl'>
-            <Text className="text-xs text-gray-500">Fecha vencimiento</Text>
-            <Text className="text-sm text-black">{formatDate(item.docDueDate)}</Text>
+          <View className='flex-1 w-full bg-gray-100 py-2 px-4 rounded-xl'>
+            <Text className="text-xs text-gray-500 font-[Poppins-Regular] tracking-[-0.3px]">Fecha vencimiento</Text>
+            <Text className="text-sm text-black font-[Poppins-Medium] tracking-[-0.3px]">{formatDate(item.docDueDate)}</Text>
           </View>
         </View>
       </Pressable>
     );
   };
 
+  const handlePresentModalPress = useCallback(() => {
+    bottomSheetModalRef.current?.present();
+  }, []);
+
+  // Memoiza el componente Backdrop para evitar recrearlo en cada render
+  const MemoizedBackdrop = useCallback((props: any) => <BottomSheetBackdrop {...props} />, []);
+
+  const renderSelectedInvoiceItem = ({ item }: { item: SelectedInvoice }) => (
+    <View className="p-4 border-b border-gray-200 flex-row justify-between items-center">
+      <View>
+        <Text className="font-[Poppins-SemiBold] text-lg">Factura Nº: {item.numAtCard}</Text>
+        {/* 🚨 CAMBIO AQUÍ: Mostrar el monto abonado en lugar del saldo pendiente */}
+        <Text className="text-gray-600 font-[Poppins-Regular]">Monto Abonado: L. {formatCurrency(item.paidAmount)}</Text>
+      </View>
+      <TouchableOpacity onPress={() => removeInvoice(item.numAtCard)}>
+        <TrashIcon size={20} color="red" />
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
-    <View className="flex-1 bg-white p-4 relative">
+    <View className="flex-1 bg-white px-4 relative" style={{ paddingTop: -Constants.statusBarHeight }}>
       <View className='z-10 absolute bottom-0'>
-        <BottomSheetInvoices />
+        {selectedInvoices.length > 0 && (
+          <TouchableOpacity
+            onPress={handlePresentModalPress}
+            className="bg-yellow-300 items-center justify-center h-[50px] w-screen flex-row gap-4"
+          >
+            <InvoicesIcon />
+            <Text className='font-[Poppins-SemiBold]'>Ver facturas seleccionadas</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
-      <View className='mt-2 gap-4 flex-row mb-4 py-2'>
+      <View className='gap-4 flex-row mb-3 py-2'>
         <View className="bg-[#fcde41] w-[50px] h-[50px] items-center justify-center rounded-full">
           <ClientIcon size={24} color="#000" />
         </View>
@@ -149,9 +189,9 @@ const IndexScreen = () => {
       ) : (
         <FlashList
           data={openInvoices}
-          renderItem={renderItem}
+          renderItem={renderOpenInvoiceItem}
           estimatedItemSize={140}
-          keyExtractor={(item, index) => item.numAtCard + index}
+          keyExtractor={(item) => item.numAtCard}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
@@ -168,35 +208,56 @@ const IndexScreen = () => {
       <Modal
         visible={modalVisible}
         transparent
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View className="flex-1 justify-center items-center bg-black/40 px-6">
-          <View className="bg-white rounded-2xl w-full p-6">
-            <Text className="text-lg font-[Poppins-Bold] mb-4">Indica el monto a pagar</Text>
+        <View className="flex-1 justify-center items-center bg-black/50 px-6">
+          <View className="bg-white rounded-3xl w-full p-6 shadow-xl">
+            <Text className="text-2xl tracking-[-0.3px] font-[Poppins-Bold] mb-2 text-center text-gray-800">
+              Abonar a Factura
+            </Text>
+            <Text className="text-sm tracking-[-0.3px] text-gray-500 mb-6 text-center">
+              Ingresa el monto que el cliente desea Pagar.
+            </Text>
             {selectedInvoice && (
               <>
-                <Text className="text-sm text-gray-600">Total: L. {selectedInvoice.docTotal.toLocaleString()}</Text>
-                <Text className="text-sm text-gray-600">Pendiente: L. {selectedInvoice.balanceDue.toLocaleString()}</Text>
-                <Text className="text-sm text-gray-600 mb-2">Fecha: {formatDate(selectedInvoice.docDate)}</Text>
-                <Text className="text-sm text-gray-600 mb-2">Serie OP - Folio: {selectedInvoice.numAtCard}</Text>
+                <View className="border-b border-gray-200 pb-4 mb-4">
+                  <View className="flex-row justify-between mb-1">
+                    <Text className="text-base tracking-[-0.3px] font-[Poppins-Regular] text-gray-600">Total:</Text>
+                    <Text className="text-base tracking-[-0.3px] font-[Poppins-SemiBold] text-gray-800">L. {formatCurrency(selectedInvoice.docTotal)}</Text>
+                  </View>
+                  <View className="flex-row justify-between mb-1">
+                    <Text className="text-base tracking-[-0.3px] font-[Poppins-Regular] text-gray-600">Pendiente:</Text>
+                    <Text className="text-base tracking-[-0.3px] font-[Poppins-SemiBold] text-red-600">L. {formatCurrency(selectedInvoice.balanceDue)}</Text>
+                  </View>
+                  <View className="flex-row justify-between">
+                    <Text className="text-xs tracking-[-0.3px] font-[Poppins-Regular] text-gray-400">Factura: {selectedInvoice.numAtCard}</Text>
+                    <Text className="text-xs tracking-[-0.3px] font-[Poppins-Regular] text-gray-400">Fecha: {formatDate(selectedInvoice.docDate)}</Text>
+                  </View>
+                </View>
                 <TextInput
-                  placeholder="Monto a pagar"
+                  placeholder="Ingresa el monto a pagar"
                   keyboardType="numeric"
                   value={amount}
                   onChangeText={(val) => {
                     setAmount(val);
                     setError('');
                   }}
-                  className="border border-gray-300 rounded-xl p-3"
+                  className="border-2 border-gray-200 rounded-xl p-4 text-lg text-gray-800 tracking-[-0.3px] font-[Poppins-Regular] focus:border-blue-500 transition-all duration-200"
                 />
-                {error ? <Text className="text-red-500 text-sm mt-1">{error}</Text> : null}
-                <View className="flex-row justify-end mt-4 gap-10">
-                  <TouchableOpacity onPress={() => setModalVisible(false)}>
-                    <Text className="text-gray-500">Cancelar</Text>
+                {error ? <Text className="text-red-500 text-sm mt-2 font-[Poppins-Regular] tracking-[-0.3px]">{error}</Text> : null}
+                <View className="flex-row justify-end mt-6 gap-3">
+                  <TouchableOpacity
+                    onPress={() => setModalVisible(false)}
+                    className="py-3 px-6 rounded-full items-center justify-center"
+                  >
+                    <Text className="text-red-500 tracking-[-0.3px] font-[Poppins-SemiBold]">Cancelar</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={handleAccept}>
-                    <Text className="text-blue-600 font-semibold">Aceptar</Text>
+                  <TouchableOpacity
+                    onPress={handleAccept}
+                    className="bg-yellow-300 py-3 px-6 rounded-full items-center justify-center"
+                  >
+                    <Text className="text-black tracking-[-0.3px] font-[Poppins-SemiBold]">Aceptar</Text>
                   </TouchableOpacity>
                 </View>
               </>
@@ -204,7 +265,48 @@ const IndexScreen = () => {
           </View>
         </View>
       </Modal>
+
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        snapPoints={snapPoints}
+        backdropComponent={MemoizedBackdrop}
+      >
+        <View className="flex-1 p-4">
+          <Text className="text-xl font-bold mb-4">Facturas Seleccionadas</Text>
+          {selectedInvoices.length > 0 ? (
+            <>
+              <BottomSheetFlatList
+                data={selectedInvoices}
+                renderItem={renderSelectedInvoiceItem}
+                keyExtractor={item => item.numAtCard}
+              />
+              <View className="mt-4">
+                <TouchableOpacity
+                  onPress={() => {
+                    bottomSheetModalRef.current?.close();
+                    router.push({
+                      pathname: '/modal/cobro',
+                      params: {
+                        Name: cardName,
+                        Code: cardCode,
+                      }
+                    });
+                  }}
+                  className="bg-yellow-300 h-[50px] items-center justify-center rounded-full"
+                >
+                  <Text className="text-black font-[Poppins-SemiBold] text-lg tracking-[-0.3px]">Continuar</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          ) : (
+            <View className="flex-1 items-center justify-center">
+              <Text className="text-gray-500 font-[Poppins-Regular]">No hay facturas seleccionadas.</Text>
+            </View>
+          )}
+        </View>
+      </BottomSheetModal>
     </View>
   );
 };
+
 export default IndexScreen;

@@ -137,10 +137,10 @@ const Invoices = () => {
     <SafeAreaView style={{ paddingTop: -Constants.statusBarHeight }} className="flex-1 bg-white px-4 pt-4 relative">
       <View className="absolute bottom-8 right-8 gap-3 items-end z-10">
         <TouchableOpacity
-          className="rounded-full flex items-center justify-center h-[50px] w-[50px] bg-black"
+          className="rounded-full flex items-center justify-center h-[50px] w-[50px] bg-yellow-300"
           onPress={() => router.push('/InvoiceClient')}
         >
-          <PlusIcon color="white" />
+          <PlusIcon color="black" />
         </TouchableOpacity>
       </View>
 

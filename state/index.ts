@@ -1,187 +1,244 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { Invoice, ProductDiscount } from '@/types/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ProductDiscount, Invoice } from '@/types/types';
+import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 type CartItem = ProductDiscount & {
-  quantity: number;
-  unitPrice: number;
-  total: number;
-  tiers?: {
-    qty: number;
-    price: number;
-    percent: number;
-    expiry: string;
-  }[];
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  tiers?: {
+    qty: number;
+    price: number;
+    percent: number;
+    expiry: string;
+  }[];
 };
 
 interface Customer {
-  cardCode: string;
-  cardName: string;
-  federalTaxID: string;
-  priceListNum: string;
+  cardCode: string;
+  cardName: string;
+  federalTaxID: string;
+  priceListNum: string;
+}
+
+export interface SelectedInvoice extends Invoice {
+  paidAmount: number;
 }
 
 interface AppStoreState {
-  products: CartItem[];
-  addProduct: (productToAdd: Omit<CartItem, 'total'>) => void;
-  updateQuantity: (itemCode: string, quantity: number, newPrice?: number) => void;
-  removeProduct: (itemCode: string) => void;
-  clearCart: () => void;
+  // Estado NO persistente para datos del formulario de pago
+  paymentForm: {
+    method: string | null;
+    amount: string;
+    reference: string;
+    date: Date;
+    bank: string;
+  };
+  setPaymentForm: (form: Partial<{
+    method: string | null;
+    amount: string;
+    reference: string;
+    date: Date;
+    bank: string;
+  }>) => void;
+  savePaymentForm: () => void;
+  products: CartItem[];
+  addProduct: (productToAdd: Omit<CartItem, 'total'>) => void;
+  updateQuantity: (itemCode: string, quantity: number, newPrice?: number) => void;
+  removeProduct: (itemCode: string) => void;
+  clearCart: () => void;
 
-  selectedCustomer: Customer | null;
-  setSelectedCustomer: (customer: Customer) => void;
-  clearSelectedCustomer: () => void;
+  selectedCustomer: Customer | null;
+  setSelectedCustomer: (customer: Customer) => void;
+  clearSelectedCustomer: () => void;
 
-  allProductsCache: ProductDiscount[];
-  setAllProductsCache: (products: ProductDiscount[]) => void;
-  clearAllProductsCache: () => void;
+  allProductsCache: ProductDiscount[];
+  setAllProductsCache: (products: ProductDiscount[]) => void;
+  clearAllProductsCache: () => void;
 
-  rawSearchText: string;
-  debouncedSearchText: string;
-  setRawSearchText: (text: string) => void;
-  setDebouncedSearchText: (text: string) => void;
+  rawSearchText: string;
+  debouncedSearchText: string;
+  setRawSearchText: (text: string) => void;
+  setDebouncedSearchText: (text: string) => void;
 
-  lastOrderDocEntry: number | null;
-  setLastOrderDocEntry: (docEntry: number) => void;
-  clearLastOrderDocEntry: () => void;
+  lastOrderDocEntry: number | null;
+  setLastOrderDocEntry: (docEntry: number) => void;
+  clearLastOrderDocEntry: () => void;
 
-  appHost: string;
-  appPort: string;
-  fetchUrl: string;
-  setAppHost: (host: string) => void;
-  setAppPort: (port: string) => void;
-  updateFetchUrl: () => void;
-  clearAppConnection: () => void;
+  appHost: string;
+  appPort: string;
+  fetchUrl: string;
+  setAppHost: (host: string) => void;
+  setAppPort: (port: string) => void;
+  updateFetchUrl: () => void;
+  clearAppConnection: () => void;
 
-  selectedInvoices: Invoice[];
-  addInvoice: (invoice: Invoice) => void;
-  removeInvoice: (invoiceId: string) => void;
-  clearInvoices: () => void;
+  selectedInvoices: SelectedInvoice[];
+  addInvoice: (invoice: Invoice, paidAmount: number) => void;
+  removeInvoice: (invoiceId: string) => void;
+  clearInvoices: () => void;
 }
 
 export const useAppStore = create<AppStoreState>()(
-  persist(
-    (set, get) => ({
-      products: [],
-      selectedCustomer: null,
-      allProductsCache: [],
-      rawSearchText: '',
-      debouncedSearchText: '',
-      lastOrderDocEntry: null,
-      appHost: '',
-      appPort: '',
-      fetchUrl: '',
-      selectedInvoices: [],
+  persist(
+    (set, get) => ({
+      products: [],
+      selectedCustomer: null,
+      allProductsCache: [],
+      rawSearchText: '',
+      debouncedSearchText: '',
+      lastOrderDocEntry: null,
+      appHost: '',
+      appPort: '',
+      fetchUrl: '',
+      selectedInvoices: [],
+      // Estado NO persistente para datos del formulario de pago
+      paymentForm: {
+        method: null,
+        amount: '',
+        reference: '',
+        date: new Date(),
+        bank: '',
+      },
+      setPaymentForm: (form) => {
+        set((state) => ({
+          paymentForm: {
+            ...state.paymentForm,
+            ...form,
+          },
+        }));
+      },
+      savePaymentForm: () => {
+        const { paymentForm } = get();
+        console.log('Datos del formulario de pago:', paymentForm);
+      },
 
-      addProduct: (productToAdd) => {
-        const products = get().products;
-        const existingIndex = products.findIndex(p => p.itemCode === productToAdd.itemCode);
-        const updatedProducts = [...products];
-        const newQuantity = productToAdd.quantity;
-        const unitPrice = productToAdd.unitPrice;
-        const newTotal = unitPrice * newQuantity;
-        if (newQuantity <= 0) {
-          if (existingIndex > -1) {
-            updatedProducts.splice(existingIndex, 1);
-          }
-        } else if (existingIndex > -1) {
-          updatedProducts[existingIndex] = {
-            ...products[existingIndex],
-            ...productToAdd,
-            quantity: newQuantity,
-            unitPrice: unitPrice,
-            total: newTotal,
-          };
-        } else {
-          updatedProducts.push({
-            ...productToAdd,
-            quantity: newQuantity,
-            unitPrice: unitPrice,
-            total: newTotal,
-          });
-        }
-        set({ products: updatedProducts });
-      },
+      addProduct: (productToAdd) => {
+        const products = get().products;
+        const existingIndex = products.findIndex(p => p.itemCode === productToAdd.itemCode);
+        const updatedProducts = [...products];
+        const newQuantity = productToAdd.quantity;
+        const unitPrice = productToAdd.unitPrice;
+        const newTotal = unitPrice * newQuantity;
 
-      updateQuantity: (itemCode, quantity, newPrice) => {
-        const products = get().products;
-        const index = products.findIndex(p => p.itemCode === itemCode);
-        if (index > -1) {
-          if (quantity <= 0) {
-            const updated = products.filter(p => p.itemCode !== itemCode);
-            set({ products: updated });
-          } else {
-            const product = products[index];
-            const actualUnitPrice = newPrice !== undefined ? newPrice : product.unitPrice;
-            const total = actualUnitPrice * quantity;
-            const updatedProducts = [...products];
-            updatedProducts[index] = {
-              ...product,
-              quantity,
-              unitPrice: actualUnitPrice,
-              total,
-            };
-            set({ products: updatedProducts });
-          }
-        }
-      },
+        if (newQuantity <= 0) {
+          if (existingIndex > -1) {
+            updatedProducts.splice(existingIndex, 1);
+          }
+        } else if (existingIndex > -1) {
+          updatedProducts[existingIndex] = {
+            ...products[existingIndex],
+            ...productToAdd,
+            quantity: newQuantity,
+            unitPrice: unitPrice,
+            total: newTotal,
+          };
+        } else {
+          updatedProducts.push({
+            ...productToAdd,
+            quantity: newQuantity,
+            unitPrice: unitPrice,
+            total: newTotal,
+          });
+        }
+        set({ products: updatedProducts });
+      },
 
-      removeProduct: (itemCode) => {
-        const updated = get().products.filter(p => p.itemCode !== itemCode);
-        set({ products: updated });
-      },
+      updateQuantity: (itemCode, quantity, newPrice) => {
+        const products = get().products;
+        const index = products.findIndex(p => p.itemCode === itemCode);
+        if (index > -1) {
+          if (quantity <= 0) {
+            const updated = products.filter(p => p.itemCode !== itemCode);
+            set({ products: updated });
+          } else {
+            const product = products[index];
+            const actualUnitPrice = newPrice !== undefined ? newPrice : product.unitPrice;
+            const total = actualUnitPrice * quantity;
+            const updatedProducts = [...products];
+            updatedProducts[index] = {
+              ...product,
+              quantity,
+              unitPrice: actualUnitPrice,
+              total,
+            };
+            set({ products: updatedProducts });
+          }
+        }
+      },
 
-      clearCart: () => set({ products: [] }),
+      removeProduct: (itemCode) => {
+        const updated = get().products.filter(p => p.itemCode !== itemCode);
+        set({ products: updated });
+      },
 
-      setSelectedCustomer: (customer) => set({ selectedCustomer: customer }),
-      clearSelectedCustomer: () => set({ selectedCustomer: null }),
+      clearCart: () => set({ products: [] }),
 
-      setAllProductsCache: (products) => set({ allProductsCache: products }),
-      clearAllProductsCache: () => set({ allProductsCache: [] }),
+      setSelectedCustomer: (customer) => set({ selectedCustomer: customer }),
+      clearSelectedCustomer: () => set({ selectedCustomer: null }),
 
-      setRawSearchText: (text) => set({ rawSearchText: text }),
-      setDebouncedSearchText: (text) => set({ debouncedSearchText: text }),
+      setAllProductsCache: (products) => set({ allProductsCache: products }),
+      clearAllProductsCache: () => set({ allProductsCache: [] }),
 
-      setLastOrderDocEntry: (docEntry: number) => set({ lastOrderDocEntry: docEntry }),
-      clearLastOrderDocEntry: () => set({ lastOrderDocEntry: null }),
+      setRawSearchText: (text) => set({ rawSearchText: text }),
+      setDebouncedSearchText: (text) => set({ debouncedSearchText: text }),
 
-      setAppHost: (host) => {
-        set({ appHost: host });
-        get().updateFetchUrl();
-      },
-      setAppPort: (port) => {
-        set({ appPort: port });
-        get().updateFetchUrl();
-      },
-      updateFetchUrl: () => {
-        const { appHost, appPort } = get();
-        const url = `${appHost}${appPort ? `:${appPort}` : ''}`;
-        set({ fetchUrl: url });
-      },
-      clearAppConnection: () => {
-        set({ appHost: '', appPort: '', fetchUrl: '' });
-      },
+      setLastOrderDocEntry: (docEntry: number) => set({ lastOrderDocEntry: docEntry }),
+      clearLastOrderDocEntry: () => set({ lastOrderDocEntry: null }),
 
-      addInvoice: (invoice) => {
-        const invoices = get().selectedInvoices;
-        const invoiceExists = invoices.some(inv => inv.numAtCard === invoice.numAtCard);
-        if (!invoiceExists) {
-          set((state) => ({
-            selectedInvoices: [...state.selectedInvoices, invoice],
-          }));
-        }
-      },
-      removeInvoice: (invoiceId) => {
-        set((state) => ({
-          selectedInvoices: state.selectedInvoices.filter(inv => inv.numAtCard !== invoiceId),
-        }));
-      },
-      clearInvoices: () => set({ selectedInvoices: [] }),
-    }),
-    {
-      name: 'app-store',
-      storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
+      setAppHost: (host) => {
+        set({ appHost: host });
+        get().updateFetchUrl();
+      },
+      setAppPort: (port) => {
+        set({ appPort: port });
+        get().updateFetchUrl();
+      },
+      updateFetchUrl: () => {
+        const { appHost, appPort } = get();
+        const url = `${appHost}${appPort ? `:${appPort}` : ''}`;
+        set({ fetchUrl: url });
+      },
+      clearAppConnection: () => {
+        set({ appHost: '', appPort: '', fetchUrl: '' });
+      },
+
+      addInvoice: (invoice, paidAmount) => {
+        const invoices = get().selectedInvoices;
+        const existingInvoiceIndex = invoices.findIndex(inv => inv.numAtCard === invoice.numAtCard);
+
+        const newSelectedInvoice = {
+          ...invoice,
+          paidAmount,
+        };
+
+        let updatedInvoices = [...invoices];
+
+        if (existingInvoiceIndex > -1) {
+          updatedInvoices[existingInvoiceIndex] = newSelectedInvoice;
+        } else {
+          updatedInvoices.push(newSelectedInvoice);
+        }
+
+        set({ selectedInvoices: updatedInvoices });
+      },
+
+      removeInvoice: (invoiceId) => {
+        set((state) => ({
+          selectedInvoices: state.selectedInvoices.filter(inv => inv.numAtCard !== invoiceId),
+        }));
+      },
+
+      clearInvoices: () => set({ selectedInvoices: [] }),
+    }),
+    {
+      name: 'app-store',
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => {
+        const { selectedInvoices, ...rest } = state;
+        return rest;
+      },
+    }
+  )
 );

@@ -25,15 +25,9 @@ export default function App() {
   return (
     <SafeAreaView style={{ paddingTop: -Constants.statusBarHeight }} className="flex-1 justify-center items-center bg-white p-6">
       <TouchableOpacity
-        onPress={() => router.push('/modal/success')}
+        onPress={() => router.push('/InvoiceClient')}
       >
-        <Text>Pantalla de Pedido realizado</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => router.push('/modal/error')}
-      >
-        <Text>Pantalla de Error</Text>
+        <Text>Clientes</Text>
       </TouchableOpacity>
 
       <BottomSheetModal
@@ -93,8 +87,8 @@ export default function App() {
 
             </View>
 
-            <TouchableOpacity className='bg-black w-full h-[50px] rounded-full items-center justify-center mt-6 z-50' onPress={handleStart}>
-              <Text className="text-white text-base font-[Poppins-Regular] font-semibold">Empezar</Text>
+            <TouchableOpacity className='bg-yellow-300 w-full h-[50px] rounded-full items-center justify-center mt-6 z-50' onPress={handleStart}>
+              <Text className="text-black text-base font-[Poppins-SemiBold]">Empezar</Text>
             </TouchableOpacity>
           </View>
         </BottomSheetView>

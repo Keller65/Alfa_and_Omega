@@ -116,9 +116,9 @@ export default function PedidosScreen() {
               params: { OrderDetails: item.docEntry },
             })
           }
-          className="w-full bg-black py-3 rounded-full items-center justify-center h-[50px]"
+          className="w-full bg-yellow-300 py-3 rounded-full items-center justify-center h-[50px]"
         >
-          <Text className="text-sm font-[Poppins-SemiBold] text-white">Ver más detalles</Text>
+          <Text className="text-[15px] font-[Poppins-SemiBold] text-black tracking-[-0.3px]">Ver más detalles</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -149,10 +149,10 @@ export default function PedidosScreen() {
           <BottomSheetCart />
         ) : (
           <TouchableOpacity
-            className="rounded-full flex items-center justify-center h-[50px] w-[50px] bg-black border border-white"
+            className="rounded-full flex items-center justify-center h-[50px] w-[50px] bg-yellow-300 border border-white"
             onPress={() => router.push('/client')}
           >
-            <PlusIcon color="white" />
+            <PlusIcon color="black" />
           </TouchableOpacity>
         )}
       </View>

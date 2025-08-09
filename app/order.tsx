@@ -202,7 +202,7 @@ const OrderDetails = () => {
               
               <tr class="subtotal-row">
                 <td colspan="3" class="text-right"><strong>SubTotal:</strong></td>
-                <td class="text-right font-semibold">L. ${((orderData.docTotal ?? 0) - (orderData.vatSum ?? 0)).toLocaleString()}</td>
+                <td class="text-right font-semibold">f ${((orderData.docTotal ?? 0) - (orderData.vatSum ?? 0)).toLocaleString()}</td>
               </tr>
 
               <tr class="total-row">
@@ -302,7 +302,7 @@ const OrderDetails = () => {
                 Total del Pedido
               </Text>
               <Text className="text-xl text-gray-900 mt-1 font-[Poppins-SemiBold]">
-                L. {(orderData.docTotal ?? 0).toLocaleString()}
+                L. {(orderData.docTotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </Text>
             </View>
             <View className="flex-1 p-3 bg-gray-50 rounded-lg ml-2">
@@ -314,21 +314,21 @@ const OrderDetails = () => {
           </View>
 
           <TouchableOpacity
-            className="w-full bg-black h-[50px] rounded-full flex-row gap-3 p-2 items-center justify-center"
+            className="w-full bg-yellow-300 h-[50px] rounded-full flex-row gap-3 p-2 items-center justify-center"
             onPress={handleShareAsPdf}
             disabled={isGeneratingPdf}
           >
             {isGeneratingPdf ? (
               <>
-                <ActivityIndicator color="white" />
-                <Text className="text-white font-[Poppins-SemiBold] tracking-[-0.3px]">
+                <ActivityIndicator color="black" />
+                <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px]">
                   Generando PDF
                 </Text>
               </>
             ) : (
               <>
-                <Entypo name="share" size={24} color="white" />
-                <Text className="text-white font-[Poppins-SemiBold] tracking-[-0.3px]">
+                <Entypo name="share" size={24} color="black" />
+                <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px]">
                   Compartir como PDF
                 </Text>
               </>

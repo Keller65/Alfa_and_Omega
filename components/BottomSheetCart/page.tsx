@@ -131,7 +131,7 @@ const MemoizedCommentInput = memo(({ comments, onCommentsChange }: { comments: s
         placeholder='Enviar comentarios'
         value={inputText}
         onChangeText={setInputText}
-        className="border border-gray-300 rounded-lg p-3 mb-4 mx-2"
+        className="border border-gray-300 rounded-3xl px-5 mb-4 mx-2"
         multiline={true}
         numberOfLines={4}
         textAlignVertical="top"
@@ -315,41 +315,41 @@ export default function BottomSheetCart() {
     <BottomSheetFooter {...props} bottomInset={0}>
       <View className="bg-white border-t border-gray-200 px-4 py-4">
         <View className="flex-row justify-between items-center">
-          <Text className='text-base text-gray-700 font-[Poppins-Medium]'>Cliente</Text>
-          <Text className='font-[Poppins-Bold] text-black'>{customerSelected?.cardName}</Text>
+          <Text className='text-base text-gray-700 font-[Poppins-Medium] tracking-[-0.3px]'>Cliente</Text>
+          <Text className='font-[Poppins-Bold] text-black tracking-[-0.3px]'>{customerSelected?.cardName}</Text>
         </View>
 
         <View className="flex-row justify-between items-center mb-3">
-          <Text className="text-base text-gray-700 font-[Poppins-Medium]">Total</Text>
-          <Text className="text-xl font-[Poppins-Bold] text-black">
+          <Text className="text-base text-gray-700 font-[Poppins-Medium] tracking-[-0.3px]">Total</Text>
+          <Text className="text-xl font-[Poppins-Bold] text-black tracking-[-0.3px]">
             L. {total.toLocaleString('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })}
           </Text>
         </View>
 
         <View className='flex-row w-full gap-2 justify-between'>
           <TouchableOpacity
-            className="flex-row flex-1 items-center justify-center h-[50px] bg-[#000] rounded-full"
+            className="flex-row flex-1 items-center justify-center h-[50px] bg-yellow-300 rounded-full"
             onPress={handleSubmitOrder}
             disabled={isLoading}
           >
             {isLoading ? (
               <>
                 <ActivityIndicator color="white" size="small" />
-                <Text className="text-white font-[Poppins-Regular] ml-2">Realizando Pedido...</Text>
+                <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px] ml-2">Realizando Pedido...</Text>
               </>
             ) : (
               <>
-                <CartIcon color="white" />
-                <Text className="text-white font-[Poppins-Regular] ml-2">Realizar Pedido</Text>
+                <CartIcon color="black" />
+                <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px] ml-2">Realizar Pedido</Text>
               </>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => router.push('/shop')}
-            className='bg-black items-center justify-center rounded-full h-[50px] w-[50px]'
+            className='bg-yellow-300 items-center justify-center rounded-full h-[50px] w-[50px]'
           >
-            <Feather name="edit" size={20} color="white" />
+            <Feather name="edit" size={20} color="black" />
           </TouchableOpacity>
         </View>
       </View>
