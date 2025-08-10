@@ -38,10 +38,10 @@ const successCobro = () => {
         source={require('@/assets/animation/Check.json')}
       />
 
-      <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#1a753c', marginTop: 20, textAlign: 'center' }}>
+      <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#1a753c', marginTop: 20, textAlign: 'center', fontFamily: 'Poppins-Regular', letterSpacing: -0.3 }}>
         ¡Cobro realizado con éxito!
       </Text>
-      <Text style={{ fontSize: 16, color: '#333', marginTop: 10, marginBottom: 40, textAlign: 'center' }}>
+      <Text style={{ fontSize: 14, color: '#333', marginTop: 10, marginBottom: 40, textAlign: 'center', fontFamily: 'Poppins-Regular', letterSpacing: -0.3 }}>
         el cobro se ha completado correctamente.
       </Text>
 
@@ -54,16 +54,16 @@ const successCobro = () => {
         })}
         style={{ backgroundColor: '#28a745', width: '100%', height: 50, alignItems: 'center', justifyContent: 'center', borderRadius: 12, marginBottom: 15 }}
       >
-        <Text style={{ fontFamily: 'Poppins-Medium', color: '#fff', fontSize: 18 }}>
+        <Text style={{ fontFamily: 'Poppins-Medium', color: '#fff', fontSize: 18, letterSpacing: -0.3 }}>
           Ver Cobro
         </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        onPress={() => router.back()}
+        onPress={() => router.push('/invoices')}
         style={{ borderWidth: 2, borderColor: '#28a745', width: '100%', height: 50, alignItems: 'center', justifyContent: 'center', borderRadius: 12 }}
       >
-        <Text style={{ fontFamily: 'Poppins-Medium', color: '#28a745', fontSize: 18 }}>
+        <Text style={{ fontFamily: 'Poppins-Medium', color: '#28a745', fontSize: 18, letterSpacing: -0.3 }}>
           ver cobros
         </Text>
       </TouchableOpacity>

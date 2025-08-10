@@ -43,6 +43,7 @@ interface AppStoreState {
     bank: string;
   }>) => void;
   savePaymentForm: () => void;
+  clearPaymentForm: () => void;
   products: CartItem[];
   addProduct: (productToAdd: Omit<CartItem, 'total'>) => void;
   updateQuantity: (itemCode: string, quantity: number, newPrice?: number) => void;
@@ -112,6 +113,17 @@ export const useAppStore = create<AppStoreState>()(
       savePaymentForm: () => {
         const { paymentForm } = get();
         console.log('Datos del formulario de pago:', paymentForm);
+      },
+      clearPaymentForm: () => {
+        set({
+          paymentForm: {
+            method: null,
+            amount: '',
+            reference: '',
+            date: new Date(),
+            bank: '',
+          }
+        });
       },
 
       addProduct: (productToAdd) => {

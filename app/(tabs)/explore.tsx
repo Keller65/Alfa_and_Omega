@@ -61,7 +61,7 @@ export default function PedidosScreen() {
 
   const renderItem = useCallback(({ item }: { item: OrderDataType }) => (
     <View key={item.docEntry} className="w-full mb-4">
-      <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-md">
+      <View className="bg-white rounded-3xl p-5 border border-gray-200 shadow-md">
         {/* Encabezado */}
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center gap-2">
@@ -143,8 +143,8 @@ export default function PedidosScreen() {
   }, [user?.salesPersonCode]);
 
   return (
-    <SafeAreaView className="flex-1 bg-white" style={{ paddingHorizontal: 10, paddingTop: -Constants.statusBarHeight }}>
-      <View className="absolute bottom-8 right-8 gap-3 items-end z-10">
+    <View className="flex-1 bg-white" style={{ paddingHorizontal: 10 }}>
+      <View className="absolute bottom-4 right-8 gap-3 items-end z-10">
         {products.length > 0 ? (
           <BottomSheetCart />
         ) : (
@@ -181,6 +181,6 @@ export default function PedidosScreen() {
           )}
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 }

@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { View, ActivityIndicator, Text, StyleSheet, Button } from 'react-native';
-import axios from 'axios';
-import slugify from 'slugify';
 import { useAuth } from '@/context/auth';
 import { useAppStore } from '@/state';
+import api from '@/lib/api';
+import slugify from 'slugify';
 
 const Tab = createMaterialTopTabNavigator();
 import CategoryProductScreen from './(top-tabs)/category-product-list';
@@ -22,7 +22,6 @@ export default function TopTabNavigatorLayout() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { fetchUrl } = useAppStore();
-  const FETCH_URL = fetchUrl + "/sap/items/categories";
 
   const priceListNum = selectedCustomer?.priceListNum?.toString() || '1';
 
@@ -42,7 +41,18 @@ export default function TopTabNavigatorLayout() {
     setError(null);
 
     try {
-      const response = await axios.get<Array<{ code: string, name: string }>>(FETCH_URL, { headers });
+      const response = await api.get<Array<{ code: string, name: string }>>(
+        '/sap/items/categories',
+        {
+          baseURL: fetchUrl,
+          headers,
+          cache: {
+            ttl: 1000 * 60 * 60 * 1, // 1 hora
+          },
+        }
+      );
+
+      console.log(response.cached ? 'Respuesta desde CACHE' : 'Respuesta desde RED');
 
       const formattedCategories: ProductCategory[] = response.data.map(category => ({
         code: category.code,
@@ -130,34 +140,32 @@ export default function TopTabNavigatorLayout() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <Tab.Navigator
-        initialRouteName={categories[0]?.slug || 'todas'}
-        screenOptions={{
-          tabBarActiveTintColor: '#000',
-          tabBarInactiveTintColor: 'gray',
-          tabBarIndicatorStyle: {
-            backgroundColor: '#000',
-            height: 2
-          },
-          tabBarStyle: {
-            backgroundColor: 'white',
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 0
-          },
-          tabBarLabelStyle: {
-            fontSize: 12,
-            width: 230,
-            fontWeight: 'bold',
-          },
-          tabBarPressColor: 'transparent',
-          tabBarScrollEnabled: true,
-        }}
-      >
-        {tabScreens}
-      </Tab.Navigator>
-    </View>
+    <Tab.Navigator
+      initialRouteName={categories[0]?.slug || 'todas'}
+      screenOptions={{
+        tabBarActiveTintColor: '#000',
+        tabBarInactiveTintColor: 'gray',
+        tabBarIndicatorStyle: {
+          backgroundColor: '#000',
+          height: 2
+        },
+        tabBarStyle: {
+          backgroundColor: 'white',
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 0
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          width: 230,
+          fontWeight: 'bold',
+        },
+        tabBarPressColor: 'transparent',
+        tabBarScrollEnabled: true,
+      }}
+    >
+      {tabScreens}
+    </Tab.Navigator>
   );
 }
 

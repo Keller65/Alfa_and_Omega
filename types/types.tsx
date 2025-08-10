@@ -142,7 +142,7 @@ export interface AccountPayCheque {
 }
 
 export interface AccountPayEfectivo {
-  slpCode: string;
+  slpCode: string | number;
   CashAccount: string;
 }
 

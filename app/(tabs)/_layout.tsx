@@ -14,6 +14,8 @@ import IndexScreen from './index';
 import ExploreScreen from './explore';
 import InvoicesScreen from './invoices';
 import SettingsScreen from './settings';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Constants from 'expo-constants';
 
 const Drawer = createDrawerNavigator();
 
@@ -38,11 +40,11 @@ export default function Layout() {
                 borderBottomWidth: 0,
               },
               headerTitleStyle: {
-                fontFamily: 'Poppins-SemiBold', 
+                fontFamily: 'Poppins-SemiBold',
                 letterSpacing: -0.6
               },
               drawerLabelStyle: {
-                fontFamily: 'Poppins-Medium', 
+                fontFamily: 'Poppins-Medium',
                 fontSize: 16,
                 letterSpacing: -0.6
               },

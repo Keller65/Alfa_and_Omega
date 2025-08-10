@@ -1,15 +1,13 @@
+import PlusIcon from '@/assets/icons/PlusIcon';
 import { useAuth } from '@/context/auth';
 import { useAppStore } from '@/state';
 import { PaymentData } from '@/types/types';
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Text, View, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Constants from 'expo-constants';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import PlusIcon from '@/assets/icons/PlusIcon';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 
 const PAGE_SIZE = 20;
 
@@ -25,6 +23,12 @@ const Invoices = () => {
   const [hasMore, setHasMore] = useState(true);
 
   const salesPersonCode = user?.salesPersonCode;
+
+  const formatMoney = (value: number | string | null | undefined) => {
+    const num = typeof value === 'string' ? Number(value) : value ?? 0;
+    const safe = isNaN(Number(num)) ? 0 : Number(num);
+    return safe.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
 
   const fetchInvoices = useCallback(async () => {
     if (!salesPersonCode || loading || !hasMore) return;
@@ -120,7 +124,7 @@ const Invoices = () => {
           </Text>
         </View>
         <Text className="text-sm font-[Poppins-SemiBold] text-gray-700">
-          L. {item.total.toLocaleString()}
+          L. {formatMoney(item.total)}
         </Text>
       </View>
     </TouchableOpacity>
@@ -134,7 +138,7 @@ const Invoices = () => {
     ) : null;
 
   return (
-    <SafeAreaView style={{ paddingTop: -Constants.statusBarHeight }} className="flex-1 bg-white px-4 pt-4 relative">
+    <View className="flex-1 bg-white px-4 relative">
       <View className="absolute bottom-8 right-8 gap-3 items-end z-10">
         <TouchableOpacity
           className="rounded-full flex items-center justify-center h-[50px] w-[50px] bg-yellow-300"
@@ -156,7 +160,7 @@ const Invoices = () => {
         onRefresh={handleRefresh}
         showsVerticalScrollIndicator={false}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

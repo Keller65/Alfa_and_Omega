@@ -1,17 +1,16 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, } from 'react-native';
-import { useRoute } from '@react-navigation/native';
-import { useEffect, useState, useMemo, useCallback } from 'react';
-import axios from 'axios';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import Entypo from '@expo/vector-icons/Entypo';
-import Constants from 'expo-constants';
 import { useAuth } from '@/context/auth';
+import api from '@/lib/api';
+import { useAppStore } from '@/state';
+import { OrderDataType } from '@/types/types';
+import Entypo from '@expo/vector-icons/Entypo';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useRoute } from '@react-navigation/native';
+import { Image } from 'expo-image';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { OrderDataType } from '@/types/types';
-import { useAppStore } from '@/state';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View, } from 'react-native';
 
 const OrderDetails = () => {
   const route = useRoute();
@@ -20,18 +19,36 @@ const OrderDetails = () => {
   const [loading, setLoading] = useState(true);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const { fetchUrl } = useAppStore();
-  const FETCH_URL = fetchUrl + "/api/Quotations/";
 
   const { user } = useAuth();
+
+  // Helper para formatear valores monetarios con 2 decimales usando toLocaleString
+  const formatMoney = useCallback((value?: number | null) => {
+    return (value ?? 0).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
 
     const fetchOrderDetails = async () => {
       try {
-        const response = await axios.get(
-          `${FETCH_URL}${docEntryParam}`
+        const response = await api.get(
+          `/api/Quotations/${docEntryParam}`,
+          {
+            baseURL: fetchUrl,
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${user?.token}`,
+            },
+            cache: {
+              ttl: 1000 * 60 * 60 * 8, // 8 horas
+            },
+          }
         );
+        console.log(response.cached ? 'Pedido cargado desde CACHE' : 'Pedido cargado desde RED');
         if (isMounted) {
           setOrderData(response.data);
         }
@@ -189,25 +206,25 @@ const OrderDetails = () => {
                   <tr>
                     <td>${item.itemDescription ?? 'N/A'}</td>
                     <td class="text-center">${(item.quantity ?? 0).toLocaleString()}</td>
-                    <td class="text-right">L. ${(item.priceAfterVAT ?? 0).toLocaleString()}</td>
-                    <td class="text-right font-semibold">L. ${((item.quantity ?? 0) * (item.priceAfterVAT ?? 0)).toLocaleString()}</td>
+                    <td class="text-right">L. ${(item.priceAfterVAT ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="text-right font-semibold">L. ${((item.quantity ?? 0) * (item.priceAfterVAT ?? 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 `
         )
         .join('')}
               <tr class="isv-row">
                 <td colspan="3" class="text-right"><strong>ISV:</strong></td>
-                <td class="text-right font-semibold">L. ${(orderData.vatSum ?? 0).toLocaleString()}</td>
+                <td class="text-right font-semibold">L. ${(orderData.vatSum ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               </tr>
               
               <tr class="subtotal-row">
                 <td colspan="3" class="text-right"><strong>SubTotal:</strong></td>
-                <td class="text-right font-semibold">f ${((orderData.docTotal ?? 0) - (orderData.vatSum ?? 0)).toLocaleString()}</td>
+                <td class="text-right font-semibold">L. ${((orderData.docTotal ?? 0) - (orderData.vatSum ?? 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               </tr>
 
               <tr class="total-row">
                 <td colspan="3" class="text-right"><strong>Total del Pedido:</strong></td>
-                <td class="text-right font-semibold">L. ${(orderData.docTotal ?? 0).toLocaleString()}</td>
+                <td class="text-right font-semibold">L. ${(orderData.docTotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               </tr>
             </tbody>
           </table>
@@ -238,7 +255,7 @@ const OrderDetails = () => {
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#000" />
         <Text className="mt-2 text-gray-600">Cargando detalles del pedido...</Text>
       </View>
     );
@@ -253,124 +270,128 @@ const OrderDetails = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1" style={{ marginTop: -Constants.statusBarHeight }}>
-      <ScrollView className="flex-1 p-4 bg-gray-50">
-        <View className="p-5 bg-white rounded-lg shadow-sm">
-          <View className="flex-row justify-between items-center mb-5">
-            <View className="flex-row items-center">
-              <FontAwesome name="user-circle-o" size={24} color="#000" />
-              <Text className="ml-2 text-lg font-[Poppins-SemiBold] tracking-[-0.3px]">
-                {orderData.cardName ?? 'N/A'}
-              </Text>
-            </View>
+    <ScrollView className="flex-1 p-4 bg-white">
+      <View className="p-5 bg-white rounded-b-[36px] shadow-sm border border-gray-100">
+        <View className="flex-row justify-between items-center mb-5">
+          <View className="flex-row items-center">
+            <FontAwesome name="user-circle-o" size={24} color="#000" />
+            <Text className="ml-2 text-lg font-[Poppins-SemiBold] tracking-[-0.3px]">
+              {orderData.cardName ?? 'N/A'}
+            </Text>
           </View>
-
-          <View className='flex-row gap-4 py-4'>
-            <View className="flex-1">
-              <Text className="text-sm text-gray-600 font-[Poppins-Regular]">
-                RTN: {orderData.federalTaxID ?? 'No disponible'}
-              </Text>
-            </View>
-
-            <View className="flex-1">
-              <Text className="text-sm text-gray-600 font-[Poppins-Regular]">
-                Vendedor: {user?.fullName ?? 'No disponible'}
-              </Text>
-            </View>
-          </View>
-
-          <View className="flex-row justify-between mb-5">
-            <View className="flex-1 p-3 bg-gray-50 rounded-lg mr-2">
-              <Text className="text-xs text-gray-500">Estado</Text>
-              <View className="flex-row items-center mt-1">
-                <Ionicons name="checkmark-circle" size={18} color="orange" />
-                <Text className="ml-1 text-sm font-[Poppins-SemiBold] text-orange-500">
-                  En Proceso
-                </Text>
-              </View>
-            </View>
-            <View className="flex-1 p-3 bg-gray-50 rounded-lg ml-2">
-              <Text className="text-xs text-gray-500 font-[Poppins-Regular]">Fecha</Text>
-              <Text className="text-sm font-[Poppins-SemiBold] mt-1">
-                {new Date(orderData.docDate ?? '').toLocaleDateString()}
-              </Text>
-            </View>
-          </View>
-          <View className="flex-row justify-between mb-5">
-            <View className="flex-1 p-3 bg-gray-50 rounded-lg mr-2">
-              <Text className="text-xs text-gray-500 font-[Poppins-Regular]">
-                Total del Pedido
-              </Text>
-              <Text className="text-xl text-gray-900 mt-1 font-[Poppins-SemiBold]">
-                L. {(orderData.docTotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </Text>
-            </View>
-            <View className="flex-1 p-3 bg-gray-50 rounded-lg ml-2">
-              <Text className="text-xs text-gray-500 font-[Poppins-Regular]">Items</Text>
-              <Text className="text-xl font-[Poppins-SemiBold] text-gray-900 mt-1">
-                {totalItems.toLocaleString()}
-              </Text>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            className="w-full bg-yellow-300 h-[50px] rounded-full flex-row gap-3 p-2 items-center justify-center"
-            onPress={handleShareAsPdf}
-            disabled={isGeneratingPdf}
-          >
-            {isGeneratingPdf ? (
-              <>
-                <ActivityIndicator color="black" />
-                <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px]">
-                  Generando PDF
-                </Text>
-              </>
-            ) : (
-              <>
-                <Entypo name="share" size={24} color="black" />
-                <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px]">
-                  Compartir como PDF
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
         </View>
 
-        <View className="mt-5">
-          <Text className="text-xl mb-4 font-[Poppins-SemiBold]">Productos</Text>
-          {orderData.lines && orderData.lines.length > 0 ? (
-            orderData.lines.map((item, index) => (
-              <View
-                key={index}
-                className="flex-row items-center bg-white p-3 rounded-lg mb-3 shadow-sm"
-              >
-                <View className="bg-gray-200 p-2 rounded-full mr-3">
-                  <Ionicons name="bag-handle-outline" size={24} color="#6B7280" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-base font-semibold font-[Poppins-Regular] tracking-[-0.3px] leading-5">
-                    {item.itemDescription ?? 'N/A'}
-                  </Text>
-                  <Text className="text-sm text-gray-500 font-[Poppins-Regular] tracking-[-0.3px]">
-                    Cantidad: {item.quantity ?? 0}
-                  </Text>
-                </View>
-                <View className="items-end">
-                  <Text className="text-base font-bold font-[Poppins-Regular] tracking-[-0.3px]">
-                    L. {(item.quantity * item.priceAfterVAT).toLocaleString()}
-                  </Text>
-                  <Text className="text-xs text-gray-500 font-[Poppins-Regular] tracking-[-0.3px]">
-                    Precio Unitario: L. {(item.priceAfterVAT ?? 0).toLocaleString()}
-                  </Text>
-                </View>
-              </View>
-            ))
+        <View className='flex-row gap-4 py-4'>
+          <View className="flex-1">
+            <Text className="text-sm text-gray-600 font-[Poppins-Regular]">
+              RTN: {orderData.federalTaxID ?? 'No disponible'}
+            </Text>
+          </View>
+
+          <View className="flex-1">
+            <Text className="text-sm text-gray-600 font-[Poppins-Regular]">
+              Vendedor: {user?.fullName ?? 'No disponible'}
+            </Text>
+          </View>
+        </View>
+
+        <View className="flex-row justify-between mb-5">
+          <View className="flex-1 p-3 bg-gray-50 rounded-lg mr-2">
+            <Text className="text-xs text-gray-500">Estado</Text>
+            <View className="flex-row items-center mt-1">
+              <Ionicons name="checkmark-circle" size={18} color="orange" />
+              <Text className="ml-1 text-sm font-[Poppins-SemiBold] text-orange-500">
+                En Proceso
+              </Text>
+            </View>
+          </View>
+          <View className="flex-1 p-3 bg-gray-50 rounded-lg ml-2">
+            <Text className="text-xs text-gray-500 font-[Poppins-Regular]">Fecha</Text>
+            <Text className="text-sm font-[Poppins-SemiBold] mt-1">
+              {new Date(orderData.docDate ?? '').toLocaleDateString()}
+            </Text>
+          </View>
+        </View>
+        <View className="flex-row justify-between mb-5">
+          <View className="flex-1 p-3 bg-gray-50 rounded-lg mr-2">
+            <Text className="text-xs text-gray-500 font-[Poppins-Regular]">
+              Total del Pedido
+            </Text>
+            <Text className="text-xl text-gray-900 mt-1 font-[Poppins-SemiBold]">
+              L. {(orderData.docTotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </Text>
+          </View>
+          <View className="flex-1 p-3 bg-gray-50 rounded-lg ml-2">
+            <Text className="text-xs text-gray-500 font-[Poppins-Regular]">Items</Text>
+            <Text className="text-xl font-[Poppins-SemiBold] text-gray-900 mt-1">
+              {totalItems.toLocaleString()}
+            </Text>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          className="w-full bg-yellow-300 h-[50px] rounded-full flex-row gap-3 p-2 items-center justify-center"
+          onPress={handleShareAsPdf}
+          disabled={isGeneratingPdf}
+        >
+          {isGeneratingPdf ? (
+            <>
+              <ActivityIndicator color="black" />
+              <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px]">
+                Generando PDF
+              </Text>
+            </>
           ) : (
-            <Text className="text-gray-500 text-center mt-4">No hay productos en este pedido.</Text>
+            <>
+              <Entypo name="share" size={24} color="black" />
+              <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px]">
+                Compartir como PDF
+              </Text>
+            </>
           )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </TouchableOpacity>
+      </View>
+
+      <View className="my-5 ">
+        <Text className="text-xl mb-4 font-[Poppins-SemiBold] tracking-[-0.3px]">Productos</Text>
+        {orderData.lines && orderData.lines.length > 0 ? (
+          orderData.lines.map((item, index) => (
+            <View
+              key={index}
+              className="flex-row items-center bg-white p-3 rounded-lg mb-3 shadow-sm border border-gray-100"
+            >
+              <View className="bg-white rounded-xl overflow-hidden mr-3">
+                <Image
+                  source={{ uri: `https://pub-266f56f2e24d4d3b8e8abdb612029f2f.r2.dev/${item.itemCode}.png` }}
+                  style={{ height: 60, width: 60, objectFit: "contain" }}
+                  contentFit="contain"
+                  transition={500}
+                />
+              </View>
+
+              <View className="flex-1">
+                <Text className="text-base font-semibold font-[Poppins-Regular] tracking-[-0.3px] leading-5">
+                  {item.itemDescription ?? 'N/A'}
+                </Text>
+                <Text className="text-sm text-gray-500 font-[Poppins-Regular] tracking-[-0.3px]">
+                  Cantidad: {(item.quantity ?? 0).toLocaleString()}
+                </Text>
+              </View>
+              <View className="items-end">
+                <Text className="text-base font-bold font-[Poppins-Regular] tracking-[-0.3px]">
+                  L. {formatMoney((item.quantity ?? 0) * (item.priceAfterVAT ?? 0))}
+                </Text>
+                <Text className="text-xs text-gray-500 font-[Poppins-Regular] tracking-[-0.3px]">
+                  Precio Unitario: L. {formatMoney(item.priceAfterVAT)}
+                </Text>
+              </View>
+            </View>
+          ))
+        ) : (
+          <Text className="text-gray-500 text-center mt-4">No hay productos en este pedido.</Text>
+        )}
+      </View>
+    </ScrollView>
   );
 };
 

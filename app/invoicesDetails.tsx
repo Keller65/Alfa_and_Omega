@@ -1,17 +1,18 @@
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
-import { PaymentData } from '@/types/types';
-import { Asset } from 'expo-asset';
-import { useEffect, useState } from 'react';
+import ReceiptIcon from '@/assets/icons/InvoicesIcon';
 import { useAuth } from '@/context/auth';
 import { useAppStore } from '@/state';
-import Constants from 'expo-constants';
+import { PaymentData } from '@/types/types';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Feather from '@expo/vector-icons/Feather';
-import * as Print from 'expo-print';
-import * as FileSystem from 'expo-file-system';
 import axios from 'axios';
+import { Asset } from 'expo-asset';
+import Constants from 'expo-constants';
+import * as FileSystem from 'expo-file-system';
+import * as Print from 'expo-print';
+import { useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const InvoicesDetails = () => {
   const { docEntry } = useLocalSearchParams();
@@ -20,6 +21,13 @@ const InvoicesDetails = () => {
   const [loading, setLoading] = useState(true);
   const { fetchUrl } = useAppStore();
   const { user } = useAuth();
+
+  // Helper: Formatear dinero siempre con 2 decimales
+  const formatMoney = (value: number | string | null | undefined) => {
+    const num = typeof value === 'string' ? Number(value) : value ?? 0;
+    const safe = isNaN(Number(num)) ? 0 : Number(num);
+    return safe.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
 
   // ✅ Cargar logo como base64
   useEffect(() => {
@@ -54,13 +62,14 @@ const InvoicesDetails = () => {
   }, [docEntry]);
 
   const buildTicketHTML = (invoice: PaymentData, logo: string) => {
-    const facturasHTML = invoice.invoices.map((inv, i) => {
-      const total = inv.docTotal.toLocaleString();
-      const abono = inv.appliedAmount.toLocaleString();
-      const saldoAnt = inv.saldoAnterior.toLocaleString();
-      const saldoPend = inv.pendiente.toLocaleString();
+    const facturasHTML = invoice.invoices
+      .map((inv, i) => {
+        const total = formatMoney(inv.docTotal);
+        const abono = formatMoney(inv.appliedAmount);
+        const saldoAnt = formatMoney(inv.saldoAnterior);
+        const saldoPend = formatMoney(inv.pendiente);
 
-      return `
+        return `
         <div>${i + 1} - ${inv.invoiceDocNum}</div>
         <div>Total: L. ${total}</div>
         <div>Abono: L. ${abono}</div>
@@ -68,7 +77,8 @@ const InvoicesDetails = () => {
         <div>Saldo Pend.: L. ${saldoPend}</div>
         <hr />
       `;
-    }).join('');
+      })
+      .join('');
 
     return `
       <html>
@@ -112,7 +122,7 @@ const InvoicesDetails = () => {
           <hr />
           <div><div class="bold">Facturas:</div>${facturasHTML}</div>
           <div>Método: ${invoice.paymentMeans}</div>
-          <div>Total pagado: L. ${invoice.total.toLocaleString()}</div>
+          <div>Total pagado: L. ${formatMoney(invoice.total)}</div>
           <hr />
           <div class="center">¡Gracias por su pago!<br/>
             Dudas o reclamo por inconsistencias con su saldo, llamar al 9458-7168
@@ -155,7 +165,6 @@ const InvoicesDetails = () => {
       </TouchableOpacity>
 
       <ScrollView style={{ paddingHorizontal: 16 }} showsVerticalScrollIndicator={false}>
-        {/* <Text>{invoiceDetails.docEntry}</Text> */}
         {/* Cliente */}
         <Text className="text-xl font-[Poppins-SemiBold] mt-4 mb-2">Cliente</Text>
         <View className="flex-row gap-4 mb-4 items-center">
@@ -163,20 +172,43 @@ const InvoicesDetails = () => {
             <MaterialCommunityIcons name="account-circle" size={30} color="#000" />
           </View>
           <View>
-            <Text className="font-[Poppins-SemiBold] tracking-[-0.4px] leading-5">{invoiceDetails.cardName}</Text>
-            <Text className="font-[Poppins-Medium] tracking-[-0.4px] leading-5">{invoiceDetails.cardCode}</Text>
+            <Text className="font-[Poppins-SemiBold] tracking-[-0.3px] leading-5">{invoiceDetails.cardName}</Text>
+            <Text className="font-[Poppins-Medium] tracking-[-0.3px] leading-5">{invoiceDetails.cardCode}</Text>
           </View>
         </View>
 
         {/* Facturas Abonadas */}
         <Text className="text-xl font-[Poppins-SemiBold] mb-2">Facturas Abonadas</Text>
-        {invoiceDetails.invoices.map((invoice, index) => (
-          <View key={index} className="p-4 border border-gray-200 mb-2 bg-white">
-            <Text className="text-base font-[Poppins-Bold] text-gray-800">Factura: {invoice.numAtCard}</Text>
-            <Text className="text-sm font-[Poppins-Regular] text-gray-600">Total: L. {invoice.docTotal.toLocaleString()}</Text>
-            <Text className="text-sm font-[Poppins-Regular] text-gray-600">Saldo Anterior: L. {invoice.saldoAnterior.toLocaleString()}</Text>
-            <Text className="text-sm font-[Poppins-Regular] text-gray-600">Abono: L. {invoice.appliedAmount.toLocaleString()}</Text>
-            <Text className="text-sm font-[Poppins-Regular] text-gray-600">Saldo Pendiente: L. {invoice.pendiente.toLocaleString()}</Text>
+        {invoiceDetails.invoices.map((inv) => (
+          <View
+            key={inv.numAtCard ?? inv.invoiceDocNum}
+            className="flex-row items-start gap-4 bg-gray-100 p-4 rounded-xl mb-3"
+          >
+            <View className="bg-yellow-300 p-2 rounded-xl">
+              <ReceiptIcon />
+            </View>
+
+            <View className="flex-1">
+              <View className="flex-row justify-between items-center mb-1">
+                <View>
+                  <Text className="font-[Poppins-SemiBold] text-base tracking-[-0.3px]">
+                    Factura Nº: {inv.numAtCard ?? inv.invoiceDocNum}
+                  </Text>
+                  <Text className="font-[Poppins-Regular] text-gray-500 text-xs tracking-[-0.3px]">
+                    Total: L. {formatMoney(inv.docTotal)}
+                  </Text>
+                  <Text className="font-[Poppins-Regular] text-gray-500 text-xs tracking-[-0.3px]">
+                    Saldo Anterior: L. {formatMoney(inv.saldoAnterior)}
+                  </Text>
+                  <Text className="font-[Poppins-Regular] text-red-500 text-xs tracking-[-0.3px]">
+                    Abono: L. {formatMoney(inv.appliedAmount ?? 0)}
+                  </Text>
+                  <Text className="font-[Poppins-Regular] text-gray-500 text-xs tracking-[-0.3px]">
+                    Saldo Pendiente: L. {formatMoney(inv.pendiente)}
+                  </Text>
+                </View>
+              </View>
+            </View>
           </View>
         ))}
 
@@ -244,7 +276,7 @@ const InvoicesDetails = () => {
 
             <View className="flex-row justify-between items-center mb-2 p-3 bg-gray-100 rounded-lg">
               <Text className="text-base font-[Poppins-Regular] text-gray-700">Total</Text>
-              <Text className="text-base font-[Poppins-SemiBold] text-gray-800">L. {invoiceDetails.total.toLocaleString()}</Text>
+              <Text className="text-base font-[Poppins-SemiBold] text-gray-800">L. {formatMoney(invoiceDetails.total)}</Text>
             </View>
 
             <View className="flex-row justify-between items-center p-3 bg-gray-100 rounded-lg">
@@ -256,9 +288,9 @@ const InvoicesDetails = () => {
           </View>
         </View>
 
-        <View className="flex-row justify-between border-b border-b-gray-300 border-dashed">
+        <View className="flex-row justify-between border-b border-b-gray-300 border-dashed mt-10">
           <Text className="font-[Poppins-SemiBold] text-xl tracking-[-0.4px]">Total</Text>
-          <Text className="font-[Poppins-SemiBold] text-xl tracking-[-0.4px]">L. {invoiceDetails.total.toLocaleString()}</Text>
+          <Text className="font-[Poppins-SemiBold] text-xl tracking-[-0.4px]">L. {formatMoney(invoiceDetails.total)}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

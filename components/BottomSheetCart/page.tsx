@@ -334,7 +334,7 @@ export default function BottomSheetCart() {
           >
             {isLoading ? (
               <>
-                <ActivityIndicator color="white" size="small" />
+                <ActivityIndicator color="black" size="small" />
                 <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px] ml-2">Realizando Pedido...</Text>
               </>
             ) : (
@@ -360,10 +360,10 @@ export default function BottomSheetCart() {
     <View style={{ flex: 1 }}>
       {products.length !== 0 && (
         <TouchableOpacity
-          className="rounded-full flex items-center justify-center h-[50px] w-[50px] bg-black shadow-lg shadow-[#09f]/30"
+          className="rounded-full flex items-center justify-center h-[50px] w-[50px] bg-yellow-300 shadow-lg shadow-[#09f]/30"
           onPress={openCart}
         >
-          <CartIcon color="white" />
+          <CartIcon color="black" />
           <View className="absolute -top-2 -right-2 bg-red-500 rounded-full w-6 h-6 items-center justify-center">
             <Text className="text-white text-xs font-bold">{products.length}</Text>
           </View>

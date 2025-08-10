@@ -199,10 +199,7 @@ const ClientScreen = memo(() => {
   }
 
   return (
-    <SafeAreaView
-      style={{ paddingTop: -Constants.statusBarHeight }}
-      className="flex-1 bg-white"
-    >
+    <View className="flex-1 bg-white">
       <View className="px-4">
         <TextInput
           value={search}
@@ -245,7 +242,7 @@ const ClientScreen = memo(() => {
           </View>
         }
       />
-    </SafeAreaView>
+    </View>
   );
 });
 

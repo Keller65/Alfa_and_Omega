@@ -6,6 +6,7 @@ import axios from 'axios';
 import slugify from 'slugify';
 import { useAuth } from '@/context/auth';
 import { useAppStore } from '@/state';
+import api from '@/lib/api';
 
 const Tab = createMaterialTopTabNavigator();
 import CategoryProductScreen from './category-product-list';
@@ -94,7 +95,18 @@ export default function TopTabNavigatorLayout() {
         return;
       }
 
-      const response = await axios.get<Array<{ code: string, name: string }>>(FETCH_URL, { headers });
+      const response = await api.get<Array<{ code: string, name: string }>>(
+        '/sap/items/categories',
+        {
+          baseURL: fetchUrl,
+          headers,
+          cache: {
+            ttl: 1000 * 60 * 60 * 1, // 1 hora
+          },
+        }
+      );
+
+      console.log(response.cached ? 'Respuesta desde CACHE' : 'Respuesta desde RED');
 
       const formattedCategories: ProductCategory[] = response.data.map(category => ({
         code: category.code,
@@ -215,7 +227,7 @@ export default function TopTabNavigatorLayout() {
         </Tab.Navigator>
       ) : (
         <View style={styles.fullScreenCenter}>
-          <ActivityIndicator size="large" color="#007bff" />
+          <ActivityIndicator size="large" color="#000" />
           <Text style={styles.loadingText}>Cargando datos del cliente y categorías...</Text>
         </View>
       )}

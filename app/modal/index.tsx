@@ -5,9 +5,9 @@ import { useAuth } from '@/context/auth';
 import { SelectedInvoice, useAppStore } from '@/state';
 import { Invoice } from '@/types/types';
 import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal } from '@gorhom/bottom-sheet';
+import { useFocusEffect } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import axios from 'axios';
-import Constants from 'expo-constants';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, RefreshControl, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -15,7 +15,7 @@ import { ActivityIndicator, Modal, Pressable, RefreshControl, Text, TextInput, T
 const IndexScreen = () => {
   const params = useLocalSearchParams();
   const { cardCode, cardName } = params as { cardCode: string, cardName: string };
-  const { fetchUrl, addInvoice, selectedInvoices, removeInvoice } = useAppStore();
+  const { fetchUrl, addInvoice, selectedInvoices, removeInvoice, clearInvoices, clearPaymentForm } = useAppStore();
   const { user } = useAuth();
   const FETCH_URL = `${fetchUrl}/sap/customers`;
   const [openInvoices, setOpenInvoices] = useState<Invoice[]>([]);
@@ -28,6 +28,19 @@ const IndexScreen = () => {
   const router = useRouter();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const snapPoints = ['50%'];
+  const proceedingRef = useRef(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      proceedingRef.current = false;
+      return () => {
+        if (!proceedingRef.current) {
+          clearInvoices();
+          clearPaymentForm();
+        }
+      };
+    }, [clearInvoices, clearPaymentForm])
+  );
 
   const fetchInvoices = async () => {
     if (!user?.token || !cardCode) return;
@@ -81,7 +94,7 @@ const IndexScreen = () => {
     setModalVisible(true);
   };
 
-  const handleAccept = () => {
+  const handleAccept = async () => {
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) {
       setError('Ingrese un monto válido.');
@@ -94,6 +107,10 @@ const IndexScreen = () => {
     if (selectedInvoice) {
       addInvoice(selectedInvoice, numAmount);
       setModalVisible(false);
+      // Refrescar la lista para mostrar el estado actualizado
+      setRefreshing(true);
+      await fetchInvoices();
+      setRefreshing(false);
     }
   };
 
@@ -103,10 +120,13 @@ const IndexScreen = () => {
     return (
       <Pressable
         onPress={() => handleSelectInvoice(item)}
-        className={`border border-black/10 p-4 mb-4 rounded-3xl ${isSelected ? 'bg-blue-100' : 'bg-white'}`}
+        className={`p-4 mb-4 rounded-3xl ${isSelected ? 'bg-blue-100' : 'bg-gray-100'}`}
       >
-        <View className="flex-row justify-between mb-2 border border-b-black/10 border-t-transparent border-x-transparent pb-1">
-          <Text className="text-lg font-[Poppins-SemiBold] tracking-[-0.3px] text-black">
+        <View className="flex-row gap-2 mb-2 border border-b-black/10 border-t-transparent border-x-transparent pb-3 items-center">
+          <View className="bg-yellow-300 p-2 rounded-xl">
+            <InvoicesIcon />
+          </View>
+          <Text className="text-base text-start font-[Poppins-SemiBold] tracking-[-0.3px] text-black">
             Nº {item.numAtCard}
           </Text>
         </View>
@@ -125,11 +145,11 @@ const IndexScreen = () => {
           </View>
         </View>
         <View className="flex-row justify-between gap-2">
-          <View className='flex-1 w-full bg-gray-100 py-2 px-4 rounded-xl'>
+          <View className='flex-1 w-full bg-gray-200 py-2 px-4 rounded-xl'>
             <Text className="text-xs text-gray-500 font-[Poppins-Regular] tracking-[-0.3px]">Fecha emisión</Text>
             <Text className="text-sm text-black font-[Poppins-Medium] tracking-[-0.3px]">{formatDate(item.docDate)}</Text>
           </View>
-          <View className='flex-1 w-full bg-gray-100 py-2 px-4 rounded-xl'>
+          <View className='flex-1 w-full bg-gray-200 py-2 px-4 rounded-xl'>
             <Text className="text-xs text-gray-500 font-[Poppins-Regular] tracking-[-0.3px]">Fecha vencimiento</Text>
             <Text className="text-sm text-black font-[Poppins-Medium] tracking-[-0.3px]">{formatDate(item.docDueDate)}</Text>
           </View>
@@ -139,18 +159,17 @@ const IndexScreen = () => {
   };
 
   const handlePresentModalPress = useCallback(() => {
-    bottomSheetModalRef.current?.present();
+    bottomSheetModalRef.current?.present(0);
   }, []);
 
-  // Memoiza el componente Backdrop para evitar recrearlo en cada render
   const MemoizedBackdrop = useCallback((props: any) => <BottomSheetBackdrop {...props} />, []);
 
   const renderSelectedInvoiceItem = ({ item }: { item: SelectedInvoice }) => (
     <View className="p-4 border-b border-gray-200 flex-row justify-between items-center">
+      <InvoicesIcon size={26} color="#000" />
       <View>
-        <Text className="font-[Poppins-SemiBold] text-lg">Factura Nº: {item.numAtCard}</Text>
-        {/* 🚨 CAMBIO AQUÍ: Mostrar el monto abonado en lugar del saldo pendiente */}
-        <Text className="text-gray-600 font-[Poppins-Regular]">Monto Abonado: L. {formatCurrency(item.paidAmount)}</Text>
+        <Text className="font-[Poppins-SemiBold] tracking-[-0.3px] text-lg">Factura Nº: {item.numAtCard}</Text>
+        <Text className="text-gray-600 font-[Poppins-Regular] tracking-[-0.3px]">Monto Abonado: L. {formatCurrency(item.paidAmount)}</Text>
       </View>
       <TouchableOpacity onPress={() => removeInvoice(item.numAtCard)}>
         <TrashIcon size={20} color="red" />
@@ -159,7 +178,7 @@ const IndexScreen = () => {
   );
 
   return (
-    <View className="flex-1 bg-white px-4 relative" style={{ paddingTop: -Constants.statusBarHeight }}>
+    <View className="flex-1 bg-white px-4 relative">
       <View className='z-10 absolute bottom-0'>
         {selectedInvoices.length > 0 && (
           <TouchableOpacity
@@ -167,7 +186,7 @@ const IndexScreen = () => {
             className="bg-yellow-300 items-center justify-center h-[50px] w-screen flex-row gap-4"
           >
             <InvoicesIcon />
-            <Text className='font-[Poppins-SemiBold]'>Ver facturas seleccionadas</Text>
+            <Text className='font-[Poppins-SemiBold] tracking-[-0.3px]'>Ver facturas seleccionadas</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -184,7 +203,7 @@ const IndexScreen = () => {
       {loading && openInvoices.length === 0 ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#000" />
-          <Text className="text-gray-500 mt-2">Cargando facturas...</Text>
+          <Text className="text-gray-500 mt-2 font-[Poppins-Medium] tracking-[-0.3px]">Cargando facturas...</Text>
         </View>
       ) : (
         <FlashList
@@ -192,12 +211,13 @@ const IndexScreen = () => {
           renderItem={renderOpenInvoiceItem}
           estimatedItemSize={140}
           keyExtractor={(item) => item.numAtCard}
+          extraData={selectedInvoices}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
           ListEmptyComponent={
             <View className='flex-1 bg-white items-center justify-center'>
-              <Text className="text-center text-gray-500 mt-10">
+              <Text className="text-center font-[Poppins-Medium] tracking-[-0.3px] text-gray-500 mt-10">
                 No hay facturas pendientes.
               </Text>
             </View>
@@ -272,17 +292,19 @@ const IndexScreen = () => {
         backdropComponent={MemoizedBackdrop}
       >
         <View className="flex-1 p-4">
-          <Text className="text-xl font-bold mb-4">Facturas Seleccionadas</Text>
+          <Text className="text-xl font-bold mb-4 font-[Poppins-SemiBold] tracking-[-0.3px]">Facturas Seleccionadas</Text>
           {selectedInvoices.length > 0 ? (
             <>
               <BottomSheetFlatList
                 data={selectedInvoices}
                 renderItem={renderSelectedInvoiceItem}
                 keyExtractor={item => item.numAtCard}
+                extraData={selectedInvoices}
               />
               <View className="mt-4">
                 <TouchableOpacity
                   onPress={() => {
+                    proceedingRef.current = true;
                     bottomSheetModalRef.current?.close();
                     router.push({
                       pathname: '/modal/cobro',

@@ -180,7 +180,7 @@ const InvoicesClientScreen = memo(() => {
   }
 
   return (
-    <SafeAreaView style={{ paddingTop: -Constants.statusBarHeight }} className="flex-1 bg-white">
+    <View className="flex-1 bg-white">
       <View className="px-4">
         <TextInput
           value={search}
@@ -221,7 +221,7 @@ const InvoicesClientScreen = memo(() => {
           </View>
         }
       />
-    </SafeAreaView>
+    </View>
   );
 });
 

@@ -1,20 +1,18 @@
 import ClientIcon from '@/assets/icons/ClientIcon';
-import ReceiptIcon from '@/assets/icons/InvoicesIcon';
+import InvoicesIcon from '@/assets/icons/InvoicesIcon';
 import { useAuth } from '@/context/auth';
 import { SelectedInvoice, useAppStore } from '@/state';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import axios from 'axios';
-import Constants from 'expo-constants';
 import * as Location from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { memo, useCallback, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const InvoiceItem = memo(({ item, formatDate, formatCurrency }: { item: SelectedInvoice, formatDate: (date: string) => string, formatCurrency: (amount: number) => string }) => (
   <View key={item.numAtCard} className="flex-row items-start gap-4 bg-gray-100 p-4 rounded-xl mb-3">
     <View className="bg-yellow-300 p-2 rounded-xl">
-      <ReceiptIcon />
+      <InvoicesIcon />
     </View>
     <View className="flex-1">
       <View className='flex-row justify-between items-center mb-1'>
@@ -32,18 +30,48 @@ const InvoiceItem = memo(({ item, formatDate, formatCurrency }: { item: Selected
 const Cobro = () => {
   const [loading, setLoading] = useState(false);
   const { Name, Code } = useLocalSearchParams();
-  const { selectedInvoices, paymentForm, fetchUrl } = useAppStore();
+  const { selectedInvoices, paymentForm, fetchUrl, clearPaymentForm } = useAppStore();
   const route = useRouter();
   const totalAbonado = selectedInvoices.reduce((sum, item) => sum + item.paidAmount, 0);
+  const paymentAmount = paymentForm.amount && paymentForm.amount !== '' && paymentForm.amount !== null ? Number(paymentForm.amount) : 0;
+  const disableCobroBtn = !paymentForm.method || paymentAmount < totalAbonado || loading;
   const { user } = useAuth();
 
   const buildBody = (lat: string, long: string) => {
+    const toHondurasISO = (): string => {
+      try {
+        const parts = Object.fromEntries(
+          new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/Tegucigalpa',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+          })
+            .formatToParts(new Date())
+            .map(p => [p.type, p.value])
+        ) as Record<string, string>;
+        return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}-06:00`;
+      } catch {
+        // Fallback sin Intl
+        const now = new Date();
+        const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+        const hondMs = utcMs - 6 * 60 * 60 * 1000;
+        const hond = new Date(hondMs);
+        const pad = (n: number) => String(n).padStart(2, '0');
+        return `${hond.getUTCFullYear()}-${pad(hond.getUTCMonth() + 1)}-${pad(hond.getUTCDate())}T${pad(hond.getUTCHours())}:${pad(hond.getUTCMinutes())}:${pad(hond.getUTCSeconds())}-06:00`;
+      }
+    };
+
     const base = {
       CardCode: Code,
       U_SlpCode: user?.salesPersonCode?.toString() || '',
       u_Latitud: lat,
       u_Longitud: long,
-      DocDate: new Date().toISOString(),
+      DocDate: toHondurasISO(),
       CheckAccount: '',
       TransferAccount: '',
       TransferReference: '',
@@ -90,7 +118,7 @@ const Cobro = () => {
             {
               creditCard: paymentForm.bank,
               voucherNum: paymentForm.reference,
-              firstPaymentDue: new Date().toISOString(),
+              firstPaymentDue: paymentForm.date,
               creditSum: Number(paymentForm.amount) || 0
             }
           ]
@@ -126,6 +154,8 @@ const Cobro = () => {
         }
       });
       console.log('Respuesta del servidor:', response.data);
+      clearPaymentForm();
+      selectedInvoices.length = 0;
       route.push({
         pathname: '/modal/successCobro',
         params: {
@@ -155,7 +185,7 @@ const Cobro = () => {
   }, []);
 
   return (
-    <SafeAreaView className="flex-1 bg-white" style={{ paddingTop: -Constants.statusBarHeight }}>
+    <View className="flex-1 bg-white">
       <ScrollView className="flex-1 px-4">
         <View className="mb-6">
           <Text className="text-xl font-[Poppins-Bold] mb-4 tracking-[-0.3px]">Cliente</Text>
@@ -227,7 +257,7 @@ const Cobro = () => {
         <View className="flex-row justify-between items-center mb-4">
           <Text className="text-xl font-[Poppins-Bold] tracking-[-0.3px]">Total</Text>
           <Text className="text-xl font-[Poppins-Bold] tracking-[-0.3px]">
-            L.{
+            L. {
               formatCurrency(
                 paymentForm.amount && paymentForm.amount !== '' && paymentForm.amount !== null
                   ? Number(paymentForm.amount)
@@ -237,18 +267,22 @@ const Cobro = () => {
           </Text>
         </View>
         <TouchableOpacity
-          className={`bg-yellow-300 h-[50px] items-center justify-center rounded-full ${(!paymentForm.method || loading) ? 'opacity-50' : ''}`}
+          className={`py-4 rounded-full h-[55px] items-center justify-center ${disableCobroBtn ? 'bg-gray-300' : 'bg-yellow-300'}`}
           onPress={handleCobro}
-          disabled={!paymentForm.method || loading}
+          disabled={disableCobroBtn}
         >
           {loading ? (
-            <ActivityIndicator color="#000" />
+            <View className="h-[55px] py-1 w-full items-center justify-center">
+              <ActivityIndicator color={disableCobroBtn ? '#6B7280' : '#000'} />
+            </View>
           ) : (
-            <Text className="text-black font-[Poppins-SemiBold] text-lg tracking-[-0.3px]">Realizar cobro</Text>
+            <Text className={`font-[Poppins-Bold] text-lg tracking-[-0.3px] ${disableCobroBtn ? 'text-gray-500' : 'text-black'}`}>
+              Realizar cobro
+            </Text>
           )}
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

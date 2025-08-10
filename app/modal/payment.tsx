@@ -1,10 +1,12 @@
+import { useAuth } from '@/context/auth';
+import api from '@/lib/api';
 import { useAppStore } from '@/state';
-import { AccountPayCheque, AccountPayEfectivo, AccountPayTransderencia, AccountPayCreditCards } from '@/types/types';
+import { AccountPayCheque, AccountPayCreditCards, AccountPayEfectivo, AccountPayTransderencia } from '@/types/types';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import Constants from 'expo-constants';
-import { useNavigation } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,7 +33,6 @@ const paymentOptions = [
   { name: 'Cheque', icon: CheckIcon },
 ];
 
-const API_BASE_URL = 'http://200.115.188.54:4325/api/BankAccounts';
 
 const PaymentScreen = () => {
   const paymentForm = useAppStore(state => state.paymentForm);
@@ -53,8 +54,11 @@ const PaymentScreen = () => {
   const [transfAccounts, setTransfAccounts] = useState<AccountPayTransderencia[]>([]);
   const [creditCardAccounts, setCreditCardAccounts] = useState<AccountPayCreditCards[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const { user } = useAuth();
 
-  const navigation = useNavigation();
+  const { fetchUrl } = useAppStore();
+  const API_BASE_URL = `${fetchUrl}/api/BankAccounts`;
+  const router = useRouter();
 
   const fetchPaymentAccounts = useCallback(async () => {
     setRefreshing(true);
@@ -67,27 +71,32 @@ const PaymentScreen = () => {
         `${API_BASE_URL}/PayTranferencia`,
         `${API_BASE_URL}/PayCreditCards`
       ];
-      const results = await Promise.allSettled(urls.map(url => fetch(url)));
+      const results = await Promise.allSettled(urls.map(url => api.get(url, {
+        baseURL: API_BASE_URL,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user?.token}`
+        },
+        cache: {
+          ttl: 1000 * 60 * 60 * 8, // 8 horas de cache
+        },
+      })));
+
+      console.log(results[0].status === 'fulfilled' ? 'Respuesta desde CACHE' : 'Respuesta desde RED');
+
       const chequeRes = results[0].status === 'fulfilled' ? results[0].value : null;
       const efectivoRes = results[1].status === 'fulfilled' ? results[1].value : null;
       const transfRes = results[2].status === 'fulfilled' ? results[2].value : null;
       const creditCardRes = results[3].status === 'fulfilled' ? results[3].value : null;
 
-      if (!chequeRes || !efectivoRes || !transfRes || !creditCardRes || !chequeRes.ok || !efectivoRes.ok || !transfRes.ok || !creditCardRes.ok) {
+      if (!chequeRes || !efectivoRes || !transfRes || !creditCardRes) {
         throw new Error('No se pudieron obtener los datos de una o más cuentas.');
       }
 
-      const [chequeData, efectivoData, transfData, creditCardData] = await Promise.all([
-        chequeRes.json(),
-        efectivoRes.json(),
-        transfRes.json(),
-        creditCardRes.json()
-      ]);
-
-      setChequeAccounts(chequeData);
-      setEfectivoAccounts(efectivoData);
-      setTransfAccounts(transfData);
-      setCreditCardAccounts(creditCardData);
+      setChequeAccounts(chequeRes.data);
+      setEfectivoAccounts(efectivoRes.data);
+      setTransfAccounts(transfRes.data);
+      setCreditCardAccounts(creditCardRes.data);
     } catch (err) {
       console.error('Error al cargar datos de cuentas:', err);
       setError('No se pudieron cargar las opciones de pago. Inténtalo de nuevo más tarde.');
@@ -110,11 +119,15 @@ const PaymentScreen = () => {
 
   const getBankOptions = () => {
     switch (selectedMethod) {
-      case 'Efectivo':
-        return efectivoAccounts.map(account => ({
+      case 'Efectivo': {
+        // Filtrar por slpCode del usuario
+        const slpCode = Number(user?.salesPersonCode);
+        const filtered = efectivoAccounts.filter(account => account.slpCode === slpCode);
+        return filtered.map(account => ({
           label: account.CashAccount,
           value: account.CashAccount,
         }));
+      }
       case 'Transferencia':
         return transfAccounts.map(account => ({
           label: account.name,
@@ -167,11 +180,11 @@ const PaymentScreen = () => {
 
   const bankOptions = getBankOptions();
 
+  // Validar que todos los campos estén completos y sin error
+  const isFormComplete = selectedMethod && paymentAmount && referenceNumber && paymentDate && selectedBank && !amountError;
+
   return (
-    <SafeAreaView
-      className="flex-1 bg-white"
-      style={{ paddingTop: -Constants.statusBarHeight }}
-    >
+    <View className="flex-1 bg-white">
       <ScrollView
         className="flex-1"
         refreshControl={
@@ -207,10 +220,10 @@ const PaymentScreen = () => {
                 }}
               >
                 <View className="mb-3">
-                  <Icon color={isSelected ? '#000' : '#888'} />
+                  <Icon color={isSelected ? '#facc15' : '#888'} />
                 </View>
                 <Text
-                  className={`font-[Poppins-SemiBold] text-base tracking-[-0.3px] ${isSelected ? 'text-black' : 'text-gray-500'
+                  className={`font-[Poppins-SemiBold] text-base tracking-[-0.3px] ${isSelected ? 'text-yellow-400' : 'text-gray-500'
                     }`}
                 >
                   {option.name}
@@ -332,8 +345,8 @@ const PaymentScreen = () => {
       {/* Botón continuar */}
       <View className="p-4 bg-white border-t border-gray-200">
         <TouchableOpacity
-          className={`py-4 rounded-xl items-center ${selectedMethod && selectedBank && !amountError ? 'bg-yellow-300' : 'bg-gray-300'}`}
-          disabled={!selectedMethod || !selectedBank || !!amountError}
+          className={`py-4 rounded-full items-center ${isFormComplete ? 'bg-yellow-300' : 'bg-gray-300'}`}
+          disabled={!isFormComplete}
           onPress={() => {
             setPaymentForm({
               method: selectedMethod,
@@ -343,17 +356,17 @@ const PaymentScreen = () => {
               bank: selectedBank,
             });
             savePaymentForm();
+            router.back();
           }}
         >
           <Text
-            className={`font-[Poppins-Bold] text-lg tracking-[-0.3px] ${selectedMethod && !amountError ? 'text-black' : 'text-gray-500'}`}
+            className={`font-[Poppins-Bold] text-lg tracking-[-0.3px] ${isFormComplete ? 'text-black' : 'text-gray-500'}`}
           >
             Continuar
           </Text>
         </TouchableOpacity>
       </View>
-
-    </SafeAreaView>
+    </View>
   );
 };
 
