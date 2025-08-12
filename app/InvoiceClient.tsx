@@ -5,9 +5,7 @@ import { useRouter } from 'expo-router';
 import { useAppStore } from '@/state/index';
 import { Customer } from '@/types/types';
 import { FlashList } from '@shopify/flash-list';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import ClientIcon from '@/assets/icons/ClientIcon';
-import Constants from 'expo-constants';
 import axios from 'axios';
 
 const PAGE_SIZE = 20;
@@ -25,7 +23,7 @@ const InvoicesClientScreen = memo(() => {
 
   const { user } = useAuth();
   const router = useRouter();
-  const setSelectedCustomer = useAppStore((state) => state.setSelectedCustomer);
+  const setSelectedCustomerInvoices = useAppStore((state) => state.setSelectedCustomerInvoices);
   const { fetchUrl } = useAppStore();
 
   const FETCH_URL = fetchUrl + "/sap/customers/";
@@ -86,7 +84,7 @@ const InvoicesClientScreen = memo(() => {
   const handleCustomerPress = useCallback(
     async (customer: Customer) => {
       try {
-        setSelectedCustomer(customer);
+        setSelectedCustomerInvoices(customer);
         router.push({
           pathname: '/modal',
           params: {
@@ -99,7 +97,7 @@ const InvoicesClientScreen = memo(() => {
         Alert.alert('Error de navegación', 'No se pudo abrir la pantalla de pedido.');
       }
     },
-    [router, setSelectedCustomer]
+    [router, setSelectedCustomerInvoices]
   );
 
   const renderCustomerItem = useCallback(

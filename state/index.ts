@@ -1,4 +1,4 @@
-import { Invoice, ProductDiscount } from '@/types/types';
+import { Customer, Invoice, ProductDiscount } from '@/types/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -15,12 +15,7 @@ type CartItem = ProductDiscount & {
   }[];
 };
 
-interface Customer {
-  cardCode: string;
-  cardName: string;
-  federalTaxID: string;
-  priceListNum: string;
-}
+// Customer importado desde types
 
 export interface SelectedInvoice extends Invoice {
   paidAmount: number;
@@ -34,6 +29,7 @@ interface AppStoreState {
     reference: string;
     date: Date;
     bank: string;
+    bankName: string;
   };
   setPaymentForm: (form: Partial<{
     method: string | null;
@@ -41,9 +37,14 @@ interface AppStoreState {
     reference: string;
     date: Date;
     bank: string;
+    bankName: string;
   }>) => void;
   savePaymentForm: () => void;
   clearPaymentForm: () => void;
+  // Estado NO persistente: cliente seleccionado para módulo de facturas (igual a selectedCustomer pero independiente)
+  selectedCustomerInvoices: Customer | null;
+  setSelectedCustomerInvoices: (customer: Customer | null) => void;
+  clearSelectedCustomerInvoices: () => void;
   products: CartItem[];
   addProduct: (productToAdd: Omit<CartItem, 'total'>) => void;
   updateQuantity: (itemCode: string, quantity: number, newPrice?: number) => void;
@@ -94,6 +95,7 @@ export const useAppStore = create<AppStoreState>()(
       appPort: '',
       fetchUrl: '',
       selectedInvoices: [],
+      selectedCustomerInvoices: null,
       // Estado NO persistente para datos del formulario de pago
       paymentForm: {
         method: null,
@@ -101,7 +103,10 @@ export const useAppStore = create<AppStoreState>()(
         reference: '',
         date: new Date(),
         bank: '',
+        bankName: '',
       },
+      setSelectedCustomerInvoices: (customer) => set({ selectedCustomerInvoices: customer }),
+      clearSelectedCustomerInvoices: () => set({ selectedCustomerInvoices: null }),
       setPaymentForm: (form) => {
         set((state) => ({
           paymentForm: {
@@ -122,6 +127,7 @@ export const useAppStore = create<AppStoreState>()(
             reference: '',
             date: new Date(),
             bank: '',
+            bankName: '',
           }
         });
       },
@@ -188,7 +194,7 @@ export const useAppStore = create<AppStoreState>()(
       clearCart: () => set({ products: [] }),
 
       setSelectedCustomer: (customer) => set({ selectedCustomer: customer }),
-      clearSelectedCustomer: () => set({ selectedCustomer: null }),
+      clearSelectedCustomer: () => set({ selectedCustomer: null, selectedCustomerInvoices: null }),
 
       setAllProductsCache: (products) => set({ allProductsCache: products }),
       clearAllProductsCache: () => set({ allProductsCache: [] }),
@@ -248,7 +254,8 @@ export const useAppStore = create<AppStoreState>()(
       name: 'app-store',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => {
-        const { selectedInvoices, ...rest } = state;
+        // Excluir estados NO persistentes
+        const { selectedInvoices, selectedCustomerInvoices, paymentForm, ...rest } = state;
         return rest;
       },
     }

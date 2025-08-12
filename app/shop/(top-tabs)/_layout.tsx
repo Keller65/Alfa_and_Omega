@@ -1,8 +1,7 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { View, ActivityIndicator, Text, StyleSheet, Button } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import slugify from 'slugify';
 import { useAuth } from '@/context/auth';
 import { useAppStore } from '@/state';
@@ -31,7 +30,6 @@ export default function TopTabNavigatorLayout() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [clientPriceList, setClientPriceList] = useState<string | undefined>(undefined);
-  const FETCH_URL = fetchUrl + "/sap/items/categories";
 
   useEffect(() => {
     const storeAndLoadClientData = async () => {
@@ -101,12 +99,12 @@ export default function TopTabNavigatorLayout() {
           baseURL: fetchUrl,
           headers,
           cache: {
-            ttl: 1000 * 60 * 60 * 1, // 1 hora
+            ttl: 1000 * 60 * 60 * 24, // 24 horas
           },
         }
       );
 
-      console.log(response.cached ? 'Respuesta desde CACHE' : 'Respuesta desde RED');
+      console.log(response.cached ? 'Categorias cargadas desde CACHE' : 'Categorias cargadas desde RED');
 
       const formattedCategories: ProductCategory[] = response.data.map(category => ({
         code: category.code,
@@ -217,7 +215,8 @@ export default function TopTabNavigatorLayout() {
             tabBarLabelStyle: {
               fontSize: 12,
               width: 230,
-              fontWeight: 'bold',
+              fontFamily: 'Poppins-SemiBold',
+              letterSpacing: -0.3,
             },
             tabBarPressColor: 'transparent',
             tabBarScrollEnabled: true,

@@ -4,7 +4,7 @@ import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
-import { AuthProvider } from '../context/auth';
+import { AuthProvider } from '@/context/auth';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { TextInput } from 'react-native';

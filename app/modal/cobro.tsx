@@ -73,8 +73,6 @@ const Cobro = () => {
       u_Longitud: long,
       DocDate: toHondurasISO(),
       CheckAccount: '',
-      TransferAccount: '',
-      TransferReference: '',
       PaymentChecks: [],
       PaymentInvoices: selectedInvoices.map(inv => ({
         DocEntry: inv.docEntry,
@@ -84,23 +82,29 @@ const Cobro = () => {
       paymentCreditCards: []
     };
     switch (paymentForm.method) {
+      case 'Transferencia':
+        return {
+          ...base,
+          TransferAccount: paymentForm.method === 'Transferencia' ? paymentForm.bank || '' : '',
+          TransferReference: paymentForm.method === 'Transferencia' ? paymentForm.reference || '' : '',
+          TransferDate: paymentForm.method === 'Transferencia' ? paymentForm.date : '',
+          TransferSum: paymentForm.method === 'Transferencia' ? Number(paymentForm.amount) || 0 : '',
+        };
       case 'Efectivo':
         return {
           ...base,
           CashAccount: paymentForm.bank,
-          CashSum: Number(paymentForm.amount)
-        };
-      case 'Transferencia':
-        return {
-          ...base,
-          TransferAccount: paymentForm.bank || '',
-          TransferSum: Number(paymentForm.amount) || 0,
-          TransferDate: paymentForm.date,
-          TransferReference: paymentForm.reference || ''
+          CashSum: Number(paymentForm.amount),
+          TransferAccount: '',
+          TransferReference: '',
+          CheckAccount: '',
         };
       case 'Cheque':
         return {
           ...base,
+          TransferReference: '',
+          TransferAccount: '',
+          CheckAccount: paymentForm.bank,
           PaymentChecks: [
             {
               dueDate: paymentForm.date,
@@ -114,6 +118,8 @@ const Cobro = () => {
       case 'Tarjeta':
         return {
           ...base,
+          TransferReference: '',
+          TransferAccount: '',
           paymentCreditCards: [
             {
               creditCard: paymentForm.bank,

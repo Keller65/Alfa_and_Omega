@@ -38,7 +38,7 @@ const successCobro = () => {
         source={require('@/assets/animation/Check.json')}
       />
 
-      <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#1a753c', marginTop: 20, textAlign: 'center', fontFamily: 'Poppins-Regular', letterSpacing: -0.3 }}>
+      <Text style={{ fontSize: 28, color: '#1a753c', marginTop: 20, textAlign: 'center', fontFamily: 'Poppins-SemiBold', letterSpacing: -0.3 }}>
         ¡Cobro realizado con éxito!
       </Text>
       <Text style={{ fontSize: 14, color: '#333', marginTop: 10, marginBottom: 40, textAlign: 'center', fontFamily: 'Poppins-Regular', letterSpacing: -0.3 }}>

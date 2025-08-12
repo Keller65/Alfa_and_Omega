@@ -34,6 +34,7 @@ const OrderDetails = () => {
     let isMounted = true;
 
     const fetchOrderDetails = async () => {
+      console.log(docEntryParam);
       try {
         const response = await api.get(
           `/api/Quotations/${docEntryParam}`,
@@ -44,7 +45,7 @@ const OrderDetails = () => {
               Authorization: `Bearer ${user?.token}`,
             },
             cache: {
-              ttl: 1000 * 60 * 60 * 8, // 8 horas
+              ttl: 1000 * 60 * 60 * 24, // 24 horas
             },
           }
         );
@@ -88,149 +89,226 @@ const OrderDetails = () => {
     setIsGeneratingPdf(true);
 
     const htmlContent = `
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-            * {
-              font-family: 'Poppins', sans-serif;
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            body {
-              padding: 24px;
-              background: #fff;
-              color: #111;
-            }
-            h1 {
-              font-size: 24px;
-              font-weight: 600;
-              margin-bottom: 16px;
-            }
-            h2 {
-                font-size: 20px;
-                font-weight: 600;
-                margin-top: 24px;
-                margin-bottom: 16px;
-            }
-            .info p {
-              margin-bottom: 4px;
-              font-size: 14px;
-            }
-            .info p strong {
-                font-weight: 500;
-            }
-            table {
-              width: 100%;
-              margin-top: 24px;
-              border-collapse: collapse;
-              font-size: 14px;
-            }
-            th {
-              text-align: left;
-              padding: 8px 0;
-              font-weight: 500;
-              color: #6B7280;
-              text-transform: uppercase;
-              font-size: 12px;
-            }
-            td {
-              padding: 8px 0;
-              border-top: 1px solid #F3F4F6;
-              font-weight: 400;
-            }
-            .product-table td {
-                padding: 12px 0;
-            }
-            .product-table tr:last-child td {
-                border-bottom: none;
-            }
-            .text-right {
-                text-align: right;
-            }
-            .text-center {
-                text-align: center;
-            }
-            .font-semibold {
-                font-weight: 600;
-            }
-            .total {
-              text-align: right;
-              font-weight: 700;
-              margin-top: 16px;
-              font-size: 18px;
-            }
-            .subtotal-row {
-                font-weight: 500;
-                border-top: 1px solid #ccc;
-                padding-top: 8px;
-                margin-top: 8px;
-            }
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+    * {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #fff;
+      color: #111;
+      font-size: 14px;
+    }
+    .factura-container {
+      max-width: 800px;
+      margin: auto;
+      padding: 24px;
+    }
+    /* Encabezado */
+    .encabezado {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+    .encabezado-izq p {
+      margin-bottom: 4px;
+    }
+    .encabezado-izq strong {
+      font-size: 16px;
+    }
+    .encabezado-der {
+      text-align: right;
+    }
+    .encabezado-der .logo {
+      font-weight: 700;
+      font-size: 20px;
+    }
+    /* Barra oscura */
+    .barra-info {
+      background: #1f2937;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+    }
+    .barra-info div {
+      text-align: center;
+    }
+    .barra-info p {
+      font-size: 12px;
+      margin-bottom: 4px;
+      color: #d1d5db;
+    }
+    .barra-info strong {
+      font-size: 14px;
+    }
+    /* Tabla productos */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th {
+      text-align: left;
+      background: #f9fafb;
+      padding: 10px;
+      font-size: 12px;
+      color: #6b7280;
+      text-transform: uppercase;
+    }
+    td {
+      padding: 10px;
+      border-bottom: 1px solid #e5e7eb;
+      vertical-align: top;
+    }
+    .text-center {
+      text-align: center;
+    }
+    .text-right {
+      text-align: right;
+    }
+    /* Totales */
+    .totales {
+      width: 100%;
+      margin-top: 20px;
+    }
+    .totales td {
+      border: none;
+      padding: 6px 0;
+    }
+    .totales .fila-total td {
+      font-weight: 700;
+      font-size: 15px;
+      border-top: 2px solid #111;
+      padding-top: 8px;
+    }
+    /* Métodos de pago */
+    .pago {
+      margin-top: 20px;
+      font-size: 13px;
+    }
+    .pago p {
+      margin-bottom: 4px;
+    }
+    /* Footer */
+    .pie {
+      margin-top: 30px;
+      padding-top: 10px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #6b7280;
+      align-items: center;
+    }
+    .pie-info {
+      display: flex;
+      gap: 10px;
+    }
+    .pie-info span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="factura-container">
+    <!-- Encabezado -->
+    <div class="encabezado">
+      <div class="encabezado-izq">
+        <p>Para:</p>
+        <strong>${orderData.cardName ?? 'N/A'}</strong>
+        <p>${orderData.address ?? 'Dirección no disponible'}</p>
+      </div>
+      <div class="encabezado-der">
+        <div class="logo">Grupo Alfa & Omega</div>
+        <p></p>
+      </div>
+    </div>
 
-            .header {
-                width: 100%;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-          </style>
-        </head>
-        <body>
-          <header class="header">
-            <h1>Resumen del Pedido</h1>
-            <p><strong>Pedido #:</strong> ${orderData.docEntry ?? 'N/A'}</p>
-          </header>
-          <div class="info">
-            <p><strong>Cliente:</strong> ${orderData.cardName ?? 'N/A'}</p>
-            <p><strong>RTN:</strong> ${orderData.federalTaxID ?? 'N/A'}</p>
-            <p><strong>Fecha:</strong> ${new Date(orderData.docDate ?? '').toLocaleDateString()}</p>
-            <p><strong>Vendedor:</strong> ${user?.fullName ?? 'N/A'}</p>
-          </div>
+    <!-- Barra oscura -->
+    <div class="barra-info">
+      <div>
+        <p>Total a Pagar</p>
+        <strong>L. ${(orderData.docTotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong>
+      </div>
+      <div>
+        <p>Fecha</p>
+        <strong>${new Date(orderData.docDate ?? '').toLocaleDateString()}</strong>
+      </div>
+      <div>
+        <p>N° de Pedido</p>
+        <strong>${orderData.docEntry ?? 'N/A'}</strong>
+      </div>
+    </div>
 
-          <table class="product-table">
-            <thead>
-              <tr>
-                <th style="width: 50%; text-align: left;">Producto</th>
-                <th style="width: 15%; text-align: center;">Cant.</th>
-                <th style="width: 15%; text-align: right;">Precio</th>
-                <th style="width: 20%; text-align: right;">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${orderData.lines
-        .map(
-          (item) => `
-                  <tr>
-                    <td>${item.itemDescription ?? 'N/A'}</td>
-                    <td class="text-center">${(item.quantity ?? 0).toLocaleString()}</td>
-                    <td class="text-right">L. ${(item.priceAfterVAT ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    <td class="text-right font-semibold">L. ${((item.quantity ?? 0) * (item.priceAfterVAT ?? 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  </tr>
-                `
-        )
-        .join('')}
-              <tr class="isv-row">
-                <td colspan="3" class="text-right"><strong>ISV:</strong></td>
-                <td class="text-right font-semibold">L. ${(orderData.vatSum ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-              </tr>
-              
-              <tr class="subtotal-row">
-                <td colspan="3" class="text-right"><strong>SubTotal:</strong></td>
-                <td class="text-right font-semibold">L. ${((orderData.docTotal ?? 0) - (orderData.vatSum ?? 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-              </tr>
+    <!-- Tabla productos -->
+    <table>
+      <thead>
+        <tr>
+          <th style="width:50%">Producto</th>
+          <th style="width:15%" class="text-right">Precio UNT</th>
+          <th style="width:10%" class="text-center">Cantidad</th>
+          <th style="width:15%" class="text-right">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${orderData.lines.map(item => `
+          <tr>
+            <td>${item.itemDescription ?? 'N/A'}</td>
+            <td class="text-right">L. ${(item.priceAfterVAT ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td class="text-center">${item.quantity ?? 0}</td>
+            <td class="text-right">L. ${((item.priceAfterVAT ?? 0) * (item.quantity ?? 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
 
-              <tr class="total-row">
-                <td colspan="3" class="text-right"><strong>Total del Pedido:</strong></td>
-                <td class="text-right font-semibold">L. ${(orderData.docTotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-              </tr>
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `;
+    <!-- Totales -->
+    <table class="totales">
+      <tr>
+        <td style="width:80%" class="text-right">Subtotal:</td>
+        <td class="text-right">L. ${((orderData.docTotal ?? 0) - (orderData.vatSum ?? 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+      </tr>
+      <tr>
+        <td class="text-right">ISV:</td>
+        <td class="text-right">L. ${(orderData.vatSum ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+      </tr>
+      <tr class="fila-total">
+        <td class="text-right">Total a Pagar:</td>
+        <td class="text-right">L. ${(orderData.docTotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+      </tr>
+    </table>
+
+    <!-- Método de pago -->
+    <div class="pago">
+      <p><strong>Vendedor: </strong>${user?.fullName ?? 'Vendedor no disponible'}</p>
+    </div>
+
+    <!-- Footer -->
+    <div class="pie">
+      <div>© ${new Date().getFullYear()} Grupo Alfa & Omega</div>
+      <div class="pie-info">
+        <span>📍 Barrio el cacao 32 y 33 cll SE 3 AV SE San pedro sula, cortes, Honduras.</span>
+        <span>📧 info@alfayomega-hn.com</span>
+        <span>🌐 alfayomega-hn.com</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+`;
+
 
     try {
       const { uri } = await Print.printToFileAsync({ html: htmlContent });

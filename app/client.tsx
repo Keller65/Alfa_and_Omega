@@ -5,9 +5,7 @@ import { useRouter } from 'expo-router';
 import { useAppStore } from '@/state/index';
 import { Customer } from '@/types/types';
 import { FlashList } from '@shopify/flash-list';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import ClientIcon from '../assets/icons/ClientIcon';
-import Constants from 'expo-constants';
 import axios from 'axios';
 
 const PAGE_SIZE = 20;

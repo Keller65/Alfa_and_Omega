@@ -87,14 +87,14 @@ const Invoices = () => {
           },
         })
       }
-      className="bg-white rounded-3xl mb-4 overflow-hidden border border-gray-200 shadow-sm"
+      className="bg-white rounded-3xl mb-4 overflow-hidden border border-gray-200"
     >
       <View className="bg-blue-100 p-4 rounded-t-3xl">
         <View className="flex-row justify-between items-center mb-2">
           <View className="flex-row items-center space-x-2">
             <View className="bg-yellow-300 px-2 py-0.5 rounded-full">
               <Text className="text-xs text-blue-800 font-[Poppins-SemiBold]">
-                #{item.docNum}
+                {item.docNum}
               </Text>
             </View>
           </View>

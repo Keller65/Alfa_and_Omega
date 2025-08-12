@@ -8,6 +8,7 @@ import slugify from 'slugify';
 
 const Tab = createMaterialTopTabNavigator();
 import CategoryProductScreen from './(top-tabs)/category-product-list';
+import NavigateOrder from '@/components/NavigateOrder/page';
 
 interface ProductCategory {
   code: string;
@@ -17,7 +18,7 @@ interface ProductCategory {
 
 export default function TopTabNavigatorLayout() {
   const { user } = useAuth();
-  const { selectedCustomer } = useAppStore();
+  const { selectedCustomer, products } = useAppStore();
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,12 +48,12 @@ export default function TopTabNavigatorLayout() {
           baseURL: fetchUrl,
           headers,
           cache: {
-            ttl: 1000 * 60 * 60 * 1, // 1 hora
+            ttl: 1000 * 60 * 60 * 24, // 24 horas
           },
         }
       );
 
-      console.log(response.cached ? 'Respuesta desde CACHE' : 'Respuesta desde RED');
+      console.log(response.cached ? 'Categorias cargadas desde CACHE' : 'Categorias cargadas desde RED');
 
       const formattedCategories: ProductCategory[] = response.data.map(category => ({
         code: category.code,
@@ -140,32 +141,37 @@ export default function TopTabNavigatorLayout() {
   }
 
   return (
-    <Tab.Navigator
-      initialRouteName={categories[0]?.slug || 'todas'}
-      screenOptions={{
-        tabBarActiveTintColor: '#000',
-        tabBarInactiveTintColor: 'gray',
-        tabBarIndicatorStyle: {
-          backgroundColor: '#000',
-          height: 2
-        },
-        tabBarStyle: {
-          backgroundColor: 'white',
-          elevation: 0,
-          shadowOpacity: 0,
-          borderBottomWidth: 0
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          width: 230,
-          fontWeight: 'bold',
-        },
-        tabBarPressColor: 'transparent',
-        tabBarScrollEnabled: true,
-      }}
-    >
-      {tabScreens}
-    </Tab.Navigator>
+    <View style={{ flex: 1, position: 'relative' }}>
+      <Tab.Navigator
+        initialRouteName={categories[0]?.slug || 'todas'}
+        screenOptions={{
+          tabBarActiveTintColor: '#000',
+          tabBarInactiveTintColor: 'gray',
+          tabBarIndicatorStyle: {
+            backgroundColor: '#000',
+            height: 2
+          },
+          tabBarStyle: {
+            backgroundColor: 'white',
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0
+          },
+          tabBarLabelStyle: {
+            fontSize: 12,
+            width: 230,
+            fontFamily: 'Poppins-SemiBold',
+            letterSpacing: -0.3,
+          },
+          tabBarPressColor: 'transparent',
+          tabBarScrollEnabled: true,
+        }}
+      >
+        {tabScreens}
+      </Tab.Navigator>
+
+      {products.length > 0 && <NavigateOrder />}
+    </View>
   );
 }
 

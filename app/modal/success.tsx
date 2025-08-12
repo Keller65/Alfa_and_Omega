@@ -2,7 +2,7 @@ import LottieView from 'lottie-react-native';
 import { useEffect, useRef } from 'react';
 import { Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useAudioPlayer } from 'expo-audio';
 
@@ -11,8 +11,8 @@ const audioSource = require('@/assets/sound/success.mp3');
 const Success = () => {
   const animation = useRef<LottieView>(null);
   const router = useRouter();
-
   const player = useAudioPlayer(audioSource);
+  const { OrderDetails } = useLocalSearchParams();
 
   useEffect(() => {
     animation.current?.play();
@@ -37,15 +37,20 @@ const Success = () => {
         source={require('@/assets/animation/Check.json')}
       />
 
-      <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#1a753c', marginTop: 20, textAlign: 'center' }}>
+      <Text style={{ fontSize: 28, fontFamily: 'Poppins-SemiBold', color: '#1a753c', marginTop: 20, textAlign: 'center' }}>
         ¡Pedido realizado con exito!
       </Text>
-      <Text style={{ fontSize: 16, color: '#333', marginTop: 10, marginBottom: 40, textAlign: 'center' }}>
-        Tu acción se ha completado correctamente.
+      <Text style={{ fontSize: 16, color: '#333', marginTop: 10, marginBottom: 40, textAlign: 'center', fontFamily: 'Poppins-Regular' }}>
+        Tu pedido se ha enviado correctamente.
       </Text>
 
       <TouchableOpacity
-        onPress={() => router.push('/(tabs)/explore')}
+        onPress={() => router.push({
+          pathname: '/order',
+          params: {
+            OrderDetails: OrderDetails
+          }
+        })}
         style={{ backgroundColor: '#28a745', width: '100%', height: 50, alignItems: 'center', justifyContent: 'center', borderRadius: 12, marginBottom: 15 }}
       >
         <Text style={{ fontFamily: 'Poppins-Medium', color: '#fff', fontSize: 18 }}>
@@ -58,7 +63,7 @@ const Success = () => {
         style={{ borderWidth: 2, borderColor: '#28a745', width: '100%', height: 50, alignItems: 'center', justifyContent: 'center', borderRadius: 12 }}
       >
         <Text style={{ fontFamily: 'Poppins-Medium', color: '#28a745', fontSize: 18 }}>
-          Volver
+          ver pedidos
         </Text>
       </TouchableOpacity>
     </SafeAreaView>

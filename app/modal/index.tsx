@@ -1,3 +1,4 @@
+import AntDesign from '@expo/vector-icons/AntDesign';
 import ClientIcon from '@/assets/icons/ClientIcon';
 import InvoicesIcon from '@/assets/icons/InvoicesIcon';
 import TrashIcon from '@/assets/icons/TrashIcon';
@@ -27,7 +28,7 @@ const IndexScreen = () => {
   const [error, setError] = useState('');
   const router = useRouter();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const snapPoints = ['50%'];
+  const snapPoints = ['10%', '50%'];
   const proceedingRef = useRef(false);
 
   useFocusEffect(
@@ -158,39 +159,40 @@ const IndexScreen = () => {
     );
   };
 
-  const handlePresentModalPress = useCallback(() => {
-    bottomSheetModalRef.current?.present(0);
-  }, []);
-
   const MemoizedBackdrop = useCallback((props: any) => <BottomSheetBackdrop {...props} />, []);
 
   const renderSelectedInvoiceItem = ({ item }: { item: SelectedInvoice }) => (
-    <View className="p-4 border-b border-gray-200 flex-row justify-between items-center">
-      <InvoicesIcon size={26} color="#000" />
-      <View>
-        <Text className="font-[Poppins-SemiBold] tracking-[-0.3px] text-lg">Factura Nº: {item.numAtCard}</Text>
-        <Text className="text-gray-600 font-[Poppins-Regular] tracking-[-0.3px]">Monto Abonado: L. {formatCurrency(item.paidAmount)}</Text>
+    <View className="p-4 mb-4 rounded-3xl bg-gray-100 relative">
+      <View className="flex-row gap-2 mb-2 border border-b-black/10 border-t-transparent border-x-transparent pb-3 items-center">
+        <View className="bg-yellow-300 p-2 rounded-xl">
+          <InvoicesIcon />
+        </View>
+        <Text className="text-base text-start font-[Poppins-SemiBold] tracking-[-0.3px] text-black">
+          Nº {item.numAtCard}
+        </Text>
       </View>
-      <TouchableOpacity onPress={() => removeInvoice(item.numAtCard)}>
+      <View className="w-full flex-row">
+        <View className="mb-2 flex-1 w-full px-4">
+          <Text className="text-gray-600 text-sm font-[Poppins-Regular]">Monto Abonado:</Text>
+          <Text className="text-base font-[Poppins-SemiBold] text-black">
+            L. {formatCurrency(item.paidAmount)}
+          </Text>
+        </View>
+      </View>
+      <TouchableOpacity onPress={() => removeInvoice(item.numAtCard)} className="absolute top-4 right-4">
         <TrashIcon size={20} color="red" />
       </TouchableOpacity>
     </View>
   );
 
+  useEffect(() => {
+    if (selectedInvoices.length > 0) {
+      bottomSheetModalRef.current?.present();
+    }
+  }, [selectedInvoices]);
+
   return (
     <View className="flex-1 bg-white px-4 relative">
-      <View className='z-10 absolute bottom-0'>
-        {selectedInvoices.length > 0 && (
-          <TouchableOpacity
-            onPress={handlePresentModalPress}
-            className="bg-yellow-300 items-center justify-center h-[50px] w-screen flex-row gap-4"
-          >
-            <InvoicesIcon />
-            <Text className='font-[Poppins-SemiBold] tracking-[-0.3px]'>Ver facturas seleccionadas</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
       <View className='gap-4 flex-row mb-3 py-2'>
         <View className="bg-[#fcde41] w-[50px] h-[50px] items-center justify-center rounded-full">
           <ClientIcon size={24} color="#000" />
@@ -290,9 +292,11 @@ const IndexScreen = () => {
         ref={bottomSheetModalRef}
         snapPoints={snapPoints}
         backdropComponent={MemoizedBackdrop}
+        enablePanDownToClose={selectedInvoices.length > 0 ? false : true}
+        style={{ shadowColor: 'black', boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.2)', borderRadius: 16, elevation: 5, shadowOffset: { width: 0, height: -3 }, shadowOpacity: 0.1, shadowRadius: 5 }}
       >
-        <View className="flex-1 p-4">
-          <Text className="text-xl font-bold mb-4 font-[Poppins-SemiBold] tracking-[-0.3px]">Facturas Seleccionadas</Text>
+        <View className="flex-1 px-4">
+          <Text className="text-xl mb-2 font-bold font-[Poppins-SemiBold] tracking-[-0.3px]">Facturas Seleccionadas</Text>
           {selectedInvoices.length > 0 ? (
             <>
               <BottomSheetFlatList
@@ -314,9 +318,10 @@ const IndexScreen = () => {
                       }
                     });
                   }}
-                  className="bg-yellow-300 h-[50px] items-center justify-center rounded-full"
+                  className="bg-yellow-300 h-[50px] items-center justify-center rounded-full flex-row gap-2"
                 >
                   <Text className="text-black font-[Poppins-SemiBold] text-lg tracking-[-0.3px]">Continuar</Text>
+                  <AntDesign name="arrowright" size={20} color="black" />
                 </TouchableOpacity>
               </View>
             </>

@@ -227,14 +227,18 @@ export default function BottomSheetCart() {
           'Content-Type': 'application/json',
         },
       });
-
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      
       closeCart();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      console.log("Pedido enviado", payload);
+      router.push({
+        pathname: '/modal/success',
+        params: {
+          OrderDetails: res.data.docEntry
+        }
+      });
       clearCart();
       setComments('');
-      console.log("Pedido enviado", payload);
-      router.push('/modal/success');
-
       if (res.data.docEntry) {
         setLastOrderDocEntry(res.data.docEntry);
       }
@@ -346,7 +350,10 @@ export default function BottomSheetCart() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => router.push('/shop')}
+            onPress={() => router.push({
+              pathname: '/shop',
+              params: (closeCart(), {})
+            })}
             className='bg-yellow-300 items-center justify-center rounded-full h-[50px] w-[50px]'
           >
             <Feather name="edit" size={20} color="black" />

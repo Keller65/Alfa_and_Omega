@@ -1,41 +1,124 @@
-import { View, TextInput, Text, TouchableOpacity, ActivityIndicator } from 'react-native'
-import { Picker } from '@react-native-picker/picker'
-import { useEffect, useState } from 'react'
+import { useAuth } from '@/context/auth'
 import { useAppStore } from '@/state/index'
-import { useRouter } from 'expo-router'
+import { Picker } from '@react-native-picker/picker'
+import { useCallback, useEffect, useState } from 'react'
+import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import api from '@/lib/api'
 
 const Settings = () => {
-  const { appHost, appPort, setAppHost, setAppPort } = useAppStore();
+  const { appHost, appPort, setAppHost, setAppPort, fetchUrl } = useAppStore();
   const [protocol, setProtocol] = useState('http')
   const [ip, setIp] = useState('')
   const [port, setPort] = useState('')
   const [isSaving, setIsSaving] = useState(false)
-  const router = useRouter()
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [hasInvalidUrl, setHasInvalidUrl] = useState(false)
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (appHost) {
-      const url = new URL(appHost.startsWith('http') ? appHost : `http://${appHost}`)
-      setProtocol(url.protocol.replace(':', ''))
-      setIp(url.hostname)
+    setHasInvalidUrl(false)
+    try {
+      // Evitar parsear valores inválidos como 'http://' o 'https://'
+      if (appHost && appHost !== 'http://' && appHost !== 'https://') {
+        const hostToParse = appHost.startsWith('http') ? appHost : `http://${appHost}`
+        const url = new URL(hostToParse)
+        if (url.hostname) {
+          setProtocol(url.protocol.replace(':', '') || 'http')
+          setIp(url.hostname)
+        } else {
+          setIp('')
+          setHasInvalidUrl(true)
+        }
+      } else if (appHost) {
+        // appHost definido pero sin hostname
+        setIp('')
+        setHasInvalidUrl(true)
+      }
+      if (appPort) setPort(appPort)
+    } catch (e) {
+      // URL inválida: no crashear, solo marcar como inválida
+      setIp('')
+      setHasInvalidUrl(true)
     }
-    if (appPort) setPort(appPort)
   }, [appHost, appPort])
 
   const fullUrl = `${protocol}://${ip}${port ? `:${port}` : ''}`
+  const isUrlReady = !!ip && !!port && !hasInvalidUrl
 
   const handleSave = async () => {
-    setIsSaving(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    if (!protocol || !ip || !port) {
+      alert('Por favor, rellena todos los campos antes de guardar la configuración.');
+      return;
+    }
+    setIsSaving(true);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    setAppHost(`${protocol}://${ip}`)
-    setAppPort(port)
+    setAppHost(`${protocol}://${ip}`);
+    setAppPort(port);
 
-    console.log('Configuración guardada:', fullUrl)
-    setIsSaving(false)
+    console.log('Configuración guardada:', fullUrl);
+    setIsSaving(false);
   }
+
+  const API_BASE_URL = `${fetchUrl !== null ? fetchUrl : fullUrl}`;
+
+  const fetchPaymentAccounts = useCallback(async () => {
+    try {
+      const urls = [
+        `${API_BASE_URL}/api/BankAccounts/PayCheque`,
+        `${API_BASE_URL}/api/BankAccounts/PayEfectivo`,
+        `${API_BASE_URL}/api/BankAccounts/PayTranferencia`,
+        `${API_BASE_URL}/api/BankAccounts/PayCreditCards`,
+        `${API_BASE_URL}/sap/items/categories`
+      ];
+      const results = await Promise.allSettled(urls.map(url => api.get(url, {
+        baseURL: API_BASE_URL,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user?.token}`
+        },
+        cache: {
+          ttl: 1000 * 60 * 60 * 24,
+        },
+      })));
+
+      const chequeRes = results[0].status === 'fulfilled' ? results[0].value : null;
+      const efectivoRes = results[1].status === 'fulfilled' ? results[1].value : null;
+      const transfRes = results[2].status === 'fulfilled' ? results[2].value : null;
+      const creditCardRes = results[3].status === 'fulfilled' ? results[3].value : null;
+
+      console.log('Informacion de pago sincronizada');
+
+      if (!chequeRes || !efectivoRes || !transfRes || !creditCardRes) {
+        throw new Error('No se pudieron obtener los datos de una o más cuentas.');
+      }
+
+      // Si los datos ya están sincronizados, solo espera 2 segundos
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    } catch (err) {
+      console.error('Error al cargar datos de cuentas:', err);
+    }
+  }, [API_BASE_URL, user?.token]);
+
+  const handleSync = useCallback(async () => {
+    if (isSyncing) return;
+    try {
+      setIsSyncing(true);
+      await fetchPaymentAccounts();
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [fetchPaymentAccounts, isSyncing]);
 
   return (
     <View className="p-4 space-y-5 bg-white rounded-2xl flex-1 gap-2">
+      {(hasInvalidUrl || !ip || !port) && (
+        <View className="border border-red-200 bg-red-50 rounded-xl px-4 py-3">
+          <Text className="text-red-700 text-sm">
+            Configura una URL válida antes de continuar. Ingresa IP y Puerto válidos para evitar errores.
+          </Text>
+        </View>
+      )}
       {/* Selector + IP */}
       <View className="flex-row gap-3 items-center">
         <View className="w-[130px] h-[50px] justify-center border border-gray-300 rounded-xl overflow-hidden bg-white">
@@ -77,23 +160,33 @@ const Settings = () => {
       {/* Botón de Guardar */}
       <TouchableOpacity
         onPress={handleSave}
-        disabled={isSaving}
-        className={`mt-4 rounded-2xl py-3 items-center justify-center h-[50px] ${isSaving ? 'bg-blue-400' : 'bg-blue-600'
+        disabled={isSaving || !isUrlReady}
+        className={`mt-4 rounded-full py-3 items-center justify-center h-[50px] ${isSaving || !isUrlReady ? 'bg-gray-300' : 'bg-yellow-300'
           }`}
       >
         {isSaving ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color="#000" />
         ) : (
-          <Text className="text-white font-[Poppins-SemiBold] text-base">Guardar configuración</Text>
+          <Text className="text-black tracking-[-0.3px] font-[Poppins-SemiBold] text-base">Guardar configuración</Text>
         )}
       </TouchableOpacity>
 
-      <TouchableOpacity
-        className='rounded-2xl py-3 items-center justify-center h-[50px] bg-blue-600'
-        onPress={() => router.push('/login')}
-      >
-        <Text className='text-white font-[Poppins-SemiBold] text-base'>Regresar</Text>
-      </TouchableOpacity>
+      {fetchUrl && (
+        <TouchableOpacity
+          className={`rounded-full py-3 items-center justify-center h-[50px] ${(isSyncing || !isUrlReady) ? 'bg-gray-300' : 'bg-yellow-300'}`}
+          onPress={handleSync}
+          disabled={isSyncing || !isUrlReady}
+        >
+          {isSyncing ? (
+            <View className="flex-row items-center gap-2">
+              <ActivityIndicator color="#6b7280" />
+              <Text className='text-gray-500 tracking-[-0.3px] font-[Poppins-SemiBold] text-base'>Sincronizando Datos...</Text>
+            </View>
+          ) : (
+            <Text className='text-black tracking-[-0.3px] font-[Poppins-SemiBold] text-base'>Sincronizar Datos</Text>
+          )}
+        </TouchableOpacity>
+      )}
     </View>
   )
 }

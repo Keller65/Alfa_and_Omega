@@ -61,7 +61,7 @@ export default function PedidosScreen() {
 
   const renderItem = useCallback(({ item }: { item: OrderDataType }) => (
     <View key={item.docEntry} className="w-full mb-4">
-      <View className="bg-white rounded-3xl p-5 border border-gray-200 shadow-md">
+      <View className="bg-white rounded-3xl p-5 border border-gray-200">
         {/* Encabezado */}
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center gap-2">

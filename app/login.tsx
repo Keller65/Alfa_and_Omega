@@ -157,10 +157,10 @@ export default function Login() {
       <TouchableOpacity
         style={{
           marginTop: 16,
-          backgroundColor: isFormValid && !loading ? '#3b82f6' : '#9ca3af',
+          backgroundColor: isFormValid && !loading ? '#3b82f6' : '#d1d5db',
           padding: 16,
           height: 56,
-          borderRadius: 24,
+          borderRadius: 99,
           alignItems: 'center',
           justifyContent: 'center'
         }}
@@ -168,9 +168,9 @@ export default function Login() {
         disabled={!isFormValid || loading}
       >
         {loading ? (
-          <ActivityIndicator color="#fff" size="small" />
+          <ActivityIndicator color="#000" size="small" />
         ) : (
-          <Text style={{ color: 'white', textAlign: 'center', fontFamily: 'Poppins-Bold', lineHeight: 12 }}>Iniciar Sesión</Text>
+          <Text style={{ color: isFormValid && !loading ? '#fff' : '#6b7280', textAlign: 'center', fontFamily: 'Poppins-SemiBold', lineHeight: 12 }}>Iniciar Sesión</Text>
         )}
       </TouchableOpacity>
 

@@ -5,11 +5,9 @@ import { AccountPayCheque, AccountPayCreditCards, AccountPayEfectivo, AccountPay
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
-import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, Alert, Platform, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const CreditCardIcon = ({ color }: { color: string }) => (
   <Ionicons name="card-outline" size={32} color={color} />
@@ -27,10 +25,10 @@ const CheckIcon = ({ color }: { color: string }) => (
 type PaymentMethod = 'Tarjeta' | 'Efectivo' | 'Transferencia' | 'Cheque';
 
 const paymentOptions = [
-  { name: 'Tarjeta', icon: CreditCardIcon },
   { name: 'Efectivo', icon: MoneyIcon },
   { name: 'Transferencia', icon: BankIcon },
   { name: 'Cheque', icon: CheckIcon },
+  { name: 'Tarjeta', icon: CreditCardIcon },
 ];
 
 
@@ -60,6 +58,14 @@ const PaymentScreen = () => {
   const API_BASE_URL = `${fetchUrl}/api/BankAccounts`;
   const router = useRouter();
 
+  // Fecha Honduras (UTC-6 sin DST): genera la fecha actual de Honduras
+  const getHondurasNow = () => {
+    const now = new Date();
+    const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+    // Honduras UTC-6
+    return new Date(utcMs - 6 * 60 * 60000);
+  };
+
   const fetchPaymentAccounts = useCallback(async () => {
     setRefreshing(true);
     setLoading(true);
@@ -78,11 +84,11 @@ const PaymentScreen = () => {
           Authorization: `Bearer ${user?.token}`
         },
         cache: {
-          ttl: 1000 * 60 * 60 * 8, // 8 horas de cache
+          ttl: 1000 * 60 * 60 * 24,
         },
       })));
 
-      console.log(results[0].status === 'fulfilled' ? 'Respuesta desde CACHE' : 'Respuesta desde RED');
+      console.log(results[0].status === 'fulfilled' ? 'Cuentas de pago cargadas desde CACHE' : 'Cuentas de pago cargadas desde RED');
 
       const chequeRes = results[0].status === 'fulfilled' ? results[0].value : null;
       const efectivoRes = results[1].status === 'fulfilled' ? results[1].value : null;
@@ -113,8 +119,17 @@ const PaymentScreen = () => {
   const handleSelectMethod = useCallback((method: PaymentMethod) => {
     setSelectedMethod(method);
     setPaymentAmount(paymentForm.amount || '');
-    setReferenceNumber(paymentForm.reference || '');
-    setSelectedBank(paymentForm.bank || '');
+    // Para Efectivo, limpiar referencia y autogestionar fecha/banco
+    if (method === 'Efectivo') {
+      setReferenceNumber('');
+      setSelectedBank('');
+      const hn = getHondurasNow();
+      setPaymentDate(hn);
+      setPaymentForm({ reference: '', date: hn, bank: '' });
+    } else {
+      setReferenceNumber(paymentForm.reference || '');
+      setSelectedBank(paymentForm.bank || '');
+    }
   }, [paymentForm]);
 
   const getBankOptions = () => {
@@ -154,6 +169,34 @@ const PaymentScreen = () => {
     setPaymentDate(currentDate);
   };
 
+  useEffect(() => {
+    if (selectedMethod === 'Efectivo') {
+      // Fecha Honduras automática
+      const hn = getHondurasNow();
+      if (paymentDate.toDateString() !== hn.toDateString()) {
+        setPaymentDate(hn);
+        setPaymentForm({ date: hn });
+      }
+
+      // Seleccionar única cuenta de efectivo según slpCode
+      const slpCode = Number(user?.salesPersonCode);
+      const filtered = efectivoAccounts.filter(a => a.slpCode === slpCode);
+      if (filtered.length === 1) {
+        const only = filtered[0].CashAccount;
+        if (selectedBank !== only) {
+          setSelectedBank(only);
+          setPaymentForm({ bank: only, bankName: only });
+        }
+      }
+
+      // Limpiar referencia
+      if (referenceNumber !== '') {
+        setReferenceNumber('');
+        setPaymentForm({ reference: '' });
+      }
+    }
+  }, [selectedMethod, efectivoAccounts, user, paymentDate, referenceNumber, selectedBank, setPaymentForm]);
+
   if (loading) {
     return (
       <View className="flex-1 bg-white justify-center items-center">
@@ -180,8 +223,66 @@ const PaymentScreen = () => {
 
   const bankOptions = getBankOptions();
 
-  // Validar que todos los campos estén completos y sin error
-  const isFormComplete = selectedMethod && paymentAmount && referenceNumber && paymentDate && selectedBank && !amountError;
+  const isFormComplete = selectedMethod === 'Efectivo'
+    ? Boolean(selectedMethod && paymentAmount && !amountError)
+    : Boolean(selectedMethod && paymentAmount && referenceNumber && paymentDate && selectedBank && !amountError);
+
+  const handleContinue = () => {
+    const isCash = selectedMethod === 'Efectivo';
+    const hn = getHondurasNow();
+    const finalDate = isCash ? hn : paymentDate;
+    let finalBank = selectedBank;
+    let finalBankName = bankOptions.find(option => option.value === finalBank)?.label || '';
+    if (isCash) {
+      const slpCode = Number(user?.salesPersonCode);
+      const filtered = efectivoAccounts.filter(a => a.slpCode === slpCode);
+      if (filtered.length === 1) {
+        finalBank = filtered[0].CashAccount;
+        finalBankName = filtered[0].CashAccount;
+      }
+    }
+
+    const difference = Math.abs(Number(paymentAmount) - totalAbonado);
+
+    if (difference > 2) {
+      Alert.alert(
+        'Aviso',
+        `Lps. ${difference} del importe que se tienen que pagar no coinciden con las operaciones existentes`,
+        [
+          {
+            text: 'Cancelar',
+            style: 'cancel',
+          },
+          {
+            text: 'Continuar',
+            onPress: () => {
+              setPaymentForm({
+                method: selectedMethod,
+                amount: paymentAmount,
+                reference: isCash ? '' : referenceNumber,
+                date: finalDate,
+                bank: finalBank,
+                bankName: finalBankName,
+              });
+              savePaymentForm();
+              router.back();
+            },
+          },
+        ]
+      );
+    } else {
+      setPaymentForm({
+        method: selectedMethod,
+        amount: paymentAmount,
+        reference: isCash ? '' : referenceNumber,
+        date: finalDate,
+        bank: finalBank,
+        bankName: finalBankName,
+      });
+      savePaymentForm();
+      router.back();
+    }
+  };
 
   return (
     <View className="flex-1 bg-white">
@@ -196,7 +297,6 @@ const PaymentScreen = () => {
           />
         }
       >
-        {/* Opciones de pago */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -233,20 +333,20 @@ const PaymentScreen = () => {
           })}
         </ScrollView>
 
-        {/* Formulario */}
         {selectedMethod && (
-          <View className="p-4 mt-4">
-            <Text className="text-lg font-[Poppins-Bold] mb-4 tracking-[-0.3px]">
+          <View className="p-5 bg-white rounded-2xl">
+            {/* Encabezado */}
+            <Text className="text-lg font-[Poppins-Bold] mb-5 tracking-[-0.3px] text-gray-800">
               Detalles de {selectedMethod}
             </Text>
 
             {/* Monto */}
-            <View className="mb-4 bg-white rounded-xl shadow-sm p-2 border border-gray-200">
-              <Text className="text-sm font-[Poppins-Medium] mb-1 text-gray-600">
+            <View className="mb-5">
+              <Text className="text-sm font-[Poppins-Medium] mb-2 text-gray-600">
                 Monto a pagar
               </Text>
               <TextInput
-                className="text-base tracking-[-0.3px] text-gray-800 p-1"
+                className="text-base tracking-[-0.3px] text-gray-800 px-4 py-3 rounded-xl bg-white border border-gray-200"
                 keyboardType="numeric"
                 placeholder="0.00"
                 placeholderTextColor="#A0AEC0"
@@ -262,82 +362,86 @@ const PaymentScreen = () => {
                   }
                 }}
               />
-              {amountError ? (
-                <Text className="text-red-500 text-xs mt-1">{amountError}</Text>
-              ) : null}
-            </View>
-
-            {/* Referencia */}
-            <View className="mb-4 bg-white rounded-xl shadow-sm p-2 border border-gray-200">
-              <Text className="text-sm font-[Poppins-Medium] mb-1 text-gray-600">
-                Número de Referencia
-              </Text>
-              <TextInput
-                className="text-base tracking-[-0.3px] text-gray-800 p-1"
-                placeholder="Ej: 123456789"
-                placeholderTextColor="#A0AEC0"
-                value={referenceNumber}
-                onChangeText={value => {
-                  setReferenceNumber(value);
-                  setPaymentForm({ reference: value });
-                }}
-              />
-            </View>
-
-            {/* Fecha */}
-            <View className="mb-4 bg-white rounded-xl shadow-sm p-2 border border-gray-200">
-              <Text className="text-sm font-[Poppins-Medium] mb-1 text-gray-600">
-                Fecha de Pago
-              </Text>
-              <TouchableOpacity
-                onPress={() => setShowDatePicker(true)}
-                className="flex-row justify-between items-center p-1"
-              >
-                <Text className="text-base tracking-[-0.3px] text-gray-800">
-                  {paymentDate.toLocaleDateString()}
-                </Text>
-                <Ionicons name="calendar-outline" size={22} color="#A0AEC0" />
-              </TouchableOpacity>
-              {showDatePicker && (
-                <DateTimePicker
-                  value={paymentDate}
-                  mode="date"
-                  display="default"
-                  onChange={(event, selectedDate) => {
-                    handleDateChange(event, selectedDate);
-                    if (selectedDate) setPaymentForm({ date: selectedDate });
-                  }}
-                />
+              {amountError && (
+                <Text className="text-red-500 text-xs mt-1 font-[Poppins-Regular] tracking-[-0.3px]">{amountError}</Text>
               )}
             </View>
 
-            {/* Banco */}
-            <View className="mb-4 bg-white rounded-xl shadow-sm p-3 border border-gray-100 w-full">
-              <Text className="text-sm font-[Poppins-Medium] text-gray-600">
-                Banco
-              </Text>
+            {/* Referencia */}
+            {selectedMethod !== 'Efectivo' && (
+              <View className="mb-5">
+                <Text className="text-sm font-[Poppins-Medium] mb-2 text-gray-600">
+                  Número de {paymentForm.method === 'Cheque' ? 'Cheque' : 'Referencia'}
+                </Text>
+                <TextInput
+                  className="text-base tracking-[-0.3px] text-gray-800 px-4 py-3 rounded-xl bg-white border border-gray-200"
+                  keyboardType='numeric'
+                  placeholder="Ej: 123456789"
+                  placeholderTextColor="#A0AEC0"
+                  value={referenceNumber}
+                  onChangeText={value => {
+                    setReferenceNumber(value);
+                    setPaymentForm({ reference: value });
+                  }}
+                />
+              </View>
+            )}
 
-              <Picker
-                selectedValue={selectedBank}
-                onValueChange={itemValue => {
-                  setSelectedBank(itemValue);
-                  setPaymentForm({ bank: itemValue });
-                }}
-              >
-                <Picker.Item label="Selecciona un banco..." value="" />
-                {bankOptions.map(option => (
-                  <Picker.Item
-                    fontFamily='Poppins-SemiBold'
-                    style={{
-                      letterSpacing: -0.3
+            {/* Fecha */}
+            {selectedMethod !== 'Efectivo' && (
+              <View className="mb-5">
+                <Text className="text-sm font-[Poppins-Medium] mb-2 text-gray-600">
+                  Fecha de Pago
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setShowDatePicker(true)}
+                  className="flex-row justify-between items-center px-4 py-3 rounded-xl bg-white border border-gray-200"
+                >
+                  <Text className="text-base tracking-[-0.3px] text-gray-800">
+                    {paymentDate.toLocaleDateString()}
+                  </Text>
+                  <Ionicons name="calendar-outline" size={20} color="#A0AEC0" />
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={paymentDate}
+                    mode="date"
+                    display="default"
+                    onChange={(event, selectedDate) => {
+                      handleDateChange(event, selectedDate);
+                      if (selectedDate) setPaymentForm({ date: selectedDate });
                     }}
-                    key={option.value}
-                    label={option.label}
-                    value={option.value}
                   />
-                ))}
-              </Picker>
-            </View>
+                )}
+              </View>
+            )}
+
+            {/* Banco */}
+            {selectedMethod !== 'Efectivo' && (
+              <View className="mb-2">
+                <Text className="text-sm font-[Poppins-Medium] mb-2 text-gray-600">
+                  Banco
+                </Text>
+                <View className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                  <Picker
+                    selectedValue={selectedBank}
+                    onValueChange={itemValue => {
+                      setSelectedBank(itemValue);
+                      setPaymentForm({ bank: itemValue });
+                    }}
+                  >
+                    <Picker.Item label="Selecciona un banco..." value="" />
+                    {bankOptions.map(option => (
+                      <Picker.Item
+                        key={option.value}
+                        label={option.label}
+                        value={option.value}
+                      />
+                    ))}
+                  </Picker>
+                </View>
+              </View>
+            )}
           </View>
         )}
       </ScrollView>
@@ -347,17 +451,7 @@ const PaymentScreen = () => {
         <TouchableOpacity
           className={`py-4 rounded-full items-center ${isFormComplete ? 'bg-yellow-300' : 'bg-gray-300'}`}
           disabled={!isFormComplete}
-          onPress={() => {
-            setPaymentForm({
-              method: selectedMethod,
-              amount: paymentAmount,
-              reference: referenceNumber,
-              date: paymentDate,
-              bank: selectedBank,
-            });
-            savePaymentForm();
-            router.back();
-          }}
+          onPress={handleContinue}
         >
           <Text
             className={`font-[Poppins-Bold] text-lg tracking-[-0.3px] ${isFormComplete ? 'text-black' : 'text-gray-500'}`}

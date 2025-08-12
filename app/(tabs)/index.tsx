@@ -4,13 +4,11 @@ import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/auth';
-import { useRouter } from 'expo-router';
 import "../../global.css"
 
 export default function App() {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const { user } = useAuth();
-  const router = useRouter();
 
   useEffect(() => {
     bottomSheetRef.current?.present();
@@ -22,18 +20,6 @@ export default function App() {
 
   return (
     <View className="flex-1 justify-center items-center bg-white p-6">
-      <TouchableOpacity
-        onPress={() => router.push('/InvoiceClient')}
-      >
-        <Text>Clientes</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => router.push('/modal/successCobro')}
-      >
-        <Text>Pantalla de Cobro</Text>
-      </TouchableOpacity>
-
       <BottomSheetModal
         ref={bottomSheetRef}
         snapPoints={['60%']}
