@@ -440,7 +440,7 @@ const OrderDetails = () => {
             >
               <View className="bg-white rounded-xl overflow-hidden mr-3">
                 <Image
-                  source={{ uri: `https://pub-266f56f2e24d4d3b8e8abdb612029f2f.r2.dev/${item.itemCode}.png` }}
+                  source={{ uri: `https://pub-266f56f2e24d4d3b8e8abdb612029f2f.r2.dev/${item.itemCode}.jpg` }}
                   style={{ height: 60, width: 60, objectFit: "contain" }}
                   contentFit="contain"
                   transition={500}

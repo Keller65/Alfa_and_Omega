@@ -21,6 +21,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.aerley_adkins2.alfaOmegaExpoRouter",
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS",

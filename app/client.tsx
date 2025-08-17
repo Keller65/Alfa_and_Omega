@@ -124,19 +124,23 @@ const ClientScreen = memo(() => {
           <ClientIcon size={24} color="#000" />
         </View>
 
-        <View className="flex-1 justify-center gap-2">
-          <Text className="font-[Poppins-SemiBold] text-lg text-black tracking-[-0.3px] leading-4">
+        <View className="flex-1 justify-center">
+          <Text className="font-[Poppins-SemiBold] text-lg text-black tracking-[-0.3px]">
             {item.cardName}
           </Text>
 
           <View className="flex-row gap-2">
             <Text className="text-gray-600 font-[Poppins-SemiBold] tracking-[-0.3px]">
               Código:{' '}
-              <Text className="font-[Poppins-Regular]">{item.cardCode}</Text>
+              <Text className="font-[Poppins-Regular] tracking-[-0.3px]">{item.cardCode}</Text>
             </Text>
             <Text className="text-gray-600 font-[Poppins-SemiBold] tracking-[-0.3px]">
               RTN:{' '}
-              <Text className="font-[Poppins-Regular]">{item.federalTaxID}</Text>
+              <Text className="font-[Poppins-Regular] tracking-[-0.3px]">
+                {item.federalTaxID
+                  ? item.federalTaxID.replace(/^(\d{4})(\d{4})(\d{6})$/, '$1-$2-$3')
+                  : ''}
+              </Text>
             </Text>
           </View>
         </View>

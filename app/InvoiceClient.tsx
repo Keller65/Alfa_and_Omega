@@ -51,7 +51,7 @@ const InvoicesClientScreen = memo(() => {
       );
 
       console.info(res.cached ? 'Clientes cargados desde cache' : 'Clientes cargados desde red');
-      
+
       const newCustomers = res.data.items || [];
 
       setCustomers((prev) =>
@@ -120,8 +120,8 @@ const InvoicesClientScreen = memo(() => {
           <ClientIcon size={24} color="#000" />
         </View>
 
-        <View className="flex-1 justify-center gap-2">
-          <Text className="font-[Poppins-SemiBold] text-lg text-black tracking-[-0.3px] leading-4">
+        <View className="flex-1 justify-center">
+          <Text className="font-[Poppins-SemiBold] text-lg text-black tracking-[-0.3px]">
             {item.cardName}
           </Text>
 
@@ -130,7 +130,12 @@ const InvoicesClientScreen = memo(() => {
               Código: <Text className="font-[Poppins-Regular]">{item.cardCode}</Text>
             </Text>
             <Text className="text-gray-600 font-[Poppins-SemiBold] tracking-[-0.3px]">
-              RTN: <Text className="font-[Poppins-Regular]">{item.federalTaxID}</Text>
+              RTN: {' '}
+              <Text className="font-[Poppins-Regular] tracking-[-0.3px]">
+                {item.federalTaxID
+                  ? item.federalTaxID.replace(/^(\d{4})(\d{4})(\d{6})$/, '$1-$2-$3')
+                  : ''}
+              </Text>
             </Text>
           </View>
         </View>

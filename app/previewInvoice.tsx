@@ -1,14 +1,18 @@
 import { useAuth } from '@/context/auth';
 import { PaymentData } from '@/types/types';
 import Feather from '@expo/vector-icons/Feather';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useLocalSearchParams } from 'expo-router';
 import { useMemo, useState, useEffect } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 import * as Print from 'expo-print';
+import { Asset } from 'expo-asset';
+import * as FileSystem from 'expo-file-system';
 
+const IMAGE = Asset.fromModule(require('@/assets/images/LogoAlfayOmega.png'));
+
+// Helpers
 const formatMoney = (value: number | string | null | undefined) => {
   const num = typeof value === 'string' ? Number(value) : value ?? 0;
   const safe = isNaN(Number(num)) ? 0 : Number(num);
@@ -21,12 +25,25 @@ const formatDate = (date: any) => {
   return isNaN(d.getTime()) ? 'N/D' : d.toISOString().split('T')[0];
 };
 
-const generateInvoiceHTML = (invoiceDetails: PaymentData | null, userFullName: string) => {
+const getBase64Logo = async () => {
+  await IMAGE.downloadAsync();
+  return await FileSystem.readAsStringAsync(IMAGE.localUri!, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+};
+
+// Generar HTML
+const generateInvoiceHTML = async (
+  invoiceDetails: PaymentData | null,
+  userFullName: string
+) => {
   if (!invoiceDetails) return '';
 
-  const logo = 'https://pub-f524aa67d2854c378ac58dd12adeca33.r2.dev/LogoAlfayOmega.png';
+  const base64Logo = await getBase64Logo();
   const folio = `${invoiceDetails?.docEntry ?? ''}`;
-  const dateStr = invoiceDetails?.docDate ? new Date(invoiceDetails.docDate).toLocaleString() : '';
+  const dateStr = invoiceDetails?.docDate
+    ? new Date(invoiceDetails.docDate).toLocaleString()
+    : '';
   const pay = invoiceDetails?.payment?.[0] ?? {};
 
   let paymentExtra = '';
@@ -46,35 +63,27 @@ const generateInvoiceHTML = (invoiceDetails: PaymentData | null, userFullName: s
     `;
   }
 
-  const facturasHTML = `
-    <div class="table-header">
-      <span class="col-date">FECHA</span>
-      <span class="col-invoice">FACTURA</span>
-      <span class="col-balance">SALDO ANT.</span>
-      <span class="col-payment">ABONO</span>
-    </div>
-    ${invoiceDetails?.invoices?.map((inv) => {
-    const abono = formatMoney(inv.appliedAmount);
-    const saldoAnt = formatMoney(inv.saldoAnterior);
-    const fecha = inv.invoiceDate ? formatDate(inv.invoiceDate) : 'N/D';
-    return `
+  const facturasHTML = invoiceDetails?.invoices
+    ?.map((inv) => {
+      return `
         <div class="table-row">
-          <span class="col-date">${fecha}</span>
+          <span class="col-date">${formatDate(inv.invoiceDate)}</span>
           <span class="col-invoice">${inv.numAtCard ?? 'N/D'}</span>
-          <span class="col-balance">L. ${saldoAnt}</span>
-          <span class="col-payment">L. ${abono}</span>
-        </div>
-      `;
-  }).join('')}
-  `;
+          <span class="col-balance">L. ${formatMoney(inv.saldoAnterior)}</span>
+          <span class="col-payment">L. ${formatMoney(inv.appliedAmount)}</span>
+        </div>`;
+    })
+    .join('');
 
-  const totalPendiente = invoiceDetails?.invoices?.reduce((acc, inv) => acc + (Number(inv.pendiente) || 0), 0);
+  const totalPendiente = invoiceDetails?.invoices?.reduce(
+    (acc, inv) => acc + (Number(inv.pendiente) || 0),
+    0
+  );
 
   return `
     <html><head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Montserrat:wght@600&display=swap" rel="stylesheet">
     <style>
       body { font-family: 'Inter', sans-serif; margin:0; padding:8px; font-size:10px; }
       .ticket { width:100%; max-width:400px; margin:0 auto; }
@@ -82,7 +91,7 @@ const generateInvoiceHTML = (invoiceDetails: PaymentData | null, userFullName: s
       .center { text-align:center; }
       .bold { font-weight:600; }
       .row { display:flex; justify-content:space-between; gap:8px; }
-      .section-title { font-family:'Montserrat', sans-serif; font-weight:600; margin:8px 0 4px; }
+      .section-title { font-weight:600; margin:8px 0 4px; font-size:12px; }
       .divider { height:1px; background:#000; opacity:0.2; margin:8px 0; }
       .table-header, .table-row { display:flex; justify-content:space-between; }
       .table-header { font-weight:600; border-bottom:1px dashed #000; padding-bottom:3px; margin-bottom:5px; }
@@ -92,13 +101,13 @@ const generateInvoiceHTML = (invoiceDetails: PaymentData | null, userFullName: s
     </style></head><body>
     <div class="ticket">
       <div class="center">
-        <img src="${logo}" />
-        <div class="bold" style="font-family:'Montserrat', sans-serif; font-size:18px; margin-bottom:34px;">Grupo Alfa & Omega</div>
+        <img src="data:image/png;base64,${base64Logo}" />
+        <div class="bold" style="font-size:18px; margin-bottom:34px;">Grupo Alfa & Omega</div>
       </div>
       <div>
-        <div class="row"><span class="bold">Folio</span><span>${folio || 'N/D'}</span></div>
+        <div class="row"><span class="bold">Folio</span><span>${folio}</span></div>
         <div class="row"><span class="bold">Cliente</span><span>${invoiceDetails?.cardCode} - ${invoiceDetails?.cardName}</span></div>
-        <div class="row"><span class="bold">Vendedor</span><span>${userFullName ?? ''}</span></div>
+        <div class="row"><span class="bold">Vendedor</span><span>${userFullName}</span></div>
         <div class="row"><span class="bold">Fecha</span><span>${dateStr}</span></div>
       </div>
       <div class="divider"></div>
@@ -114,7 +123,7 @@ const generateInvoiceHTML = (invoiceDetails: PaymentData | null, userFullName: s
       <div class="divider"></div>
       <div class="row bold"><span>Saldo pendiente</span><span>L. ${formatMoney(totalPendiente)}</span></div>
       <div class="divider"></div>
-      <div class="foot">¡Gracias por su pago!<br/>Dudas o reclamos por inconsistencias con su saldo,<br/> llamar al 9458-7168</div>
+      <div class="foot">¡Gracias por su pago!<br/>Dudas o reclamos llamar al 9458-7168</div>
     </div>
     </body></html>`;
 };
@@ -130,15 +139,21 @@ export default function PreviewInvoice() {
   const invoiceDetails = useMemo<PaymentData | null>(() => {
     const raw = Array.isArray(item) ? item[0] : item;
     if (!raw) return null;
-    try { return JSON.parse(raw) as PaymentData; } catch { return null; }
+    try {
+      return JSON.parse(raw) as PaymentData;
+    } catch {
+      return null;
+    }
   }, [item]);
 
-  // Generar el HTML cuando cambien los detalles de la factura
+  // Generar HTML al cargar
   useEffect(() => {
     if (invoiceDetails) {
-      const generatedHtml = generateInvoiceHTML(invoiceDetails, user?.fullName ?? '');
-      setHtml(generatedHtml);
-      setLoading(false);
+      (async () => {
+        const generatedHtml = await generateInvoiceHTML(invoiceDetails, user?.fullName ?? '');
+        setHtml(generatedHtml);
+        setLoading(false);
+      })();
     }
   }, [invoiceDetails, user]);
 
@@ -157,17 +172,12 @@ export default function PreviewInvoice() {
     }
   };
 
-  const refresh = () => {
-    setLoading(true);
-    const generatedHtml = generateInvoiceHTML(invoiceDetails, user?.fullName ?? '');
-    setHtml(generatedHtml);
-    setLoading(false);
-  };
-
   if (!invoiceDetails) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white">
-        <Text className='font-[Poppins-Regular] tracking-[-0.3px]'>No se encontró la información.</Text>
+        <Text className="font-[Poppins-Regular] tracking-[-0.3px]">
+          No se encontró la información.
+        </Text>
       </SafeAreaView>
     );
   }
@@ -177,12 +187,14 @@ export default function PreviewInvoice() {
       {loading || !html ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color="black" size="large" />
-          <Text className="mt-2 font-[Poppins-Regular] tracking-[-0.3px]">Generando vista previa...</Text>
+          <Text className="mt-2 font-[Poppins-Regular] tracking-[-0.3px]">
+            Generando vista previa...
+          </Text>
         </View>
       ) : (
-        <View className='px-10 py-4 flex-1'>
-          <View className='flex-1 bg-white border border-gray-100 shadow-md'>
-            <WebView originWhitelist={["*"]} source={{ html }} style={{ flex: 1 }} />
+        <View className="px-10 py-4 flex-1">
+          <View className="flex-1 bg-white border border-gray-100 shadow-md">
+            <WebView originWhitelist={['*']} source={{ html }} style={{ flex: 1 }} />
           </View>
         </View>
       )}
@@ -190,19 +202,15 @@ export default function PreviewInvoice() {
         <TouchableOpacity
           onPress={print}
           disabled={generating || loading}
-          className={`flex-1 flex-row items-center justify-center rounded-full px-4 py-3 ${generating || loading ? 'bg-gray-300' : 'bg-yellow-300'}`}
+          className={`flex-1 flex-row items-center justify-center rounded-full px-4 py-3 ${
+            generating || loading ? 'bg-gray-300' : 'bg-yellow-300'
+          }`}
         >
           <Feather name="printer" size={18} color="#000" />
-          <Text className="ml-2 font-[Poppins-SemiBold]">{generating ? 'Procesando...' : 'Imprimir'}</Text>
+          <Text className="ml-2 font-[Poppins-SemiBold]">
+            {generating ? 'Procesando...' : 'Imprimir'}
+          </Text>
         </TouchableOpacity>
-        {/* <TouchableOpacity
-          onPress={refresh}
-          disabled={loading}
-          className={`flex-row items-center justify-center rounded-full px-4 py-3 ${loading ? 'bg-gray-300' : 'bg-gray-200'}`}
-        >
-          <MaterialIcons name="refresh" size={20} color="#000" />
-          <Text className="ml-2 font-[Poppins-Medium]">Actualizar</Text>
-        </TouchableOpacity> */}
       </View>
     </View>
   );

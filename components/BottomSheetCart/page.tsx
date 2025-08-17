@@ -60,7 +60,7 @@ const CartItem = memo(({ item, onRemove }: CartItemProps) => {
       <View className="flex-row gap-4 items-center">
         <View className="size-[120px] bg-white border overflow-hidden border-gray-200 rounded-lg items-center justify-center">
           <Image
-            source={{ uri: `https://pub-266f56f2e24d4d3b8e8abdb612029f2f.r2.dev/${item.itemCode}.png` }}
+            source={{ uri: `https://pub-266f56f2e24d4d3b8e8abdb612029f2f.r2.dev/${item.itemCode}.jpg` }}
             style={{ height: 120, width: 120, objectFit: "contain" }}
             contentFit="contain"
             transition={500}

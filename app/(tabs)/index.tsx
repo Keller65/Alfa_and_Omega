@@ -104,8 +104,8 @@ export default function App() {
 
   return (
     <ScrollView
-      className="flex-1 bg-white"
-      contentContainerClassName="gap-4 relative"
+      className="flex-1 bg-white relative"
+      contentContainerClassName="gap-4 flex-1"
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
       <UpdateBanner
@@ -138,11 +138,11 @@ export default function App() {
           lastUpdated={goalData?.lastUpdated}
         />
 
-        <View className="absolute bottom-4 right-8 gap-3 items-end">
-          {products.length > 0 && (<BottomSheetCart />)}
-        </View>
-
         <BottomSheetWelcome />
+      </View>
+
+      <View className="absolute bottom-4 right-8 gap-3 items-end">
+        {products.length > 0 && (<BottomSheetCart />)}
       </View>
     </ScrollView>
   );
