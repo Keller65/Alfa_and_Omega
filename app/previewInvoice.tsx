@@ -84,12 +84,15 @@ const generateInvoiceHTML = async (
     <html><head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Montserrat:wght@600&display=swap" rel="stylesheet">
     <style>
-      body { font-family: 'Inter', sans-serif; margin:0; padding:8px; font-size:10px; }
+      * { font-family: 'Inter', sans-serif; }
+      body { margin:0; padding:8px; font-size:10px; }
       .ticket { width:100%; max-width:400px; margin:0 auto; }
       img { max-width:80%; margin:12px auto; display:block; }
       .center { text-align:center; }
-      .bold { font-weight:600; }
+      .bold { font-weight:500; }
+      .title-bold { font-weight:600; }
       .row { display:flex; justify-content:space-between; gap:8px; }
       .section-title { font-weight:600; margin:8px 0 4px; font-size:12px; }
       .divider { height:1px; background:#000; opacity:0.2; margin:8px 0; }
@@ -102,7 +105,7 @@ const generateInvoiceHTML = async (
     <div class="ticket">
       <div class="center">
         <img src="data:image/png;base64,${base64Logo}" />
-        <div class="bold" style="font-size:18px; margin-bottom:34px;">Grupo Alfa & Omega</div>
+        <div class="title-bold" style="font-size:18px; margin-bottom:34px;">Grupo Alfa & Omega</div>
       </div>
       <div>
         <div class="row"><span class="bold">Folio</span><span>${folio}</span></div>
@@ -114,6 +117,12 @@ const generateInvoiceHTML = async (
       <div class="center section-title">Recibo de Cobros</div>
       <div class="divider"></div>
       <div class="section-title">Facturas</div>
+      <div class="table-header">
+          <span class="col-date">FECHA</span>
+          <span class="col-invoice">FACTURA</span>
+          <span class="col-balance">SALDO ANT.</span>
+          <span class="col-payment">ABONO</span>
+        </div>
       ${facturasHTML}
       <div class="divider"></div>
       <div class="section-title">Pago</div>
@@ -193,7 +202,7 @@ export default function PreviewInvoice() {
         </View>
       ) : (
         <View className="px-10 py-4 flex-1">
-          <View className="flex-1 bg-white border border-gray-100 shadow-md">
+          <View className="flex-1 bg-white border border-gray-100 shadow-md p-4">
             <WebView originWhitelist={['*']} source={{ html }} style={{ flex: 1 }} />
           </View>
         </View>
@@ -202,9 +211,8 @@ export default function PreviewInvoice() {
         <TouchableOpacity
           onPress={print}
           disabled={generating || loading}
-          className={`flex-1 flex-row items-center justify-center rounded-full px-4 py-3 ${
-            generating || loading ? 'bg-gray-300' : 'bg-yellow-300'
-          }`}
+          className={`flex-1 flex-row items-center justify-center rounded-full px-4 py-3 ${generating || loading ? 'bg-gray-300' : 'bg-yellow-300'
+            }`}
         >
           <Feather name="printer" size={18} color="#000" />
           <Text className="ml-2 font-[Poppins-SemiBold]">

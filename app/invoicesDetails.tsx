@@ -1,24 +1,16 @@
 import ReceiptIcon from '@/assets/icons/InvoicesIcon';
-import { useAuth } from '@/context/auth';
 import { PaymentData } from '@/types/types';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Feather from '@expo/vector-icons/Feather';
-import { Asset } from 'expo-asset';
 import Constants from 'expo-constants';
-import { SaveFormat, useImageManipulator } from 'expo-image-manipulator';
-import { printAsync, printToFileAsync } from 'expo-print';
 import { router, useLocalSearchParams } from 'expo-router';
-import * as Sharing from 'expo-sharing';
-import { useMemo, useState } from 'react';
-import { Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useMemo } from 'react';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const IMAGE = Asset.fromModule(require('@/assets/images/LogoAlfayOmega.png'))
 
 const InvoicesDetails = () => {
   const { item } = useLocalSearchParams<{ item?: string | string[] }>();
-  const { user } = useAuth();
-  const [printing, setPrinting] = useState(false);
 
   const invoiceDetails = useMemo<PaymentData | null>(() => {
     const raw = Array.isArray(item) ? item[0] : item;
@@ -37,229 +29,12 @@ const InvoicesDetails = () => {
     return safe.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
-  const context = useImageManipulator(IMAGE.uri);
-
   if (!invoiceDetails) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-white">
         <Text>No se encontró el recibo.</Text>
       </SafeAreaView>
     );
-  }
-
-  async function generateAndPrint() {
-    try {
-      if (!invoiceDetails) return;
-      if (printing) return;
-      setPrinting(true);
-
-      await IMAGE.downloadAsync();
-      const manipulatedImage = await context.renderAsync();
-      const result = await manipulatedImage.saveAsync({ base64: true, format: SaveFormat.PNG, compress: 0.7 });
-      const logo = `data:image/png;base64,${result.base64}`;
-
-      const folio = `${invoiceDetails.docEntry ?? ''}`;
-      const dateStr = invoiceDetails.docDate
-        ? new Date(invoiceDetails.docDate).toLocaleString()
-        : '';
-
-      const pay = invoiceDetails.payment?.[0] ?? ({} as any);
-      let paymentExtra = '';
-      if (invoiceDetails.paymentMeans === 'Tarjeta') {
-        paymentExtra = `<div class="row"><span>Referencia</span><span>${pay.cardVoucherNum ?? 'N/D'}</span></div>`;
-      } else if (invoiceDetails.paymentMeans === 'Cheque') {
-        paymentExtra = `
-          <div class="row"><span>Banco</span><span>${pay.bankCode ?? 'N/D'}</span></div>
-          <div class="row"><span>N° Cheque</span><span>${pay.checkNumber ?? 'N/D'}</span></div>
-          <div class="row"><span>Fecha Cheque</span><span>${pay.dueDate ?? 'N/D'}</span></div>
-        `;
-      } else if (invoiceDetails.paymentMeans === 'Transferencia') {
-        paymentExtra = `
-          <div class="row"><span>Fecha</span><span>${pay.transferDate ?? 'N/D'}</span></div>
-          <div class="row"><span>Referencia</span><span>${pay.transferReference ?? 'N/D'}</span></div>
-          <div class="row"><span>Cuenta</span><span>${pay.transferAccountName ?? 'N/D'}</span></div>
-        `;
-      }
-
-      // Función para formatear fechas en formato YYYY-MM-DD
-      const formatDate = (date: any) => {
-        if (!date) return 'N/D';
-        const d = new Date(date);
-        return isNaN(d.getTime()) ? 'N/D' : d.toISOString().split('T')[0];
-      };
-
-      // Modificación de la tabla de facturas
-      const facturasHTML = `
-        <div class="table-header">
-          <span class="col-date">FECHA</span>
-          <span class="col-invoice">FACTURA</span>
-          <span class="col-balance">SALDO ANT.</span>
-          <span class="col-payment">ABONO</span>
-        </div>
-        ${invoiceDetails.invoices.map((inv) => {
-        const abono = formatMoney(inv.appliedAmount);
-        const saldoAnt = formatMoney(inv.saldoAnterior);
-
-        const fecha = inv.invoiceDate ? formatDate(inv.invoiceDate) : 'N/D';
-
-        return `
-            <div class="table-row">
-              <span class="col-date">${fecha}</span>
-              <span class="col-invoice">${inv.numAtCard ?? 'N/D'}</span>
-              <span class="col-balance">L. ${saldoAnt}</span>
-              <span class="col-payment">L. ${abono}</span>
-            </div>
-          `;
-      }).join('')}
-      `;
-
-      // Calcular el saldo pendiente sumando todos los pendientes de las facturas
-      const totalPendiente = invoiceDetails.invoices.reduce(
-        (acc, inv) => acc + (Number(inv.pendiente) || 0),
-        0
-      );
-
-      const html = `
-        <html>
-          <head>
-        <meta charset="utf-8" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Montserrat:wght@600&display=swap" rel="stylesheet">
-        <style>
-          @page { size: 80mm auto; margin: 4px 4px 8px; }
-          * { box-sizing: border-box; }
-          body {
-            font-family: 'Inter', sans-serif;
-            background: #fff;
-            margin: 0;
-            padding: 0;
-            font-size: 10px;
-            color: #000;
-          }
-          .ticket {
-            width: 80mm;
-            height: auto;
-            // padding: 8px 8px 12px;
-            margin: 0 auto;
-          }
-          img {
-            max-width: 80%;
-            margin: 12px auto 12px;
-            display: block;
-            background: white;
-          }
-          .center { text-align: center; }
-          .start { text-align: left; width: 100%; margin-top: 8px; }
-          .bold { font-weight: 600; }
-          .muted { color: #555; }
-          .row { display: flex; justify-content: space-between; gap: 8px; }
-          .section-title {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            margin: 8px 0 4px;
-            text-transform: uppercase;
-          }
-          .divider {
-            height: 1px;
-            background: #000;
-            opacity: 0.2;
-            margin: 8px 0;
-          }
-          hr {
-            border: none;
-            border-top: 1px dashed #000;
-            margin: 6px 0;
-          }
-          .foot {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 11px;
-            color: #444;
-          }
-          /* Estilos para la tabla */
-          .table-header {
-            display: flex;
-            justify-content: space-between;
-            font-weight: bold;
-            margin-bottom: 5px;
-            border-bottom: 1px dashed #000;
-            padding-bottom: 3px;
-          }
-          .table-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-          }
-          .col-date { width: 25%; }
-          .col-invoice { width: 25%; }
-          .col-balance { width: 25%; text-align: right; }
-          .col-payment { width: 25%; text-align: right; }
-        </style>
-          </head>
-          <body>
-        <div class="ticket">
-          <div class="center">
-            <img src="${logo}" />
-            <div class="bold" style="font-family:'Montserrat', sans-serif; font-size:18px; margin-bottom: 34px;">Grupo Alfa & Omega</div>
-          </div>
-          <div class="start">
-            <div class="row"><span class="bold">Folio</span><span>${folio || 'N/D'}</span></div>
-            <div class="row"><span class="bold">Cliente</span><span>${invoiceDetails.cardCode} - ${invoiceDetails.cardName}</span></div>
-            <div class="row"><span class="bold">Vendedor</span><span>${user?.fullName ?? ''}</span></div>
-            <div class="row"><span class="bold">Fecha</span><span>${dateStr}</span></div>
-          </div>
-          <div class="divider"></div>
-          <div class="center section-title">Recibo de Cobros</div>
-          <div class="divider"></div>
-          <div class="section-title">Facturas</div>
-          ${facturasHTML}
-          <div class="divider"></div>
-          <div class="section-title">Pago</div>
-          <div class="row"><span>Método</span><span>${invoiceDetails.paymentMeans}</span></div>
-          ${paymentExtra}
-          <div class="row bold"><span>Total pagado</span><span>L. ${formatMoney(invoiceDetails.total)}</span></div>
-          <div class="divider"></div>
-          <div class="row bold"><span>Saldo pendiente</span><span>L. ${formatMoney(totalPendiente)}</span></div>
-          <div class="divider"></div>
-          <div class="foot">
-            ¡Gracias por su pago!<br/>
-            Dudas o reclamos por inconsistencias con su saldo,<br/> llamar al 9458-7168
-          </div>
-        </div>
-          </body>
-        </html>
-      `;
-      // Primero generamos el PDF localmente (más confiable en producción / standalone)
-      const pdf = await printToFileAsync({ html, base64: false });
-
-      // Intentamos abrir el diálogo de impresión (iOS admite uri directa; en Android usamos nuevamente html si uri falla)
-      try {
-        if (Platform.OS === 'ios') {
-          await printAsync({ uri: pdf.uri });
-        } else {
-          // Algunos servicios de impresión en Android no aceptan uri, reutilizamos html
-          await printAsync({ html });
-        }
-      } catch (printErr) {
-        console.warn('Fallo al abrir diálogo de impresión, se intentará compartir el PDF:', printErr);
-      }
-
-      // Ofrecemos compartir/guardar el PDF si es posible
-      try {
-        if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(pdf.uri, {
-            UTI: 'com.adobe.pdf',
-            mimeType: 'application/pdf',
-            dialogTitle: 'Compartir recibo'
-          });
-        }
-      } catch (shareErr) {
-        console.warn('No se pudo compartir el PDF:', shareErr);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setPrinting(false);
-    }
   }
 
   return (

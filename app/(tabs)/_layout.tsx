@@ -22,16 +22,19 @@ import SettingsScreen from './settings';
 const Drawer = createDrawerNavigator();
 
 export default function Layout() {
+  const ActiveColor = '#000';
+  const InActiveColor = '#c9c9c9';
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
         <ProtectedLayout>
           <ConnectivityBanner />
-          
           <Drawer.Navigator
             screenOptions={{
               headerShown: true,
-              drawerActiveTintColor: '#000',
+              drawerActiveTintColor: ActiveColor,
+              drawerInactiveTintColor: InActiveColor,
               drawerStyle: Platform.select({
                 ios: { backgroundColor: '#fff' },
                 android: {},
@@ -44,6 +47,7 @@ export default function Layout() {
               headerTitleStyle: {
                 fontFamily: 'Poppins-SemiBold',
                 letterSpacing: -0.6,
+                color: "#000",
               },
               drawerLabelStyle: {
                 fontFamily: 'Poppins-Medium',
@@ -51,14 +55,16 @@ export default function Layout() {
                 letterSpacing: -0.6,
               },
             }}
-            drawerContent={(props) => <CustomDrawerContent {...props} />}
+            drawerContent={(props) => <CustomDrawerContent {...props} ActiveColor={ActiveColor} InActiveColor={InActiveColor} />}
           >
             <Drawer.Screen
               name="index"
               component={IndexScreen}
               options={{
                 title: 'Inicio',
-                drawerIcon: ({ color }) => <HomeIcon size={26} color={color} />,
+                drawerIcon: ({ focused }) => (
+                  <HomeIcon size={26} color={focused ? ActiveColor : InActiveColor} />
+                ),
               }}
             />
             <Drawer.Screen
@@ -66,7 +72,9 @@ export default function Layout() {
               component={ExploreScreen}
               options={{
                 title: 'Pedidos',
-                drawerIcon: ({ color }) => <OrderIcon size={26} color={color} />,
+                drawerIcon: ({ focused }) => (
+                  <OrderIcon size={26} color={focused ? ActiveColor : InActiveColor} />
+                ),
               }}
             />
             <Drawer.Screen
@@ -74,7 +82,9 @@ export default function Layout() {
               component={InvoicesScreen}
               options={{
                 title: 'Cobros',
-                drawerIcon: ({ color }) => <InvoicesIcon size={26} color={color} />,
+                drawerIcon: ({ focused }) => (
+                  <InvoicesIcon size={26} color={focused ? ActiveColor : InActiveColor} />
+                ),
               }}
             />
             <Drawer.Screen
@@ -82,7 +92,9 @@ export default function Layout() {
               component={SettingsScreen}
               options={{
                 title: 'Ajustes',
-                drawerIcon: ({ color }) => <SettingsIcon size={26} color={color} />,
+                drawerIcon: ({ focused }) => (
+                  <SettingsIcon size={26} color={focused ? ActiveColor : InActiveColor} />
+                ),
               }}
             />
           </Drawer.Navigator>
@@ -107,7 +119,7 @@ function CustomDrawerContent(props: any) {
             {user?.fullName ?? 'Usuario'}
           </Text>
           <Text className="font-[Poppins-Regular] text-sm text-neutral-500">
-            Codigo: {user?.employeeCode ?? 'correo@ejemplo.com'}
+            Codigo: {user?.employeeCode ?? 'codigo no disponible'}
           </Text>
         </View>
       </View>
