@@ -45,3 +45,15 @@ export interface SalesDataType {
   end: string;
   dateField: string;
 }
+
+export interface TableDataType {
+  title: string;
+  slpCode: number;
+  asOf: string;
+  items: Array<{
+    cardCode: string;
+    cardName: string;
+    days: number;
+    pending: number;
+  }>;
+}

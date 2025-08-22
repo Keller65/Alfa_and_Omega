@@ -14,7 +14,7 @@ const Error = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { logout } = useAuth();
-  
+
   const errorCode = params.errorCode || '500';
   const errorMessage = params.errorMessage || 'Ocurrió un error inesperado';
 
@@ -22,7 +22,7 @@ const Error = () => {
 
   useEffect(() => {
     animation.current?.play();
-    
+
     setTimeout(() => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       player.play();
@@ -52,17 +52,17 @@ const Error = () => {
         source={require('@/assets/animation/Error.json')}
       />
 
-      <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#cc0000', marginTop: 20, textAlign: 'center' }}>
+      <Text style={{ fontSize: 28, fontFamily: 'Poppins-Medium', color: '#cc0000', marginTop: 20, textAlign: 'center' }}>
         {errorCode === '401' ? 'Sesión expirada' : '¡Ha ocurrido un error!'}
       </Text>
-      
+
       <Text style={{ fontSize: 16, color: '#666', marginTop: 10, marginBottom: 40, textAlign: 'center' }}>
         {errorMessage}
       </Text>
 
       <TouchableOpacity
         onPress={handleRetry}
-        style={{ backgroundColor: '#cc0000', width: '100%', height: 50, alignItems: 'center', justifyContent: 'center', borderRadius: 12, marginBottom: 15 }}
+        style={{ backgroundColor: '#cc0000', width: '100%', height: 50, alignItems: 'center', justifyContent: 'center', borderRadius: 99, marginBottom: 10 }}
       >
         <Text style={{ fontFamily: 'Poppins-Medium', color: '#fff', fontSize: 18 }}>
           {errorCode === '401' ? 'Iniciar sesión' : 'Intentar de nuevo'}
@@ -71,10 +71,10 @@ const Error = () => {
 
       <TouchableOpacity
         onPress={handleBack}
-        style={{ borderWidth: 2, borderColor: '#cc0000', width: '100%', height: 50, alignItems: 'center', justifyContent: 'center', borderRadius: 12 }}
+        style={{ width: '100%', height: 50, alignItems: 'center', justifyContent: 'center', borderRadius: 99 }}
       >
         <Text style={{ fontFamily: 'Poppins-Medium', color: '#cc0000', fontSize: 18 }}>
-          Volver
+          Volver a Intentar
         </Text>
       </TouchableOpacity>
     </SafeAreaView>

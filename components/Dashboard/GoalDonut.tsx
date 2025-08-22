@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
 export type GoalDonutProps = {
@@ -11,6 +11,7 @@ export type GoalDonutProps = {
   centerLabelPrimary?: string;
   centerLabelSecondary?: string;
   lastUpdated?: string;
+  loading?: boolean; // Asegurarse de que loading esté definido en las props
 };
 
 export default function GoalDonut({
@@ -22,9 +23,18 @@ export default function GoalDonut({
   centerLabelPrimary,
   centerLabelSecondary,
   lastUpdated,
+  loading = false, // Valor predeterminado para evitar undefined
 }: GoalDonutProps) {
   const scale = useRef(new Animated.Value(0.94)).current;
   const [displayPercent, setDisplayPercent] = useState(0);
+
+  if (loading) {
+    return (
+      <View className="bg-white rounded-2xl px-4 py-3 border border-gray-100 w-full items-center justify-center">
+        <ActivityIndicator size="large" color="#6b7280" />
+      </View>
+    );
+  }
 
   const rawProgress = (() => {
     if (progressPct != null) return progressPct;

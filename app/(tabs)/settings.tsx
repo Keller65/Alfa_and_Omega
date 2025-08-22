@@ -342,7 +342,7 @@ const Settings = () => {
         />
         <SettingItem
           kind="info"
-          title="Dirección MAC"
+          title="Dirección IP"
           subtitle={macAddress || 'Cargando...'}
           iconLeft={<Feather name="wifi" size={18} color="#4B5563" style={{ marginRight: 12 }} />}
         />

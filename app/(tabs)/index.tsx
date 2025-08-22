@@ -8,7 +8,7 @@ import UpdateBanner from '@/components/UpdateBanner';
 import { useAuth } from '@/context/auth';
 import { useOtaUpdates } from "@/hooks/useOtaUpdates";
 import { useAppStore } from '@/state';
-import { GoalDonutType, SalesDataType } from "@/types/DasboardType";
+import { GoalDonutType, SalesDataType, TableDataType } from "@/types/DasboardType";
 import axios from 'axios';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
@@ -21,15 +21,22 @@ export default function App() {
   const [loadingGoal, setLoadingGoal] = useState(false);
   const [goalError, setGoalError] = useState<string | null>(null);
   const [sales, setSales] = useState<SalesDataType | null>(null);
-  const { uuid, valid, loading } = useLicense();
+  const { valid, loading } = useLicense();
   const { isUpdating, error, isUpdateAvailable, checkAndUpdate } = useOtaUpdates();
   const [kpiData, setKpiData] = useState(null);
+  const [loadingKpi, setLoadingKpi] = useState(true);
+  const [tableData, setTableData] = useState<TableDataType | null>(null);
+  const [loadingTableData, setLoadingTableData] = useState(false);
+  const [tableError, setTableError] = useState<string | null>(null);
+  const [loadingSales, setLoadingSales] = useState(false);
 
   const fetchData = async () => {
     if (!user?.token) return;
     const slpCode = user.salesPersonCode;
 
     try {
+      setLoadingKpi(true);
+      setLoadingSales(true);
       const [goalRes, kpiRes, salesRes] = await Promise.all([
         axios.get(`${fetchUrl}/api/Metrics/sales-progress/${slpCode}?mode=net`, {
           headers: {
@@ -58,11 +65,42 @@ export default function App() {
     } catch (e) {
       console.error('Error fetching data:', e);
       setGoalError('No se pudieron cargar los datos');
+    } finally {
+      setLoadingKpi(false);
+      setLoadingSales(false);
+    }
+  };
+
+  const fetchTableData = async () => {
+    if (!user?.token) return;
+    const slpCode = user.salesPersonCode;
+
+    try {
+      setLoadingTableData(true);
+      const response = await fetch(`${fetchUrl}/api/Kpi/aging-36-60/${slpCode}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al obtener los datos de la tabla");
+      }
+
+      const data: TableDataType = await response.json();
+      setTableData(data);
+    } catch (error) {
+      console.error("Error fetching table data:", error);
+      setTableError("No se pudieron cargar los datos de la tabla");
+    } finally {
+      setLoadingTableData(false);
     }
   };
 
   useEffect(() => {
     fetchData();
+    fetchTableData();
   }, [user?.token]);
 
   const goal = { current: goalData?.current || 0, target: goalData?.target || 0 };
@@ -99,11 +137,6 @@ export default function App() {
     { fecha: "2024-06-04", cliente: "Cliente D", monto: 9400 },
     { fecha: "2024-06-04", cliente: "Cliente E", monto: 9600 },
     { fecha: "2024-06-04", cliente: "Cliente F", monto: 6800 },
-    { fecha: "2024-06-04", cliente: "Cliente G", monto: 9000 },
-    { fecha: "2024-06-04", cliente: "Cliente H", monto: 3400 },
-    { fecha: "2024-06-04", cliente: "Cliente I", monto: 5600 },
-    { fecha: "2024-06-04", cliente: "Cliente J", monto: 1285 },
-    { fecha: "2024-06-04", cliente: "Cliente K", monto: 2068 },
   ];
 
   if (loading) {
@@ -118,7 +151,7 @@ export default function App() {
   if (!valid) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
-        <Text className="text-black text-xl mt-2 font-[Poppins-SemiBold] tracking-[-0.3px]">
+        <Text className="text-red-500 font-[Poppins-SemiBold] tracking-[-0.3px]">
           Licencia Expirada
         </Text>
       </View>
@@ -142,74 +175,75 @@ export default function App() {
               message="Actualización disponible"
             />
 
-            <View className='px-4 gap-4'>
-              <Text className="text-2xl font-[Poppins-SemiBold] tracking-[-0.3px] text-gray-900">Dashboard</Text>
-
-              <View className="flex-row flex-wrap justify-between gap-4">
-                <View className='flex gap-4 w-full'>
-                  <KPICard data={kpiData} userName={user?.fullName} />
-                  <SalesCard data={sales} />
-                </View>
+            <View className='px-4 gap-6'>
+              <View>
+                <Text className="text-xl font-[Poppins-SemiBold] tracking-[-0.6px] text-gray-900">Ventas vs Cobros</Text>
+                <KPICard data={kpiData} userName={user?.fullName} loading={loadingKpi} />
               </View>
 
-              <GoalDonut
-                current={goal.current}
-                target={goal.target}
-                progressPct={goalData?.progressPct}
-                currency={goalData?.currency}
-                centerLabelPrimary={goalData?.centerLabelPrimary}
-                centerLabelSecondary={goalData?.centerLabelSecondary}
-                lastUpdated={goalData?.lastUpdated}
-              />
+              <View>
+                <Text className="text-xl font-[Poppins-SemiBold] tracking-[-0.6px] text-gray-900">Cobros</Text>
+                <SalesCard data={sales} loading={loadingSales} />
+              </View>
 
-              <BottomSheetWelcome />
+              <View>
+                <Text className="text-xl font-[Poppins-SemiBold] tracking-[-0.6px] text-gray-900">Ventas</Text>
+                <GoalDonut
+                  current={goal.current}
+                  target={goal.target}
+                  progressPct={goalData?.progressPct}
+                  currency={goalData?.currency}
+                  centerLabelPrimary={goalData?.centerLabelPrimary}
+                  centerLabelSecondary={goalData?.centerLabelSecondary}
+                  lastUpdated={goalData?.lastUpdated}
+                  loading={loadingGoal}
+                />
+              </View>
             </View>
 
             <View className="px-4 mt-4">
-              <Text className="text-2xl font-[Poppins-SemiBold] tracking-[-0.3px] text-gray-900 mb-3">
-                Ventas recientes
+              <Text className="text-2xl font-[Poppins-SemiBold] tracking-[-0.6px] text-black">
+                Facturas Pendientes
               </Text>
 
-              <View className="overflow-hidden">
-                {/* Header */}
-                <View className="flex-row bg-black py-3 px-5 w-full justify-between flex-1 rounded-full">
-                  <Text className="text-white font-[Poppins-SemiBold] text-sm">
-                    Fecha
-                  </Text>
-                  <Text className="text-white font-[Poppins-SemiBold] text-sm">
-                    Cliente
-                  </Text>
-                  <Text className="text-white font-[Poppins-SemiBold] text-sm">
-                    Monto
-                  </Text>
-                </View>
+              <Text className="text-sm font-[Poppins-SemiBold] tracking-[-0.6px] text-gray-500 mb-3">
+                {tableData?.title}
+              </Text>
+
+              <View className="flex-row bg-white py-3 w-full justify-between flex-1 rounded-full">
+                <Text className="text-black font-[Poppins-SemiBold] text-sm">Código</Text>
+                <Text className="text-black font-[Poppins-SemiBold] text-sm">Cliente</Text>
+                <Text className="text-black font-[Poppins-SemiBold] text-sm">Días</Text>
+                <Text className="text-black font-[Poppins-SemiBold] text-sm">Pendiente</Text>
               </View>
             </View>
           </>
         }
-        renderItem={({ item, index }) => (
-          <Pressable
-            className="flex-row justify-between items-center bg-white px-5 py-3"
-            style={{
-              borderBottomWidth: index === ventas.length - 1 ? 0 : 1,
-              borderBottomColor: "#f0f0f0",
-            }}
-          >
-            <Text className="text-start text-gray-500 text-xs tracking-[-0.3px] font-[Poppins-Regular]">
-              {item.fecha}
-            </Text>
-            <Text className="text-start text-gray-800 text-sm tracking-[-0.3px] font-[Poppins-Medium]">
-              {item.cliente}
-            </Text>
-            <Text className="text-right text-gray-900 text-sm tracking-[-0.3px] font-[Poppins-SemiBold]">
-              L. {item.monto.toLocaleString()}
-            </Text>
-          </Pressable>
+        renderItem={({ index }) => (
+          <View>
+            <View className="flex-row py-3 px-5 w-full justify-between items-center border-b border-gray-100">
+              <Text className="text-gray-900 tracking-[-0.3px] font-[Poppins-Regular] text-sm" style={{ flex: 1 }}>
+                {tableData?.items?.[index]?.cardCode ?? "-"}
+              </Text>
+              <Text className="text-gray-900 tracking-[-0.3px] font-[Poppins-Regular] text-sm" style={{ flex: 2 }}>
+                {tableData?.items?.[index]?.cardName ?? "-"}
+              </Text>
+              <Text className="text-gray-900 tracking-[-0.3px] font-[Poppins-Regular] text-sm" style={{ flex: 1 }}>
+                {tableData?.items?.[index]?.days ?? "-"}
+              </Text>
+              <Text className="text-gray-900 tracking-[-0.3px] font-[Poppins-Regular] text-sm text-right" style={{ flex: 1 }}>
+                {typeof tableData?.items?.[index]?.pending === "number"
+                  ? tableData.items[index].pending.toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                  : "-"}
+              </Text>
+            </View>
+          </View>
         )}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ paddingBottom: products.length > 0 ? 24 : 0 }}
       />
-      <Text className="text-xs text-center font-[Poppins-SemiBold] tracking-[-0.3px] text-gray-500">{uuid}</Text>
+
+      <BottomSheetWelcome />
     </View>
   );
 }
