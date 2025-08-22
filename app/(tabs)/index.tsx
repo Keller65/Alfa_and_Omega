@@ -1,75 +1,68 @@
+import { useLicense } from "@/auth/useLicense";
 import BottomSheetCart from '@/components/BottomSheetCart/page';
 import BottomSheetWelcome from '@/components/BottomSheetWelcome/page';
 import GoalDonut from '@/components/Dashboard/GoalDonut';
 import KPICard from '@/components/Dashboard/KPICard';
+import SalesCard from "@/components/Dashboard/SalesCard";
 import UpdateBanner from '@/components/UpdateBanner';
 import { useAuth } from '@/context/auth';
 import { useOtaUpdates } from "@/hooks/useOtaUpdates";
 import { useAppStore } from '@/state';
+import { GoalDonutType, SalesDataType } from "@/types/DasboardType";
 import axios from 'axios';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, Text, View, FlatList, Pressable } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import "../../global.css";
 
 export default function App() {
-  const kpis = {
-    totalVentas: 52340,
-    tickets: 312,
-    promedioTicket: 168,
-    margen: 34.5,
-    deltaVentas: 8.3,
-    deltaTickets: -2.1,
-  };
-
-  // Estado de métricas (donut)
   const { fetchUrl } = useAppStore();
   const { user } = useAuth();
-  const [goalData, setGoalData] = useState<{
-    current: number;
-    target: number;
-    progressPct?: number;
-    currency?: string;
-    centerLabelPrimary?: string;
-    centerLabelSecondary?: string;
-    lastUpdated?: string;
-  } | null>(null);
+  const [goalData, setGoalData] = useState<GoalDonutType | null>(null);
   const [loadingGoal, setLoadingGoal] = useState(false);
   const [goalError, setGoalError] = useState<string | null>(null);
+  const [sales, setSales] = useState<SalesDataType | null>(null);
+  const { uuid, valid, loading } = useLicense();
+  const { isUpdating, error, isUpdateAvailable, checkAndUpdate } = useOtaUpdates();
+  const [kpiData, setKpiData] = useState(null);
 
-  async function fetchGoal() {
+  const fetchData = async () => {
     if (!user?.token) return;
     const slpCode = user.salesPersonCode;
-    setLoadingGoal(true);
-    setGoalError(null);
+
     try {
-      const url = `${fetchUrl}/api/Metrics/sales-progress/${slpCode}?mode=net`;
-      const res = await axios.get(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${user.token}`,
-          'Content-Encoding': 'gzip'
-        }
-      });
-      const d = res.data;
+      const [goalRes, kpiRes, salesRes] = await Promise.all([
+        axios.get(`${fetchUrl}/api/Metrics/sales-progress/${slpCode}?mode=net`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${user.token}`,
+            'Content-Encoding': 'gzip'
+          }
+        }),
+        fetch(`${fetchUrl}/api/Kpi/sales-vs-collections/${slpCode}`).then(res => res.json()),
+        fetch(`${fetchUrl}/api/Kpi/monthly/${slpCode}`).then(res => res.json())
+      ]);
+
+      const goalData = goalRes.data;
       setGoalData({
-        current: d.actual ?? 0,
-        target: d.target ?? 0,
-        progressPct: d.progressPct,
-        currency: d.currency,
-        centerLabelPrimary: d.centerLabel?.primary,
-        centerLabelSecondary: d.centerLabel?.secondary,
-        lastUpdated: d.lastUpdated
+        current: goalData.actual ?? 0,
+        target: goalData.target ?? 0,
+        progressPct: goalData.progressPct,
+        currency: goalData.currency,
+        centerLabelPrimary: goalData.centerLabel?.primary,
+        centerLabelSecondary: goalData.centerLabel?.secondary,
+        lastUpdated: goalData.lastUpdated
       });
+
+      setKpiData(kpiRes);
+      setSales(salesRes);
     } catch (e) {
-      console.error('Error fetch goal', e);
+      console.error('Error fetching data:', e);
       setGoalError('No se pudieron cargar los datos');
-    } finally {
-      setLoadingGoal(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchGoal();
+    fetchData();
   }, [user?.token]);
 
   const goal = { current: goalData?.current || 0, target: goalData?.target || 0 };
@@ -80,14 +73,11 @@ export default function App() {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchGoal().finally(() => {
+    fetchData().finally(() => {
       setRefreshKey((k) => k + 1);
       setRefreshing(false);
     });
   }, []);
-
-  const { isUpdating, error, isUpdateAvailable, checkAndUpdate } = useOtaUpdates();
-
 
   if (isUpdating) {
     return (
@@ -116,97 +106,110 @@ export default function App() {
     { fecha: "2024-06-04", cliente: "Cliente K", monto: 2068 },
   ];
 
+  if (loading) {
+    return (
+      <View className="flex-1 bg-white items-center justify-center gap-2">
+        <ActivityIndicator size="large" color="#000" />
+        <Text className='font-[Poppins-SemiBold] tracking-[-0.3px]'>Validando Licencia...</Text>
+      </View>
+    );
+  }
+
+  if (!valid) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <Text className="text-black text-xl mt-2 font-[Poppins-SemiBold] tracking-[-0.3px]">
+          Licencia Expirada
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View className='flex-1 bg-white relative'>
       <View className="absolute bottom-4 right-8 gap-3 items-end">
         {products.length > 0 && (<BottomSheetCart />)}
       </View>
 
-      <ScrollView
-        className="flex-1 bg-white"
-        contentContainerClassName="gap-4 pb-24"
-        scrollEnabled
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      >
-        <UpdateBanner
-          visible={isUpdateAvailable}
-          onReload={checkAndUpdate}
-          message="Actualización disponible"
-        />
-
-        <View className='px-4 gap-4'>
-          <Text className="text-2xl font-[Poppins-SemiBold] tracking-[-0.3px] text-gray-900">Dashboard</Text>
-
-          <View className="flex-row flex-wrap justify-between gap-4">
-            <View className='flex-row gap-4 w-full'>
-              <KPICard title="Ventas" value={`$${kpis.totalVentas.toLocaleString()}`} delta={kpis.deltaVentas} subtitle="vs. semana ant." />
-              <KPICard title="Tickets" value={kpis.tickets} delta={kpis.deltaTickets} subtitle="vs. semana ant." />
-            </View>
-            <View className='flex-row gap-4 w-full'>
-              <KPICard title="Promedio ticket" value={`$${kpis.promedioTicket.toLocaleString()}`} />
-              <KPICard title="Margen" value={`${kpis.margen}%`} />
-            </View>
-          </View>
-
-          <GoalDonut
-            current={goal.current}
-            target={goal.target}
-            progressPct={goalData?.progressPct}
-            currency={goalData?.currency}
-            centerLabelPrimary={goalData?.centerLabelPrimary}
-            centerLabelSecondary={goalData?.centerLabelSecondary}
-            lastUpdated={goalData?.lastUpdated}
-          />
-
-          <BottomSheetWelcome />
-        </View>
-
-        <View className="px-4 mt-4">
-          <Text className="text-2xl font-[Poppins-SemiBold] tracking-[-0.3px] text-gray-900 mb-3">
-            Ventas recientes
-          </Text>
-
-          <View className="overflow-hidden">
-            {/* Header */}
-            <View className="flex-row bg-black py-3 px-5 w-full justify-between flex-1 rounded-full">
-              <Text className="text-white font-[Poppins-SemiBold] text-sm">
-                Fecha
-              </Text>
-              <Text className="text-white font-[Poppins-SemiBold] text-sm">
-                Cliente
-              </Text>
-              <Text className="text-white font-[Poppins-SemiBold] text-sm">
-                Monto
-              </Text>
-            </View>
-
-            {/* Rows */}
-            <FlatList
-              data={ventas}
-              keyExtractor={(item, idx) => item.fecha + item.cliente + idx}
-              renderItem={({ item, index }) => (
-                <Pressable
-                  className="flex-row justify-between items-center bg-white px-5 py-3"
-                  style={{
-                    borderBottomWidth: index === ventas.length - 1 ? 0 : 1,
-                    borderBottomColor: "#f0f0f0",
-                  }}
-                >
-                  <Text className="text-start text-gray-500 text-xs tracking-[-0.3px] font-[Poppins-Regular]">
-                    {item.fecha}
-                  </Text>
-                  <Text className="text-start text-gray-800 text-sm tracking-[-0.3px] font-[Poppins-Medium]">
-                    {item.cliente}
-                  </Text>
-                  <Text className="text-right text-gray-900 text-sm tracking-[-0.3px] font-[Poppins-SemiBold]">
-                    L. {item.monto.toLocaleString()}
-                  </Text>
-                </Pressable>
-              )}
+      <FlatList
+        data={ventas}
+        keyExtractor={(item, idx) => item.fecha + item.cliente + idx}
+        ListHeaderComponent={
+          <>
+            <UpdateBanner
+              visible={isUpdateAvailable}
+              onReload={checkAndUpdate}
+              message="Actualización disponible"
             />
-          </View>
-        </View>
-      </ScrollView>
+
+            <View className='px-4 gap-4'>
+              <Text className="text-2xl font-[Poppins-SemiBold] tracking-[-0.3px] text-gray-900">Dashboard</Text>
+
+              <View className="flex-row flex-wrap justify-between gap-4">
+                <View className='flex gap-4 w-full'>
+                  <KPICard data={kpiData} userName={user?.fullName} />
+                  <SalesCard data={sales} />
+                </View>
+              </View>
+
+              <GoalDonut
+                current={goal.current}
+                target={goal.target}
+                progressPct={goalData?.progressPct}
+                currency={goalData?.currency}
+                centerLabelPrimary={goalData?.centerLabelPrimary}
+                centerLabelSecondary={goalData?.centerLabelSecondary}
+                lastUpdated={goalData?.lastUpdated}
+              />
+
+              <BottomSheetWelcome />
+            </View>
+
+            <View className="px-4 mt-4">
+              <Text className="text-2xl font-[Poppins-SemiBold] tracking-[-0.3px] text-gray-900 mb-3">
+                Ventas recientes
+              </Text>
+
+              <View className="overflow-hidden">
+                {/* Header */}
+                <View className="flex-row bg-black py-3 px-5 w-full justify-between flex-1 rounded-full">
+                  <Text className="text-white font-[Poppins-SemiBold] text-sm">
+                    Fecha
+                  </Text>
+                  <Text className="text-white font-[Poppins-SemiBold] text-sm">
+                    Cliente
+                  </Text>
+                  <Text className="text-white font-[Poppins-SemiBold] text-sm">
+                    Monto
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </>
+        }
+        renderItem={({ item, index }) => (
+          <Pressable
+            className="flex-row justify-between items-center bg-white px-5 py-3"
+            style={{
+              borderBottomWidth: index === ventas.length - 1 ? 0 : 1,
+              borderBottomColor: "#f0f0f0",
+            }}
+          >
+            <Text className="text-start text-gray-500 text-xs tracking-[-0.3px] font-[Poppins-Regular]">
+              {item.fecha}
+            </Text>
+            <Text className="text-start text-gray-800 text-sm tracking-[-0.3px] font-[Poppins-Medium]">
+              {item.cliente}
+            </Text>
+            <Text className="text-right text-gray-900 text-sm tracking-[-0.3px] font-[Poppins-SemiBold]">
+              L. {item.monto.toLocaleString()}
+            </Text>
+          </Pressable>
+        )}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        contentContainerStyle={{ paddingBottom: products.length > 0 ? 24 : 0 }}
+      />
+      <Text className="text-xs text-center font-[Poppins-SemiBold] tracking-[-0.3px] text-gray-500">{uuid}</Text>
     </View>
   );
 }

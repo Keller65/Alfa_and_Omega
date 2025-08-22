@@ -9,6 +9,7 @@ import * as Device from 'expo-device';
 import * as FileSystem from 'expo-file-system';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as Location from 'expo-location';
+import * as Network from 'expo-network';
 import * as Notifications from 'expo-notifications';
 import * as Sharing from 'expo-sharing';
 import * as Updates from 'expo-updates';
@@ -33,6 +34,7 @@ const Settings = () => {
   const [updating, setUpdating] = useState(false);
   const [exportingLogs, setExportingLogs] = useState(false);
   const [locationServicesEnabled, setLocationServicesEnabled] = useState(false);
+  const [macAddress, setMacAddress] = useState<string | null>(null);
   const { fetchUrl } = useAppStore();
   const API_BASE_URL = fetchUrl;
 
@@ -57,6 +59,19 @@ const Settings = () => {
       checkLocationServicesStatus();
     };
     loadData();
+  }, []);
+
+  useEffect(() => {
+    const fetchMacAddress = async () => {
+      try {
+        const networkState = await Network.getNetworkStateAsync();
+        setMacAddress(await Network.getIpAddressAsync());
+      } catch (e) {
+        console.warn('Error obteniendo la dirección MAC', e);
+        setMacAddress('Error');
+      }
+    };
+    fetchMacAddress();
   }, []);
 
   const checkLocationServicesStatus = async () => {
@@ -324,6 +339,12 @@ const Settings = () => {
           title="Ubicación"
           subtitle={locationServicesEnabled ? 'Activa' : 'Desactivada'}
           iconLeft={<Feather name="map-pin" size={18} color="#4B5563" style={{ marginRight: 12 }} />}
+        />
+        <SettingItem
+          kind="info"
+          title="Dirección MAC"
+          subtitle={macAddress || 'Cargando...'}
+          iconLeft={<Feather name="wifi" size={18} color="#4B5563" style={{ marginRight: 12 }} />}
         />
       </SettingsSection>
 

@@ -46,7 +46,14 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-audio"
+      "expo-audio",
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true,
+          "faceIDPermission": "Permitir que $(PRODUCT_NAME) acceda a tus datos biométricos."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

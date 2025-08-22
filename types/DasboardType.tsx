@@ -21,3 +21,27 @@ export interface DashboardType {
   colorHints: any | null;
   lastUpdated: string;
 }
+
+export interface GoalDonutType {
+  current: number;
+  target: number;
+  progressPct?: number;
+  currency?: string;
+  centerLabelPrimary?: string;
+  centerLabelSecondary?: string;
+  lastUpdated?: string;
+}
+
+export interface SalesDataType {
+  slpCode: number;
+  period: string;
+  currency: string;
+  cash: number;
+  transfer: number;
+  card: number;
+  checksDeposited: number;
+  total: number;
+  start: string;
+  end: string;
+  dateField: string;
+}
