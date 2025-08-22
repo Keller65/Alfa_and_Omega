@@ -431,6 +431,7 @@ export default function BottomSheetCart() {
         snapPoints={snapPoints}
         onChange={handleSheetChanges}
         footerComponent={renderFooter}
+        backgroundStyle={{ borderRadius: 30 }}
         backdropComponent={(props: BottomSheetBackdropProps) => (
           <BottomSheetBackdrop
             {...props}

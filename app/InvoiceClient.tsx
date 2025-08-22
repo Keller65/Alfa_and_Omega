@@ -45,7 +45,7 @@ const InvoicesClientScreen = memo(() => {
             Authorization: `Bearer ${user.token}`,
           },
           cache: {
-            ttl: Infinity,
+            ttl: 1000 * 60 * 60 * 24,
           }
         }
       );

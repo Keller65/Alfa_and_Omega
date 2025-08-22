@@ -248,22 +248,26 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: '#333',
+    fontFamily: 'Poppins-SemiBold',
   },
   errorText: {
     fontSize: 16,
     color: 'red',
     textAlign: 'center',
     marginBottom: 5,
+    fontFamily: 'Poppins-SemiBold',
   },
   subText: {
     fontSize: 14,
     color: 'gray',
     textAlign: 'center',
     marginBottom: 10,
+    fontFamily: 'Poppins-SemiBold',
   },
   emptyText: {
     fontSize: 16,
     color: 'gray',
     textAlign: 'center',
+    fontFamily: 'Poppins-SemiBold',
   },
 });

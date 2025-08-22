@@ -10,6 +10,7 @@ import InvoicesIcon from '@/assets/icons/InvoicesIcon';
 import SettingsIcon from '@/assets/icons/SettingsIcon';
 import OrderIcon from '@/assets/icons/OrdeIcon';
 import ClientIcon from '@/assets/icons/ClientIcon';
+import CatalogIcon from '@/assets/icons/CatalogIcon';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -18,6 +19,7 @@ import IndexScreen from './index';
 import ExploreScreen from './explore';
 import InvoicesScreen from './invoices';
 import SettingsScreen from './settings';
+import ProductScreen from './products';
 
 const Drawer = createDrawerNavigator();
 
@@ -84,6 +86,18 @@ export default function Layout() {
                 title: 'Cobros',
                 drawerIcon: ({ focused }) => (
                   <InvoicesIcon size={26} color={focused ? ActiveColor : InActiveColor} />
+                ),
+              }}
+            />
+            <Drawer.Screen
+              name="products"
+              component={ProductScreen}
+              options={{
+                title: 'Productos',
+                headerTitle: '',
+                headerStyle: { backgroundColor: '#f9fafb', elevation: 0, borderBottomWidth: 0, zIndex: 1 },
+                drawerIcon: ({ focused }) => (
+                  <CatalogIcon size={24} color={focused ? ActiveColor : InActiveColor} />
                 ),
               }}
             />

@@ -29,8 +29,8 @@ export default function BottomSheetWelcome() {
     <View className="flex-1 justify-center items-center bg-white p-6" pointerEvents="box-none">
       <BottomSheetModal
         ref={bottomSheetRef}
-        snapPoints={['60%']}
-        backgroundStyle={{ borderRadius: 26 }}
+        snapPoints={['50%']}
+        backgroundStyle={{ borderRadius: 30 }}
         backdropComponent={(props) => (
           <BottomSheetBackdrop
             {...props}
