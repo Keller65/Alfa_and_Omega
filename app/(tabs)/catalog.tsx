@@ -5,14 +5,14 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import axios from 'axios';
 import Checkbox from 'expo-checkbox';
+import * as FileSystem from 'expo-file-system';
 import { Image as ExpoImage } from 'expo-image';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown, FadeOutUp } from 'react-native-reanimated';
 import '../../global.css';
-import { ScrollView } from 'react-native-gesture-handler';
 
 // Definimos los tipos para los parámetros y las estructuras
 type Category = {
@@ -27,17 +27,27 @@ type GroupedProducts = {
   };
 };
 
-// Genera un HTML simple para un producto con foto, nombre y código
+// Genera un HTML estilizado para un producto con foto, nombre y código
 function generateProductHtml(product: ProductDiscount) {
   return `
-    <div style="display:flex;align-items:center;border:1px solid #eee;border-radius:12px;padding:16px;margin-bottom:12px;">
+    <div style="text-align:center;padding:16px;margin-bottom:12px;">
       <img src="https://pub-266f56f2e24d4d3b8e8abdb612029f2f.r2.dev/${product.itemCode ?? '100000'}.jpg"
            alt="Producto" 
-           style="width:170px;height:170px;object-fit:cover;border-radius:8px;margin-right:16px;">
-      <div>
-        <div style="font-size:22px;font-weight:600;margin-bottom:4px;font-family:'Poppins-Medium',Arial,sans-serif;">${product.itemName}</div>
-        ${product.barCode ? `<div style="font-size:16px;color:#888;font-family:'Poppins-Medium',Arial,sans-serif;">Código: ${product.barCode}</div>` : ''}
-        <div style="font-size:16px;margin-bottom:4px;font-family:'Poppins-Medium',Arial,sans-serif;">${product.salesUnit} x ${product.salesItemsPerUnit}</div>
+           style="width:150px;height:150px;object-fit:cover;border-radius:8px;margin-bottom:8px;">
+      <div style="font-size:16px;font-weight:600;font-family:'Poppins-Medium',Arial,sans-serif;color:#333;">${product.itemName}</div>
+      ${product.barCode ? `<div style="font-size:14px;color:#666;font-family:'Poppins-Regular',Arial,sans-serif;margin-top:4px;">${product.barCode}</div>` : ''}
+      <div style="font-size:14px;font-family:'Poppins-Regular',Arial,sans-serif;color:#555;margin-top:4px;">${product.salesUnit} x ${product.salesItemsPerUnit}</div>
+    </div>
+  `;
+}
+
+// Genera un HTML estilizado para una categoría con 3 productos por fila
+function generateCategoryHtml(categoryName: string, productsHtml: string) {
+  return `
+    <div style="margin-bottom:24px;">
+      <h2 style="font-size:20px;font-weight:700;font-family:'Poppins-Bold',Arial,sans-serif;color:#222;margin-bottom:16px;border-bottom:1px solid #ddd;padding-bottom:8px;">${categoryName}</h2>
+      <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;">
+        ${productsHtml}
       </div>
     </div>
   `;
@@ -66,6 +76,16 @@ function groupProductsByCategory(products: ProductDiscount[], categories: Catego
   return grouped;
 }
 
+// Genera una portada para el catálogo
+function generateCoverPage() {
+  return `
+    <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;background-color:#fff;height:100%;width:100%;">
+      <p style="font-size:24px;font-family:'Poppins-Bold',Arial,sans-serif;color:#555;margin-bottom:24px;text-align:center;">Catálogo de Productos</p>
+      <img src="https://pub-f524aa67d2854c378ac58dd12adeca33.r2.dev/LogoAlfayOmega.png" alt="Portada del catálogo" style="width:450px;height:auto;border-radius:12px;display:block;margin:0 auto;">
+    </div>
+  `;
+}
+
 const ProductScreen = () => {
   const { fetchUrl } = useAppStore();
   const { user } = useAuth();
@@ -92,6 +112,10 @@ const ProductScreen = () => {
   // Genera y comparte PDF
   const handleGeneratePdf = async (htmlContent: string) => {
     try {
+      const currentDate = new Date();
+      const formattedDate = `${currentDate.toLocaleDateString().replace(/\//g, '-')}_${currentDate.toLocaleTimeString().replace(/:/g, '-')}`;
+      const fileName = `Catalogo Alfa & Omega - ${formattedDate}.pdf`;
+
       const { uri } = await Print.printToFileAsync({
         html: `
           <html>
@@ -102,17 +126,19 @@ const ProductScreen = () => {
               </style>
             </head>
             <body>
-              <h2 style="text-align:center;">Catálogo de Productos</h2>
               ${htmlContent}
             </body>
           </html>
         `,
       });
 
-      console.log('✅ PDF generado en:', uri);
+      const newUri = `${uri.substring(0, uri.lastIndexOf('/') + 1)}${fileName}`;
+      await FileSystem.moveAsync({ from: uri, to: newUri });
+
+      console.log('✅ PDF generado en:', newUri);
 
       if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri, {
+        await Sharing.shareAsync(newUri, {
           mimeType: 'application/pdf',
           UTI: 'com.adobe.pdf',
         });
@@ -160,25 +186,25 @@ const ProductScreen = () => {
       const groupedProducts = groupProductsByCategory(response.data, filteredCategories);
 
       // Generar contenido HTML agrupado por categoría
-      const pdfContent = Object.keys(groupedProducts)
-        .map((categoryCode) => {
-          const category = groupedProducts[categoryCode];
-          const productsHtml = category.products
-            .map((product) =>
-              generateProductHtml({
-                ...product,
-                itemCode: product?.itemCode !== undefined ? String(product.itemCode) : 'SIN-CÓDIGO',
-                itemName: product?.itemName ?? 'Sin nombre',
-              })
-            )
-            .join('');
+      const pdfContent = `
+        ${generateCoverPage()}
+        ${Object.keys(groupedProducts)
+          .map((categoryCode) => {
+            const category = groupedProducts[categoryCode];
+            const productsHtml = category.products
+              .map((product) =>
+                generateProductHtml({
+                  ...product,
+                  itemCode: product?.itemCode !== undefined ? String(product.itemCode) : 'SIN-CÓDIGO',
+                  itemName: product?.itemName ?? 'Sin nombre',
+                })
+              )
+              .join('');
 
-          return `
-            <h3 style="font-family:'Poppins-SemiBold',Arial,sans-serif;">${category.name}</h3>
-            ${productsHtml}
-          `;
-        })
-        .join('');
+            return generateCategoryHtml(category.name, productsHtml);
+          })
+          .join('')}
+      `;
 
       await handleGeneratePdf(pdfContent);
 
@@ -265,31 +291,32 @@ const ProductScreen = () => {
             Se generará un archivo PDF con la lista de productos, incluyendo nombre, código, imagen y precio.
           </Text>
 
-          {/* <Text className="text-md font-[Poppins-SemiBold] tracking-[-0.3px] text-gray-900 mt-4 mb-2">
+          <Text className="text-md font-[Poppins-SemiBold] tracking-[-0.3px] text-gray-900 mt-4 mb-2">
             Selecciona las categorías para el catálogo:
-          </Text> */}
-{/* 
+          </Text>
+
+          <View
+            className="h-fit w-fit px-3"
+            style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}
+          >
+            <Checkbox
+              style={{ borderRadius: 6, borderColor: '#000' }}
+              value={selectedCategories.includes('all')}
+              onValueChange={() => handleCategorySelection('all')}
+              color={selectedCategories.includes('all') ? '#FFD700' : undefined}
+            />
+            <Text className="ml-2 leading-5 text-black tracking-[-0.3px] font-[Poppins-Regular]">Todas las categorías</Text>
+          </View>
+
           <ScrollView
             showsVerticalScrollIndicator={false}
-            style={{ maxHeight: 200, marginBottom: 16, flex: 1 }}
+            scrollEnabled={true}
+            style={{ maxHeight: 230, marginBottom: 16, flex: 1 }}
             contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}
           >
-            <View
-              className="h-[40px] w-[46%] px-3"
-              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}
-            >
-              <Checkbox
-                style={{ borderRadius: 6, borderColor: '#000' }}
-                value={selectedCategories.includes('all')}
-                onValueChange={() => handleCategorySelection('all')}
-                color={selectedCategories.includes('all') ? '#FFD700' : undefined}
-              />
-              <Text className="ml-2 leading-5 text-black tracking-[-0.3px] font-[Poppins-Regular]">Todas</Text>
-            </View>
-
             {categories.map((category) => (
               <View
-                className="h-[40px] w-[46%] px-3"
+                className="h-fit w-[46%] px-3"
                 key={category.code}
                 style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}
               >
@@ -302,7 +329,7 @@ const ProductScreen = () => {
                 <Text className="ml-2 leading-5 text-black tracking-[-0.3px] font-[Poppins-Regular]">{category.name}</Text>
               </View>
             ))}
-          </ScrollView> */}
+          </ScrollView>
 
           <TouchableOpacity
             className="bg-yellow-300 py-3 h-[50px] flex-1 px-4 rounded-full items-center justify-center"
