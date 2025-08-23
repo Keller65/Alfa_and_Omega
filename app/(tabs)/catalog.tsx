@@ -1,16 +1,31 @@
 import { useAuth } from '@/context/auth';
 import { useAppStore } from '@/state';
 import { ProductDiscount } from '@/types/types';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import axios from 'axios';
+import Checkbox from 'expo-checkbox';
 import { Image as ExpoImage } from 'expo-image';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown, FadeOutUp } from 'react-native-reanimated';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import '../../global.css';
+import { ScrollView } from 'react-native-gesture-handler';
+
+// Definimos los tipos para los parámetros y las estructuras
+type Category = {
+  code: string;
+  name: string;
+};
+
+type GroupedProducts = {
+  [key: string]: {
+    name: string;
+    products: ProductDiscount[];
+  };
+};
 
 // Genera un HTML simple para un producto con foto, nombre y código
 function generateProductHtml(product: ProductDiscount) {
@@ -18,23 +33,61 @@ function generateProductHtml(product: ProductDiscount) {
     <div style="display:flex;align-items:center;border:1px solid #eee;border-radius:12px;padding:16px;margin-bottom:12px;">
       <img src="https://pub-266f56f2e24d4d3b8e8abdb612029f2f.r2.dev/${product.itemCode ?? '100000'}.jpg"
            alt="Producto" 
-           style="width:150px;height:150px;object-fit:cover;border-radius:8px;margin-right:16px;">
+           style="width:170px;height:170px;object-fit:cover;border-radius:8px;margin-right:16px;">
       <div>
-        <div style="font-size:18px;font-weight:600;margin-bottom:4px;font-family:'Poppins-Medium',Arial,sans-serif;">${product.itemName}</div>
-        <div style="font-size:14px;color:#555;font-family:'Poppins-Medium',Arial,sans-serif;">Código: <b>${product.itemCode}</b></div>
-        ${product.barCode ? `<div style="font-size:13px;color:#888;font-family:'Poppins-Medium',Arial,sans-serif;">Barra: ${product.barCode}</div>` : ''}
-        ${product.price ? `<div style="font-size:15px;color:#222;margin-top:4px;font-family:'Poppins-Medium',Arial,sans-serif;">Precio: L. ${product.price}</div>` : ''}
+        <div style="font-size:22px;font-weight:600;margin-bottom:4px;font-family:'Poppins-Medium',Arial,sans-serif;">${product.itemName}</div>
+        ${product.barCode ? `<div style="font-size:16px;color:#888;font-family:'Poppins-Medium',Arial,sans-serif;">Código: ${product.barCode}</div>` : ''}
+        <div style="font-size:16px;margin-bottom:4px;font-family:'Poppins-Medium',Arial,sans-serif;">${product.salesUnit} x ${product.salesItemsPerUnit}</div>
       </div>
     </div>
   `;
+}
+
+// Nueva función para agrupar productos por categoría
+function groupProductsByCategory(products: ProductDiscount[], categories: Category[]): GroupedProducts {
+  const grouped: GroupedProducts = {};
+
+  categories.forEach((category) => {
+    grouped[category.code] = {
+      name: category.name,
+      products: [],
+    };
+  });
+
+  // Asegurarse de que los productos tengan la propiedad `categoryCode` asignada correctamente
+  products.forEach((product) => {
+    if (product.groupCode && grouped[product.groupCode]) {
+      grouped[product.groupCode].products.push(product);
+    } else {
+      console.warn(`Producto sin categoría asignada: ${product.itemName}`);
+    }
+  });
+
+  return grouped;
 }
 
 const ProductScreen = () => {
   const { fetchUrl } = useAppStore();
   const { user } = useAuth();
   const [products, setProducts] = useState<ProductDiscount[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(false); // Estado de carga
   const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(['all']);
+
+  // Fetch de categorías al cargar el componente
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get('http://200.115.188.54:4325/sap/items/categories');
+        setCategories(response.data);
+      } catch (error) {
+        console.error('❌ Error al cargar las categorías', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   // Genera y comparte PDF
   const handleGeneratePdf = async (htmlContent: string) => {
@@ -69,6 +122,24 @@ const ProductScreen = () => {
     }
   };
 
+  const handleCategorySelection = (categoryCode: string) => {
+    setSelectedCategories((prev) => {
+      if (categoryCode === 'all') {
+        return prev.includes('all') ? [] : ['all'];
+      }
+
+      const updated = prev.includes(categoryCode)
+        ? prev.filter((code) => code !== categoryCode)
+        : [...prev.filter((code) => code !== 'all'), categoryCode];
+
+      return updated;
+    });
+  };
+
+  const filteredCategories = categories.filter((category) =>
+    selectedCategories.includes('all') || selectedCategories.includes(category.code)
+  );
+
   const handleGenerateCatalog = async () => {
     setIsLoading(true);
     try {
@@ -85,19 +156,28 @@ const ProductScreen = () => {
 
       setProducts(response.data);
 
-      // Debug para entender tu API
-      console.log("📦 Total productos:", response.data.length);
-      console.log("🔍 Primer producto:", response.data[0]);
-      console.log("⚠️ Productos sin código:", response.data.filter(p => !p.itemCode).length);
+      // Agrupar productos por categorías seleccionadas
+      const groupedProducts = groupProductsByCategory(response.data, filteredCategories);
 
-      const pdfContent = response.data
-        .map(product =>
-          generateProductHtml({
-            ...product,
-            itemCode: product?.itemCode !== undefined ? String(product.itemCode) : "SIN-CÓDIGO",
-            itemName: product?.itemName ?? "Sin nombre",
-          })
-        )
+      // Generar contenido HTML agrupado por categoría
+      const pdfContent = Object.keys(groupedProducts)
+        .map((categoryCode) => {
+          const category = groupedProducts[categoryCode];
+          const productsHtml = category.products
+            .map((product) =>
+              generateProductHtml({
+                ...product,
+                itemCode: product?.itemCode !== undefined ? String(product.itemCode) : 'SIN-CÓDIGO',
+                itemName: product?.itemName ?? 'Sin nombre',
+              })
+            )
+            .join('');
+
+          return `
+            <h3 style="font-family:'Poppins-SemiBold',Arial,sans-serif;">${category.name}</h3>
+            ${productsHtml}
+          `;
+        })
         .join('');
 
       await handleGeneratePdf(pdfContent);
@@ -184,35 +264,70 @@ const ProductScreen = () => {
           <Text className="text-sm text-gray-500 mb-5 text-center font-[Poppins-Regular] tracking-[-0.3px]">
             Se generará un archivo PDF con la lista de productos, incluyendo nombre, código, imagen y precio.
           </Text>
-          <View className="flex-row justify-center mb-4">
-          </View>
 
-          <View className='flex-row justify-between items-center gap-4'>
-            <TouchableOpacity
-              className="bg-yellow-300 py-3 h-[50px] flex-1 px-4 rounded-full items-center justify-center"
-              onPress={handleGenerateCatalog}
-              disabled={isLoading}
+          {/* <Text className="text-md font-[Poppins-SemiBold] tracking-[-0.3px] text-gray-900 mt-4 mb-2">
+            Selecciona las categorías para el catálogo:
+          </Text> */}
+{/* 
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            style={{ maxHeight: 200, marginBottom: 16, flex: 1 }}
+            contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}
+          >
+            <View
+              className="h-[40px] w-[46%] px-3"
+              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}
             >
-              {isLoading ? (
-                <View className="flex-row items-center">
-                  <ActivityIndicator size="small" color="#000" />
-                  <Text className="text-black text-md font-[Poppins-SemiBold] ml-2">
-                    Generando Catálogo...
-                  </Text>
-                </View>
-              ) : (
-                <View className="flex-row items-center gap-3">
-                  <FontAwesome name="file-text" size={20} color="black" />
-                  <Text className="text-black text-md font-[Poppins-SemiBold]">
-                    Generar Catálogo
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
+              <Checkbox
+                style={{ borderRadius: 6, borderColor: '#000' }}
+                value={selectedCategories.includes('all')}
+                onValueChange={() => handleCategorySelection('all')}
+                color={selectedCategories.includes('all') ? '#FFD700' : undefined}
+              />
+              <Text className="ml-2 leading-5 text-black tracking-[-0.3px] font-[Poppins-Regular]">Todas</Text>
+            </View>
+
+            {categories.map((category) => (
+              <View
+                className="h-[40px] w-[46%] px-3"
+                key={category.code}
+                style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}
+              >
+                <Checkbox
+                  style={{ borderRadius: 6, borderColor: '#000' }}
+                  value={selectedCategories.includes(category.code)}
+                  onValueChange={() => handleCategorySelection(category.code)}
+                  color={selectedCategories.includes(category.code) ? '#FFD700' : undefined}
+                />
+                <Text className="ml-2 leading-5 text-black tracking-[-0.3px] font-[Poppins-Regular]">{category.name}</Text>
+              </View>
+            ))}
+          </ScrollView> */}
+
+          <TouchableOpacity
+            className="bg-yellow-300 py-3 h-[50px] flex-1 px-4 rounded-full items-center justify-center"
+            onPress={handleGenerateCatalog}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <View className="flex-row items-center">
+                <ActivityIndicator size="small" color="#000" />
+                <Text className="text-black text-md font-[Poppins-SemiBold] ml-2">
+                  Generando Catálogo...
+                </Text>
+              </View>
+            ) : (
+              <View className="flex-row items-center gap-3">
+                <FontAwesome name="file-text" size={20} color="black" />
+                <Text className="text-black text-md font-[Poppins-SemiBold]">
+                  Generar Catálogo
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
 
           <Text className="text-xs text-gray-400 text-center mt-5 font-[Poppins-Regular] tracking-[-0.3px]">
-            Este proceso puede tardar unos segundos dependiendo de la cantidad de productos y calidad de conexion a internet.
+            Este proceso puede tardar unos segundos dependiendo de la cantidad de productos y calidad de conexión a internet.
           </Text>
         </BottomSheetView>
       </BottomSheetModal>

@@ -24,6 +24,7 @@ export type ProductDiscount = {
   quantity: number;
   unitPrice: number;
   originalPrice: number;
+  categoryCode: string; // Código de la categoría del producto
 };
 
 export type CreateOrder = {
