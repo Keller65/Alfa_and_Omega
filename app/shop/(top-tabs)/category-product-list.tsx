@@ -8,9 +8,9 @@ import { BottomSheetBackdrop, BottomSheetFooter, BottomSheetModal, BottomSheetSc
 import { useRoute } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import axios from 'axios';
-import { Image } from 'expo-image';
+// import { Image } from 'expo-image';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, RefreshControl, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, RefreshControl, Text, TextInput, TouchableOpacity, View, Image } from 'react-native';
 
 const PAGE_SIZE = 20;
 
@@ -26,8 +26,9 @@ const ProductItem = memo(({ item, onPress }: { item: ProductDiscount, onPress: (
         <Image
           source={{ uri: `https://pub-266f56f2e24d4d3b8e8abdb612029f2f.r2.dev/${item.itemCode}.jpg` }}
           style={{ height: 180, width: 180, objectFit: "contain", borderRadius: 16 }}
-          contentFit="contain"
-          transition={500}
+          // contentFit="contain"
+          onError={() => console.log("Error loading image for item:", item.itemCode)}
+          // transition={500}
         />
       </View>
 
@@ -340,7 +341,7 @@ const CategoryProductScreen = memo(() => {
     return (
       <View className="flex-1 items-center justify-center bg-white">
         <ActivityIndicator size="large" color="#000" />
-        <Text className="mt-4 text-gray-600">Cargando productos...</Text>
+        <Text className="mt-4 text-gray-600 font-[Poppins-SemiBold] tracking-[-0.3px]">Cargando productos...</Text>
       </View>
     );
   }
@@ -350,7 +351,7 @@ const CategoryProductScreen = memo(() => {
       <View className="flex-1 bg-white items-center justify-center p-4">
         <Text className="text-red-500 text-center mb-4">{error}</Text>
         <TouchableOpacity onPress={onRefresh}>
-          <Text className="text-blue-500">Reintentar</Text>
+          <Text className="text-blue-500 font-[Poppins-SemiBold] tracking-[-0.3px]">Reintentar</Text>
         </TouchableOpacity>
       </View>
     );
@@ -392,9 +393,9 @@ const CategoryProductScreen = memo(() => {
               <View className="w-full h-[230px] items-center justify-center bg-white overflow-hidden">
                 <Image
                   source={{ uri: `https://pub-266f56f2e24d4d3b8e8abdb612029f2f.r2.dev/${selectedItem.itemCode}.jpg` }}
-                  style={{ height: 230, width: 230 }}
-                  contentFit="contain"
-                  transition={500}
+                  style={{ height: 230, width: 230, aspectRatio: 1, objectFit: "contain" }}
+                  // contentFit="contain"
+                  // transition={500}
                 />
               </View>
 

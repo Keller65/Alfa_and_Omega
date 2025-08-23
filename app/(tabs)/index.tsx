@@ -133,10 +133,6 @@ export default function App() {
   const ventas = [
     { fecha: "2024-06-01", cliente: "Cliente A", monto: 12000 },
     { fecha: "2024-06-02", cliente: "Cliente B", monto: 8500 },
-    { fecha: "2024-06-03", cliente: "Cliente C", monto: 15700 },
-    { fecha: "2024-06-04", cliente: "Cliente D", monto: 9400 },
-    { fecha: "2024-06-04", cliente: "Cliente E", monto: 9600 },
-    { fecha: "2024-06-04", cliente: "Cliente F", monto: 6800 },
   ];
 
   if (loading) {
@@ -179,11 +175,6 @@ export default function App() {
               <View>
                 <Text className="text-xl font-[Poppins-SemiBold] tracking-[-0.6px] text-gray-900">Ventas vs Cobros</Text>
                 <KPICard data={kpiData} userName={user?.fullName} loading={loadingKpi} />
-              </View>
-
-              <View>
-                <Text className="text-xl font-[Poppins-SemiBold] tracking-[-0.6px] text-gray-900">Cobros</Text>
-                <SalesCard data={sales} loading={loadingSales} />
               </View>
 
               <View>

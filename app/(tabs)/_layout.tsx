@@ -19,7 +19,7 @@ import IndexScreen from './index';
 import ExploreScreen from './explore';
 import InvoicesScreen from './invoices';
 import SettingsScreen from './settings';
-import ProductScreen from './products';
+import ProductScreen from './catalog';
 
 const Drawer = createDrawerNavigator();
 
@@ -90,12 +90,12 @@ export default function Layout() {
               }}
             />
             <Drawer.Screen
-              name="products"
+              name="catalog"
               component={ProductScreen}
               options={{
-                title: 'Productos',
+                title: 'Catalogo',
                 headerTitle: '',
-                headerStyle: { backgroundColor: '#f9fafb', elevation: 0, borderBottomWidth: 0, zIndex: 1 },
+                headerStyle: { backgroundColor: '#f9fafb', elevation: 0, borderBottomWidth: 0 },
                 drawerIcon: ({ focused }) => (
                   <CatalogIcon size={24} color={focused ? ActiveColor : InActiveColor} />
                 ),
