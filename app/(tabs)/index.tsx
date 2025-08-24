@@ -12,6 +12,7 @@ import { GoalDonutType, SalesDataType, TableDataType } from "@/types/DasboardTyp
 import axios from 'axios';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { usePushNotificationsFCM } from '@/hooks/usePushNotificationsFCM';
 import "../../global.css";
 
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
   const [loadingTableData, setLoadingTableData] = useState(false);
   const [tableError, setTableError] = useState<string | null>(null);
   const [loadingSales, setLoadingSales] = useState(false);
+  const { fcmToken, permissionGranted } = usePushNotificationsFCM();
 
   const fetchData = async () => {
     if (!user?.token) return;
@@ -159,6 +161,12 @@ export default function App() {
       <View className="absolute bottom-4 right-8 gap-3 items-end">
         {products.length > 0 && (<BottomSheetCart />)}
       </View>
+
+      <Text>Permiso: {String(permissionGranted)}</Text>
+      <Text style={{ marginTop: 8, fontSize: 12 }}>FCM Token:</Text>
+      <Text selectable style={{ fontSize: 12, textAlign: 'center' }}>
+        {fcmToken ?? '—'}
+      </Text>
 
       <FlatList
         data={ventas}

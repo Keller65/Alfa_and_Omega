@@ -255,6 +255,11 @@ const Settings = () => {
     }
   };
 
+  const handleTogglePush = async () => {
+    await requestPushPermission();
+    togglePush();
+  };
+
   const toggleSound = async () => {
     const next = !soundEnabled;
     setSoundEnabled(next);
@@ -377,7 +382,7 @@ const Settings = () => {
           title="Notificaciones push"
           subtitle="Permitir avisos importantes"
           value={pushEnabled}
-          onChange={togglePush}
+          onChange={handleTogglePush} 
           iconLeft={<Feather name="bell" size={18} color="#4B5563" style={{ marginRight: 12 }} />}
         />
         <SettingItem
