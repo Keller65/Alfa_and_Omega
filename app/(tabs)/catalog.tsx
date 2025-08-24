@@ -79,8 +79,12 @@ function groupProductsByCategory(products: ProductDiscount[], categories: Catego
 // Genera una portada para el catálogo
 function generateCoverPage() {
   return `
-    <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;background-color:#fff;height:100%;width:100%;">
-      <p style="font-size:24px;font-family:'Poppins-Bold',Arial,sans-serif;color:#555;margin-bottom:24px;text-align:center;">Catálogo de Productos</p>
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;background-color:#fff;height:100%;width:100%;font-weight:600;">
+      <p style="font-size:40px;font-family:'Poppins',Arial,sans-serif;color:#000;margin-bottom:24px;text-align:center;">Catálogo de Productos</p>
       <img src="https://pub-f524aa67d2854c378ac58dd12adeca33.r2.dev/LogoAlfayOmega.png" alt="Portada del catálogo" style="width:450px;height:auto;border-radius:12px;display:block;margin:0 auto;">
     </div>
   `;
@@ -95,11 +99,10 @@ const ProductScreen = () => {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(['all']);
 
-  // Fetch de categorías al cargar el componente
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('http://200.115.188.54:4325/sap/items/categories');
+        const response = await axios.get(`${fetchUrl}/sap/items/categories`);
         setCategories(response.data);
       } catch (error) {
         console.error('❌ Error al cargar las categorías', error);
@@ -109,7 +112,18 @@ const ProductScreen = () => {
     fetchCategories();
   }, []);
 
-  // Genera y comparte PDF
+  useEffect(() => {
+    if (selectedCategories.includes('all')) {
+      setSelectedCategories(['all', ...categories.map((category) => category.code)]);
+    }
+  }, [categories]);
+
+  useEffect(() => {
+    if (categories.length > 0 && categories.every((category) => selectedCategories.includes(category.code))) {
+      setSelectedCategories((prev) => (prev.includes('all') ? prev : ['all', ...prev]));
+    }
+  }, [selectedCategories, categories]);
+
   const handleGeneratePdf = async (htmlContent: string) => {
     try {
       const currentDate = new Date();
@@ -151,12 +165,16 @@ const ProductScreen = () => {
   const handleCategorySelection = (categoryCode: string) => {
     setSelectedCategories((prev) => {
       if (categoryCode === 'all') {
-        return prev.includes('all') ? [] : ['all'];
+        return prev.includes('all') ? [] : ['all', ...categories.map((category) => category.code)];
       }
 
       const updated = prev.includes(categoryCode)
         ? prev.filter((code) => code !== categoryCode)
         : [...prev.filter((code) => code !== 'all'), categoryCode];
+
+      if (!categories.every((category) => updated.includes(category.code))) {
+        return updated.filter((code) => code !== 'all');
+      }
 
       return updated;
     });
@@ -182,10 +200,8 @@ const ProductScreen = () => {
 
       setProducts(response.data);
 
-      // Agrupar productos por categorías seleccionadas
       const groupedProducts = groupProductsByCategory(response.data, filteredCategories);
 
-      // Generar contenido HTML agrupado por categoría
       const pdfContent = `
         ${generateCoverPage()}
         ${Object.keys(groupedProducts)
@@ -288,7 +304,7 @@ const ProductScreen = () => {
             ¿Deseas exportar el catálogo de productos en PDF?
           </Text>
           <Text className="text-sm text-gray-500 mb-5 text-center font-[Poppins-Regular] tracking-[-0.3px]">
-            Se generará un archivo PDF con la lista de productos, incluyendo nombre, código, imagen y precio.
+            Se generará un archivo PDF con la lista de productos, incluyendo nombre, código, e imagen.
           </Text>
 
           <Text className="text-md font-[Poppins-SemiBold] tracking-[-0.3px] text-gray-900 mt-4 mb-2">
@@ -298,6 +314,7 @@ const ProductScreen = () => {
           <View
             className="h-fit w-fit px-3"
             style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}
+            onTouchEnd={() => handleCategorySelection('all')}
           >
             <Checkbox
               style={{ borderRadius: 6, borderColor: '#000' }}
@@ -305,7 +322,7 @@ const ProductScreen = () => {
               onValueChange={() => handleCategorySelection('all')}
               color={selectedCategories.includes('all') ? '#FFD700' : undefined}
             />
-            <Text className="ml-2 leading-5 text-black tracking-[-0.3px] font-[Poppins-Regular]">Todas las categorías</Text>
+            <Text className="ml-2 leading-5 text-black tracking-[-0.3px] font-[Poppins-Regular] text-sm">Todas las categorías</Text>
           </View>
 
           <ScrollView
@@ -319,14 +336,16 @@ const ProductScreen = () => {
                 className="h-fit w-[46%] px-3"
                 key={category.code}
                 style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}
+                onTouchEnd={() => handleCategorySelection(category.code)}
               >
                 <Checkbox
                   style={{ borderRadius: 6, borderColor: '#000' }}
                   value={selectedCategories.includes(category.code)}
                   onValueChange={() => handleCategorySelection(category.code)}
                   color={selectedCategories.includes(category.code) ? '#FFD700' : undefined}
+                  onTouchEnd={() => handleCategorySelection(category.code)}
                 />
-                <Text className="ml-2 leading-5 text-black tracking-[-0.3px] font-[Poppins-Regular]">{category.name}</Text>
+                <Text className="ml-2 leading-5 text-black tracking-[-0.3px] font-[Poppins-Regular] text-sm">{category.name}</Text>
               </View>
             ))}
           </ScrollView>
