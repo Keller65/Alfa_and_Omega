@@ -53,6 +53,18 @@
           "configureAndroidBackup": true,
           "faceIDPermission": "Permitir que $(PRODUCT_NAME) acceda a tus datos biométricos."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/adaptive-icon.png",
+          "color": "#ffffff",
+          "defaultChannel": "default",
+          "sounds": [
+            "./assets/sound/notification.wav"
+          ],
+          "enableBackgroundRemoteNotifications": true
+        }
       ]
     ],
     "experiments": {
