@@ -22,7 +22,7 @@ export default function App() {
   const [loadingGoal, setLoadingGoal] = useState(false);
   const [goalError, setGoalError] = useState<string | null>(null);
   const [sales, setSales] = useState<SalesDataType | null>(null);
-  const { valid, loading } = useLicense();
+  const { valid, loading, uuid } = useLicense();
   const { isUpdating, error, isUpdateAvailable, checkAndUpdate } = useOtaUpdates();
   const [kpiData, setKpiData] = useState(null);
   const [loadingKpi, setLoadingKpi] = useState(true);
@@ -161,12 +161,6 @@ export default function App() {
       <View className="absolute bottom-4 right-8 gap-3 items-end">
         {products.length > 0 && (<BottomSheetCart />)}
       </View>
-
-      <Text>Permiso: {String(permissionGranted)}</Text>
-      <Text style={{ marginTop: 8, fontSize: 12 }}>FCM Token:</Text>
-      <Text selectable style={{ fontSize: 12, textAlign: 'center' }}>
-        {fcmToken ?? '—'}
-      </Text>
 
       <FlatList
         data={ventas}

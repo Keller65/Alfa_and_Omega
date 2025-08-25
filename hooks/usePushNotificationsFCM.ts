@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
-import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import { useCallback, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 
 type UsePushReturn = {
@@ -16,6 +16,7 @@ Notifications.setNotificationHandler({
     shouldSetBadge: true,
     priority: Notifications.AndroidNotificationPriority.HIGH,
     channelId: 'default',
+    sound: 'notification.wav',
   }),
 });
 
@@ -30,6 +31,7 @@ export function usePushNotificationsFCM(): UsePushReturn {
         description: 'General notifications',
         importance: Notifications.AndroidImportance.MAX,
         vibrationPattern: [0, 250, 250, 250],
+        sound: 'notification.wav', // El sonido esta en android/app/src/main/res/raw/notification.wav
       });
     }
   }, []);

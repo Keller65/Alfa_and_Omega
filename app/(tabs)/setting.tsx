@@ -1,9 +1,12 @@
+import { useLicense } from '@/auth/useLicense';
 import { SettingItem, SettingsSection } from '@/components/SettingItem';
 import { useAuth } from '@/context/auth';
+import { usePushNotificationsFCM } from '@/hooks/usePushNotificationsFCM';
 import api from '@/lib/api';
 import { useAppStore } from '@/state';
 import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Clipboard from 'expo-clipboard';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as FileSystem from 'expo-file-system';
@@ -16,7 +19,7 @@ import * as Updates from 'expo-updates';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, ScrollView, Text, View } from 'react-native';
 
-const Settings = () => {
+const SettingsScreen = () => {
   const { logout, user } = useAuth();
   // Apariencia
   const [darkMode, setDarkMode] = useState(false);
@@ -35,8 +38,12 @@ const Settings = () => {
   const [exportingLogs, setExportingLogs] = useState(false);
   const [locationServicesEnabled, setLocationServicesEnabled] = useState(false);
   const [macAddress, setMacAddress] = useState<string | null>(null);
+  const [pushToken, setPushToken] = useState<string | null>(null);
+  const { uuid } = useLicense();
   const { fetchUrl } = useAppStore();
   const API_BASE_URL = fetchUrl;
+
+  const { fcmToken } = usePushNotificationsFCM();
 
   useEffect(() => {
     const loadData = async () => {
@@ -382,7 +389,7 @@ const Settings = () => {
           title="Notificaciones push"
           subtitle="Permitir avisos importantes"
           value={pushEnabled}
-          onChange={handleTogglePush} 
+          onChange={handleTogglePush}
           iconLeft={<Feather name="bell" size={18} color="#4B5563" style={{ marginRight: 12 }} />}
         />
         <SettingItem
@@ -393,6 +400,20 @@ const Settings = () => {
           onChange={toggleSound}
           iconLeft={<Feather name="volume-2" size={18} color="#4B5563" style={{ marginRight: 12 }} />}
           disabled={!pushEnabled}
+        />
+        <SettingItem
+          kind="action"
+          title="Push Token"
+          subtitle={pushEnabled ? fcmToken || 'No disponible' : 'Desactivado'}
+          iconLeft={<Feather name="key" size={18} color="#4B5563" style={{ marginRight: 12 }} />}
+          onPress={() => {
+            if (fcmToken) {
+              Clipboard.setStringAsync(fcmToken);
+              Alert.alert('Copiado', 'El Push Token ha sido copiado al portapapeles.');
+            } else {
+              Alert.alert('Error', 'No hay token disponible para copiar.');
+            }
+          }}
         />
       </SettingsSection>
 
@@ -421,6 +442,23 @@ const Settings = () => {
           subtitle="Para soporte técnico"
           onPress={handleCopyDeviceInfo}
           iconLeft={<Feather name="copy" size={18} color="#4B5563" style={{ marginRight: 12 }} />}
+        />
+      </SettingsSection>
+
+      <SettingsSection title="Licencia">
+        <SettingItem
+          kind="action"
+          title="UUID del Dispositivo"
+          subtitle={uuid || 'Cargando...'}
+          iconLeft={<Feather name="key" size={18} color="#4B5563" style={{ marginRight: 12 }} />}
+          onPress={() => {
+            if (uuid) {
+              Clipboard.setStringAsync(uuid);
+              Alert.alert('Copiado', 'El UUID ha sido copiado al portapapeles.');
+            } else {
+              Alert.alert('Error', 'No hay UUID disponible para copiar.');
+            }
+          }}
         />
       </SettingsSection>
 
@@ -462,4 +500,4 @@ const Settings = () => {
   );
 };
 
-export default Settings;
+export default SettingsScreen;

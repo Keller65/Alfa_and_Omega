@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
 import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
@@ -62,6 +63,20 @@ export default function Login() {
       }
     })();
   }, [user]);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Notifications.getPermissionsAsync();
+      if (status !== 'granted') {
+        const { status: newStatus } = await Notifications.requestPermissionsAsync();
+        if (newStatus !== 'granted') {
+          console.log('Permiso de notificaciones denegado');
+          return;
+        }
+      }
+      console.log('Permiso de notificaciones concedido');
+    })();
+  }, []);
 
   const handleLogin = async () => {
     if (loading || !isFormValid) return;

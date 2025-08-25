@@ -18,7 +18,7 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import IndexScreen from './index';
 import ExploreScreen from './explore';
 import InvoicesScreen from './invoices';
-import SettingsScreen from './settings';
+import SettingsScreen from './setting';
 import ProductScreen from './catalog';
 
 const Drawer = createDrawerNavigator();
