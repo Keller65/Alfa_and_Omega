@@ -11,6 +11,7 @@ import SettingsIcon from '@/assets/icons/SettingsIcon';
 import OrderIcon from '@/assets/icons/OrdeIcon';
 import ClientIcon from '@/assets/icons/ClientIcon';
 import CatalogIcon from '@/assets/icons/CatalogIcon';
+import LocationIcon from '@/assets/icons/Locations';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -20,6 +21,7 @@ import ExploreScreen from './explore';
 import InvoicesScreen from './invoices';
 import SettingsScreen from './setting';
 import ProductScreen from './catalog';
+import LocationScreen from './locations';
 
 const Drawer = createDrawerNavigator();
 
@@ -61,7 +63,7 @@ export default function Layout() {
           >
             <Drawer.Screen
               name="index"
-              component={IndexScreen}
+              component={LocationScreen}
               options={{
                 title: 'Dashboard',
                 drawerIcon: ({ focused }) => (
@@ -98,6 +100,16 @@ export default function Layout() {
                 headerStyle: { backgroundColor: '#f9fafb', elevation: 0, borderBottomWidth: 0 },
                 drawerIcon: ({ focused }) => (
                   <CatalogIcon size={24} color={focused ? ActiveColor : InActiveColor} />
+                ),
+              }}
+            />
+            <Drawer.Screen
+              name="location"
+              component={LocationScreen}
+              options={{
+                title: 'Ubicaciones',
+                drawerIcon: ({ focused }) => (
+                  <LocationIcon size={24} color={focused ? ActiveColor : InActiveColor} />
                 ),
               }}
             />
