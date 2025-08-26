@@ -84,7 +84,7 @@ const BottomSheetSearchClients = forwardRef<BottomSheetSearchClientsHandle, Prop
           placeholder="Buscar cliente..."
           value={searchText}
           onChangeText={setSearchText}
-          className="bg-gray-200 rounded-2xl py-3 px-4 mb-2"
+          className="bg-gray-200 rounded-2xl py-3 px-4 mb-2 text-black"
         />
 
         {error ? (

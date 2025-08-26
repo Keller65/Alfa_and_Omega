@@ -57,6 +57,7 @@
     "react-native": "0.79.5",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-gifted-charts": "^1.4.63",
+    "react-native-maps": "1.20.1",
     "react-native-pager-view": "6.7.1",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
@@ -65,8 +66,7 @@
     "react-native-uuid": "^2.0.3",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
-    "zustand": "^5.0.6",
-    "react-native-maps": "1.20.1"
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
