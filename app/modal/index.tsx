@@ -295,8 +295,8 @@ const IndexScreen = () => {
         enablePanDownToClose={selectedInvoices.length > 0 ? false : true}
         style={{ shadowColor: 'black', boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.2)', borderRadius: 16, elevation: 5, shadowOffset: { width: 0, height: -3 }, shadowOpacity: 0.1, shadowRadius: 5 }}
       >
-        <View className="flex-1 px-4">
-          <Text className="text-xl mb-2 font-bold font-[Poppins-SemiBold] tracking-[-0.3px]">Facturas Seleccionadas</Text>
+        <View className="flex-1 px-4 pb-4">
+          <Text className="text-xl mb-2 font-[Poppins-SemiBold] tracking-[-0.3px]">Facturas Seleccionadas</Text>
           {selectedInvoices.length > 0 ? (
             <>
               <BottomSheetFlatList

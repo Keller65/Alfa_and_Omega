@@ -1,6 +1,8 @@
 import 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { useAppStore } from '@/state';
+import Feather from '@expo/vector-icons/Feather';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import * as LocalAuthentication from 'expo-local-authentication';
@@ -18,6 +20,7 @@ export default function Login() {
   const [salesPersonCode, setSalesPersonCode] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
   const router = useRouter();
   const { fetchUrl } = useAppStore()
   const FETCH_URL = fetchUrl + "/auth/employee";
@@ -78,6 +81,13 @@ export default function Login() {
     })();
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      const savedBiometricUser = await AsyncStorage.getItem('biometricUser');
+      setBiometricAvailable(!!savedBiometricUser);
+    })();
+  }, []);
+
   const handleLogin = async () => {
     if (loading || !isFormValid) return;
     setLoading(true);
@@ -134,6 +144,28 @@ export default function Login() {
       console.error('Login error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    try {
+      const biometricAuth = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Inicia sesión con tu huella o Face ID',
+        fallbackLabel: 'Ingresar manualmente',
+        biometricsSecurityLevel: 'strong',
+        cancelLabel: 'Ingresar manualmente',
+      });
+
+      if (biometricAuth.success) {
+        const savedBiometricUser = await AsyncStorage.getItem('biometricUser');
+        if (savedBiometricUser) {
+          const parsedUser = JSON.parse(savedBiometricUser);
+          setUser(parsedUser);
+          await AsyncStorage.setItem('user', JSON.stringify(parsedUser));
+        }
+      }
+    } catch (error) {
+      console.error('Error en autenticación biométrica:', error);
     }
   };
 
@@ -203,14 +235,27 @@ export default function Login() {
             <Text style={{ color: isFormValid && !loading ? '#fff' : '#6b7280', textAlign: 'center', fontFamily: 'Poppins-SemiBold', lineHeight: 12 }}>Iniciar Sesión</Text>
           )}
         </TouchableOpacity>
-        <View className='w-full items-center justify-center mt-16'>
-          <TouchableOpacity
-            onPress={() => router.push('/settings')}
-          >
-            <Text className='font-[Poppins-Medium] tracking-[-0.3px] text-[#3b82f6]'>Configuraciones</Text>
-          </TouchableOpacity>
-        </View>
+
+        {biometricAvailable && (
+          <View className='w-full items-center justify-center mt-16'>
+
+            <TouchableOpacity
+              className="mt-4 w-[50px] h-[50px] bg-blue-500 rounded-full items-center justify-center"
+              onPress={handleBiometricLogin}
+            >
+              <Ionicons name="finger-print-outline" size={28} color="white" />
+            </TouchableOpacity>
+          </View>
+        )}
       </Animated.View>
+
+      <View className='flex-1 items-center justify-center absolute bottom-4 right-0 left-0'>
+        <TouchableOpacity
+          onPress={() => router.push('/settings')}
+        >
+          <Text className='font-[Poppins-SemiBold] text-sm tracking-[-0.3px] text-[#3b82f6]'>Configuraciones</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -221,7 +266,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "white",
     position: 'relative',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   block: {
     alignSelf: 'stretch',

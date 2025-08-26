@@ -274,7 +274,7 @@ const CategoryProductScreen = memo(() => {
     selectedItem ? (
       <BottomSheetFooter {...props}>
         <View
-          className='w-full px-4 pt-4 bg-white border-t border-gray-200'
+          className='w-full px-4 pt-4 pb-2 bg-white border-t border-gray-200'
           onLayout={(e) => setFooterHeight(e.nativeEvent.layout.height)}
         >
           <View className="w-full flex-row justify-between items-end">

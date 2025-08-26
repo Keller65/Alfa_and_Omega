@@ -1,14 +1,15 @@
 import { useAuth } from '@/context/auth';
 import { PaymentData } from '@/types/types';
 import Feather from '@expo/vector-icons/Feather';
+import { Asset } from 'expo-asset';
+import * as FileSystem from 'expo-file-system';
+import * as Print from 'expo-print';
 import { useLocalSearchParams } from 'expo-router';
-import { useMemo, useState, useEffect } from 'react';
+import * as Sharing from 'expo-sharing';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
-import * as Print from 'expo-print';
-import { Asset } from 'expo-asset';
-import * as FileSystem from 'expo-file-system';
 
 const IMAGE = Asset.fromModule(require('@/assets/images/LogoAlfayOmega.png'));
 
@@ -181,6 +182,21 @@ export default function PreviewInvoice() {
     }
   };
 
+  const share = async () => {
+    if (!html) return;
+    try {
+      const { uri } = await Print.printToFileAsync({
+        html,
+      });
+      await Sharing.shareAsync(uri, {
+        mimeType: 'application/pdf',
+        dialogTitle: 'Compartir recibo',
+      });
+    } catch (error) {
+      console.error('Error al compartir:', error);
+    }
+  };
+
   if (!invoiceDetails) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white">
@@ -217,6 +233,16 @@ export default function PreviewInvoice() {
           <Feather name="printer" size={18} color="#000" />
           <Text className="ml-2 font-[Poppins-SemiBold]">
             {generating ? 'Procesando...' : 'Imprimir'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={share}
+          disabled={loading}
+          className={`flex-1 flex-row items-center justify-center rounded-full px-4 py-3 ${loading ? 'bg-gray-300' : 'bg-yellow-300'}`}
+        >
+          <Feather name="share-2" size={18} color="#000" />
+          <Text className="ml-2 font-[Poppins-SemiBold]">
+            Compartir
           </Text>
         </TouchableOpacity>
       </View>

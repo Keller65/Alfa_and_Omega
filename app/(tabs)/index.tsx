@@ -3,7 +3,6 @@ import BottomSheetCart from '@/components/BottomSheetCart/page';
 import BottomSheetWelcome from '@/components/BottomSheetWelcome/page';
 import GoalDonut from '@/components/Dashboard/GoalDonut';
 import KPICard from '@/components/Dashboard/KPICard';
-import SalesCard from "@/components/Dashboard/SalesCard";
 import UpdateBanner from '@/components/UpdateBanner';
 import { useAuth } from '@/context/auth';
 import { useOtaUpdates } from "@/hooks/useOtaUpdates";
@@ -11,8 +10,7 @@ import { useAppStore } from '@/state';
 import { GoalDonutType, SalesDataType, TableDataType } from "@/types/DasboardType";
 import axios from 'axios';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
-import { usePushNotificationsFCM } from '@/hooks/usePushNotificationsFCM';
+import { ActivityIndicator, FlatList, RefreshControl, Text, View } from 'react-native';
 import "../../global.css";
 
 export default function App() {
@@ -30,7 +28,6 @@ export default function App() {
   const [loadingTableData, setLoadingTableData] = useState(false);
   const [tableError, setTableError] = useState<string | null>(null);
   const [loadingSales, setLoadingSales] = useState(false);
-  const { fcmToken, permissionGranted } = usePushNotificationsFCM();
 
   const fetchData = async () => {
     if (!user?.token) return;
@@ -195,7 +192,7 @@ export default function App() {
             </View>
 
             <View className="px-4 mt-4">
-              <Text className="text-2xl font-[Poppins-SemiBold] tracking-[-0.6px] text-black">
+              <Text className="text-xl font-[Poppins-SemiBold] tracking-[-0.6px] text-black">
                 Facturas Pendientes
               </Text>
 
@@ -225,7 +222,7 @@ export default function App() {
                 {tableData?.items?.[index]?.days ?? "-"}
               </Text>
               <Text className="text-gray-900 tracking-[-0.3px] font-[Poppins-Regular] text-sm text-right" style={{ flex: 1 }}>
-                {typeof tableData?.items?.[index]?.pending === "number"
+                L. {typeof tableData?.items?.[index]?.pending === "number"
                   ? tableData.items[index].pending.toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                   : "-"}
               </Text>

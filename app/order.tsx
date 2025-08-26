@@ -334,7 +334,7 @@ const OrderDetails = () => {
     return (
       <View className="flex-1 justify-center items-center bg-white">
         <ActivityIndicator size="large" color="#000" />
-        <Text className="mt-2 text-gray-600">Cargando detalles del pedido...</Text>
+        <Text className="mt-2 text-gray-600 font-[Poppins-SemiBold] tracking-[-0.3px]">Cargando detalles del pedido...</Text>
       </View>
     );
   }
@@ -342,7 +342,7 @@ const OrderDetails = () => {
   if (!orderData) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
-        <Text className="text-gray-600">No se encontraron detalles para este pedido.</Text>
+        <Text className="text-gray-600 font-[Poppins-SemiBold] tracking-[-0.3px]">No se encontraron detalles para este pedido.</Text>
       </View>
     );
   }

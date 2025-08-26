@@ -29,7 +29,6 @@ export default function BottomSheetWelcome() {
     <View className="flex-1 justify-center items-center bg-white p-6" pointerEvents="box-none">
       <BottomSheetModal
         ref={bottomSheetRef}
-        snapPoints={['50%']}
         backgroundStyle={{ borderRadius: 30 }}
         backdropComponent={(props) => (
           <BottomSheetBackdrop
@@ -41,11 +40,11 @@ export default function BottomSheetWelcome() {
           />
         )}
       >
-        <BottomSheetView className="flex-1 px-6 pt-6 pb-6">
+        <BottomSheetView className="flex-1 px-6 pb-6">
           <View className="flex-1 justify-between">
             <View>
               <Text className="text-black text-2xl font-semibold font-[Poppins-SemiBold] tracking-[-0.3px] text-center">¡Bienvenido {user?.fullName}!</Text>
-              <Text className="text-base text-gray-500 font-[Poppins-Regular] tracking-[-0.3px] mt-6 leading-5">
+              <Text className="text-base text-gray-500 font-[Poppins-Regular] tracking-[-0.3px] mt-4 leading-5">
                 Aqui podras realizar todas las gestiones de ventas de manera rápida y sencilla.
               </Text>
 
