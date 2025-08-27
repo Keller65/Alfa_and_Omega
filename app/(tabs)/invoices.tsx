@@ -4,7 +4,6 @@ import { useAppStore } from '@/state';
 import { PaymentData } from '@/types/types';
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
-import axios from 'axios';
 import api from '@/lib/api';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';

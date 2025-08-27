@@ -243,13 +243,13 @@ const ClientScreen = memo(() => {
   return (
     <View className="flex-1 bg-white">
       <View className='px-4'>
-        <View className="border border-gray-300 rounded-full px-4 mb-2 text-base font-[Poppins-Regular] text-black flex-row items-center gap-2">
+        <View className="bg-gray-200 rounded-2xl px-4 mb-2 text-base font-[Poppins-Regular] text-black flex-row items-center gap-2">
           <Feather name="search" size={20} color="#9ca3af" />
           <TextInput
             value={search}
             onChangeText={setSearch}
             placeholder="Buscar por nombre, código o RTN"
-            className="w-[86%]"
+            className="w-[86%] font-[Poppins-Medium] tracking-[-0.3px]"
             autoCapitalize="none"
             autoCorrect={false}
           />

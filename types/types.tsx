@@ -245,3 +245,16 @@ export interface PaymentCreditCard {
   firstPaymentDue: string;
   creditSum: number;
 }
+
+// Direcciones de cliente (respuesta de /api/Customers/{cardCode}/addresses)
+export interface CustomerAddress {
+  addressName: string;
+  street: string;
+  country: string;
+  state: string;
+  stateName: string;
+  u_Ciudad: string;
+  ciudadName: string;
+  u_Latitud: string; // puede venir vacío
+  u_Longitud: string; // puede venir vacío
+}

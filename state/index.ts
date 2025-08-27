@@ -58,6 +58,11 @@ interface AppStoreState {
   setSelectedCustomer: (customer: Customer) => void;
   clearSelectedCustomer: () => void;
 
+  // Ubicación seleccionada (no persistente)
+  selectedCustomerLocation: Customer | null;
+  setSelectedCustomerLocation: (customer: Customer | null) => void;
+  clearSelectedCustomerLocation: () => void;
+
   allProductsCache: ProductDiscount[];
   setAllProductsCache: (products: ProductDiscount[]) => void;
   clearAllProductsCache: () => void;
@@ -83,6 +88,21 @@ interface AppStoreState {
   addInvoice: (invoice: Invoice, paidAmount: number) => void;
   removeInvoice: (invoiceId: string) => void;
   clearInvoices: () => void;
+
+  // Estado NO persistente para actualizar la ubicación del cliente
+  updateCustomerLocation: {
+    updateLocation: boolean;
+    latitude: number | null;
+    longitude: number | null;
+    addressName: string | null;
+  };
+  setUpdateCustomerLocation: (location: Partial<{
+    updateLocation: boolean;
+    latitude: number | null;
+    longitude: number | null;
+    addressName: string | null;
+  }>) => void;
+  clearUpdateCustomerLocation: () => void;
 }
 
 export const useAppStore = create<AppStoreState>()(
@@ -90,6 +110,7 @@ export const useAppStore = create<AppStoreState>()(
     (set, get) => ({
       products: [],
       selectedCustomer: null,
+      selectedCustomerLocation: null,
       allProductsCache: [],
       rawSearchText: '',
       debouncedSearchText: '',
@@ -99,8 +120,8 @@ export const useAppStore = create<AppStoreState>()(
       fetchUrl: '',
       selectedInvoices: [],
       selectedCustomerInvoices: null,
-  userClickAcceptWelcome: false,
-  setUserClickAcceptWelcome: (value: boolean) => set({ userClickAcceptWelcome: value }),
+      userClickAcceptWelcome: false,
+      setUserClickAcceptWelcome: (value: boolean) => set({ userClickAcceptWelcome: value }),
       // Estado NO persistente para datos del formulario de pago
       paymentForm: {
         method: null,
@@ -201,6 +222,9 @@ export const useAppStore = create<AppStoreState>()(
       setSelectedCustomer: (customer) => set({ selectedCustomer: customer }),
       clearSelectedCustomer: () => set({ selectedCustomer: null, selectedCustomerInvoices: null }),
 
+      setSelectedCustomerLocation: (loc) => set({ selectedCustomerLocation: loc }),
+      clearSelectedCustomerLocation: () => set({ selectedCustomerLocation: null }),
+
       setAllProductsCache: (products) => set({ allProductsCache: products }),
       clearAllProductsCache: () => set({ allProductsCache: [] }),
 
@@ -254,13 +278,27 @@ export const useAppStore = create<AppStoreState>()(
       },
 
       clearInvoices: () => set({ selectedInvoices: [] }),
+
+      // Estado NO persistente para actualizar la ubicación del cliente
+      updateCustomerLocation: {
+        updateLocation: false,
+        latitude: null,
+        longitude: null,
+        addressName: null,
+      },
+      setUpdateCustomerLocation: (location) => {
+        set({ updateCustomerLocation: { ...get().updateCustomerLocation, ...location } });
+      },
+      clearUpdateCustomerLocation: () => {
+        set({ updateCustomerLocation: { updateLocation: false, latitude: null, longitude: null, addressName: null } });
+      },
     }),
     {
       name: 'app-store',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => {
         // Excluir estados NO persistentes
-        const { selectedInvoices, selectedCustomerInvoices, paymentForm, ...rest } = state;
+        const { selectedInvoices, selectedCustomerInvoices, paymentForm, selectedCustomerLocation, updateCustomerLocation, ...rest } = state;
         return rest;
       },
     }
