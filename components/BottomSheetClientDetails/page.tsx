@@ -1,18 +1,22 @@
 import ClientIcon from '@/assets/icons/ClientIcon';
+import { useAuth } from '@/context/auth';
+import api from '@/lib/api';
 import { useAppStore } from '@/state';
 import { CustomerAddress } from '@/types/types';
 import Feather from '@expo/vector-icons/Feather';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import axios from 'axios';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Text, TouchableOpacity, View } from 'react-native';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 const BottomSheetClientDetails = () => {
   const { selectedCustomerLocation, setUpdateCustomerLocation, updateCustomerLocation } = useAppStore();
   const clearSelectedCustomerLocation = useAppStore((s) => s.clearSelectedCustomerLocation);
+  const { fetchUrl } = useAppStore();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [customerAddresses, setCustomerAddresses] = useState<CustomerAddress[] | null>(null);
+  const { user } = useAuth();
 
   function clearSelected() {
     clearSelectedCustomerLocation();
@@ -30,8 +34,19 @@ const BottomSheetClientDetails = () => {
     const fetchCustomerAddresses = async () => {
       if (selectedCustomerLocation?.cardCode) {
         try {
-          const response = await axios.get<CustomerAddress[]>(
-            `http://200.115.188.54:4325/api/Customers/${selectedCustomerLocation.cardCode}/addresses`
+          const response = await api.get<CustomerAddress[]>(
+            `/api/Customers/${selectedCustomerLocation.cardCode}/addresses`,
+            {
+              baseURL: fetchUrl,
+              headers: {
+                Authorization: `Bearer ${user?.token}`,
+                'Content-Type': 'application/json',
+              },
+              cache: {
+                ttl: 3600 * 24,
+                override: true,
+              }
+            }
           );
           setCustomerAddresses(response.data);
         } catch (error) {
@@ -43,12 +58,13 @@ const BottomSheetClientDetails = () => {
     fetchCustomerAddresses();
   }, [selectedCustomerLocation?.cardCode]);
 
-  const handleUpdateLocation = () => {
-    if (customerAddresses && customerAddresses[0]) {
+  const handleUpdateLocation = (rowNum: number) => {
+    if (customerAddresses && customerAddresses[rowNum]) {
       setUpdateCustomerLocation({
         ...updateCustomerLocation,
         updateLocation: true,
-        addressName: customerAddresses[0].addressName,
+        addressName: customerAddresses[rowNum].addressName,
+        rowNum: customerAddresses[rowNum].rowNum,
       });
     } else {
       setUpdateCustomerLocation({
@@ -64,29 +80,38 @@ const BottomSheetClientDetails = () => {
   };
 
   const updateCustomerGeoLocation = async () => {
-    if (!selectedCustomerLocation?.cardCode || !updateCustomerLocation.addressName || !updateCustomerLocation.latitude || !updateCustomerLocation.longitude) {
+    if (!selectedCustomerLocation?.cardCode || !updateCustomerLocation.addressName) {
       Alert.alert('Error', 'Faltan datos para actualizar la ubicación.');
       return;
     }
 
-    try {
-      const patchBody = {
-        headers: {
-          latitud: updateCustomerLocation.latitude.toString(),
-          longitud: updateCustomerLocation.longitude.toString(),
-        },
-      };
-      console.log('Cuerpo del PATCH:', patchBody);
+    if (!updateCustomerLocation.latitude || !updateCustomerLocation.longitude) {
+      Alert.alert('Error', 'Latitud y longitud no están definidas.');
+      return;
+    }
 
+    const URL = `http://200.115.188.54:4325/api/Customers/${selectedCustomerLocation.cardCode}/addresses/${updateCustomerLocation.rowNum}/geo`;
+
+    try {
       const response = await axios.patch(
-        `http://200.115.188.54:4325/api/Customers/${selectedCustomerLocation.cardCode}/addresses/${updateCustomerLocation.addressName}/geo`,
-        patchBody
+        `http://200.115.188.54:4325/api/Customers/${selectedCustomerLocation.cardCode}/addresses/${updateCustomerLocation.rowNum}/geo`,
+        {
+          latitud: `${updateCustomerLocation.latitude}`,
+          longitud: `${updateCustomerLocation.longitude}`
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user?.token}`,
+            'Content-Type': 'application/json',
+          },
+        }
       );
 
-      Alert.alert('Éxito', 'Ubicación actualizada correctamente.', [{ text: 'OK' }]);
-      console.log('Respuesta del servidor:', response.data);
+      Alert.alert('Éxito', 'Ubicación actualizada correctamente.');
+      console.log('Respuesta del servidor:', response);
     } catch (error) {
       console.error('Error al actualizar la ubicación:', error);
+      console.log('URL de la solicitud:', URL);
       Alert.alert('Error', 'No se pudo actualizar la ubicación.');
     }
   };
@@ -183,10 +208,17 @@ const BottomSheetClientDetails = () => {
                 <Text className="font-[Poppins-SemiBold] text-lg text-black tracking-[-0.3px]">Direcciones:</Text>
                 {customerAddresses ? (
                   customerAddresses.map((address, index) => (
-                    <View key={index} className="mt-2">
-                      <Text className="text-black font-[Poppins-Medium] tracking-[-0.3px]">{address.street}</Text>
-                      <Text className="text-black font-[Poppins-Regular] tracking-[-0.3px]">{address.ciudadName}, {address.stateName}</Text>
+                    <View key={index} className="mt-2 bg-gray-200 p-4 rounded-xl relative">
+                      <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px]">{address.street}</Text>
+                      <Text className="text-black font-[Poppins-Regular] tracking-[-0.3px]">{address.ciudadName} - {address.stateName}</Text>
                       <Text className="text-black font-[Poppins-Regular] tracking-[-0.3px]">{address.addressName}</Text>
+
+                      <Text className="text-black font-[Poppins-Regular] tracking-[-0.3px]">Longuitud: {address.u_Longitud}</Text>
+                      <Text className="text-black font-[Poppins-Regular] tracking-[-0.3px]">Latitud: {address.u_Latitud}</Text>
+
+                      <TouchableOpacity onPress={() => handleUpdateLocation(address.rowNum)} className='h-[28px] w-[28px] rounded-full bg-yellow-300 items-center justify-center absolute top-3 right-3'>
+                        <MaterialCommunityIcons name="pencil" size={18} color="black" />
+                      </TouchableOpacity>
                     </View>
                   ))
                 ) : (
@@ -195,10 +227,11 @@ const BottomSheetClientDetails = () => {
               </View>
 
               <TouchableOpacity
-                className='flex-1 h-[50px] bg-yellow-300 items-center justify-center rounded-full'
-                onPress={handleUpdateLocation}
+                className='flex-1 h-[50px] bg-yellow-300 items-center justify-center rounded-full flex-row gap-2'
+              // onPress={handleUpdateLocation}
               >
-                <Text className="text-center text-md font-[Poppins-SemiBold] text-black tracking-[-0.3px]">
+                <MaterialCommunityIcons name="map-marker-radius" size={24} color="black" />
+                <Text className="text-center text-lg font-[Poppins-SemiBold] text-black tracking-[-0.3px]">
                   Editar Ubicación
                 </Text>
               </TouchableOpacity>

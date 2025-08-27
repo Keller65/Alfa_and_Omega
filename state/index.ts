@@ -95,12 +95,14 @@ interface AppStoreState {
     latitude: number | null;
     longitude: number | null;
     addressName: string | null;
+    rowNum: number | null;
   };
   setUpdateCustomerLocation: (location: Partial<{
     updateLocation: boolean;
     latitude: number | null;
     longitude: number | null;
     addressName: string | null;
+    rowNum: number | null;
   }>) => void;
   clearUpdateCustomerLocation: () => void;
 }
@@ -285,12 +287,13 @@ export const useAppStore = create<AppStoreState>()(
         latitude: null,
         longitude: null,
         addressName: null,
+        rowNum: null,
       },
       setUpdateCustomerLocation: (location) => {
         set({ updateCustomerLocation: { ...get().updateCustomerLocation, ...location } });
       },
       clearUpdateCustomerLocation: () => {
-        set({ updateCustomerLocation: { updateLocation: false, latitude: null, longitude: null, addressName: null } });
+        set({ updateCustomerLocation: { updateLocation: false, latitude: null, longitude: null, addressName: null, rowNum: null } });
       },
     }),
     {

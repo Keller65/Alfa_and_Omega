@@ -248,13 +248,16 @@ export interface PaymentCreditCard {
 
 // Direcciones de cliente (respuesta de /api/Customers/{cardCode}/addresses)
 export interface CustomerAddress {
+  rowNum: number;
   addressName: string;
+  addressType: string;
+  bpCode: string;
   street: string;
   country: string;
   state: string;
   stateName: string;
   u_Ciudad: string;
   ciudadName: string;
-  u_Latitud: string; // puede venir vacío
-  u_Longitud: string; // puede venir vacío
+  u_Latitud: string;
+  u_Longitud: string;
 }
