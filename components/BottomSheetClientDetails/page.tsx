@@ -66,6 +66,16 @@ const BottomSheetClientDetails: React.FC<BottomSheetClientDetailsProps> = ({ map
     fetchCustomerAddresses();
   }, [selectedCustomerLocation?.cardCode]);
 
+  useEffect(() => {
+    // Limpiar estados cuando cambia el cliente seleccionado
+    setCustomerAddresses(null);
+    setUpdateCustomerLocation({
+      updateLocation: false,
+      addressName: undefined,
+      rowNum: undefined,
+    });
+  }, [selectedCustomerLocation]);
+
   const handleUpdateLocation = (rowNum: number) => {
     if (customerAddresses && customerAddresses[rowNum]) {
       setUpdateCustomerLocation({

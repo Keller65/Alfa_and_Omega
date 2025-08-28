@@ -1,3 +1,4 @@
+import ClientIcon from '@/assets/icons/ClientIcon';
 import { useAuth } from '@/context/auth';
 import api from '@/lib/api';
 import { useAppStore } from '@/state';
@@ -351,11 +352,19 @@ const OrderDetails = () => {
     <ScrollView className="flex-1 p-4 bg-white">
       <View className="p-5 bg-white rounded-b-[36px] shadow-sm border border-gray-100">
         <View className="flex-row justify-between items-center mb-5">
-          <View className="flex-row items-center">
-            <FontAwesome name="user-circle-o" size={24} color="#000" />
-            <Text className="ml-2 text-lg font-[Poppins-SemiBold] tracking-[-0.3px]">
-              {orderData.cardName ?? 'N/A'}
-            </Text>
+          <View className="flex-row items-center gap-2">
+            <View className="bg-[#fcde41] w-[40px] h-[40px] items-center justify-center rounded-full">
+              <ClientIcon size={24} color="#000" />
+            </View>
+
+            <View>
+              <Text className="ml-2 text-lg font-[Poppins-SemiBold] tracking-[-0.3px]">
+                {orderData.cardName ?? 'N/A'}
+              </Text>
+              <Text className="ml-2 text-md font-[Poppins-SemiBold] text-gray-600 tracking-[-0.3px]">
+                {orderData.cardCode ?? 'N/A'}
+              </Text>
+            </View>
           </View>
         </View>
 

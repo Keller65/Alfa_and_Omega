@@ -58,7 +58,6 @@ const InvoicesDetails = () => {
         <View>
           <Text className="font-[Poppins-SemiBold] tracking-[-0.3px] leading-5">{invoiceDetails.cardName}</Text>
           <Text className="font-[Poppins-Medium] tracking-[-0.3px] leading-5">{invoiceDetails.cardCode}</Text>
-          <Text className="font-[Poppins-Medium] tracking-[-0.3px] leading-5">{invoiceDetails.docEntry}</Text>
         </View>
       </View>
 
