@@ -1,17 +1,22 @@
 import ClientIcon from '@/assets/icons/ClientIcon';
+import LocationIcon from '@/assets/icons/Locations';
 import { useAuth } from '@/context/auth';
 import api from '@/lib/api';
 import { useAppStore } from '@/state';
 import { CustomerAddress } from '@/types/types';
-import Feather from '@expo/vector-icons/Feather';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Text, TouchableOpacity, View } from 'react-native';
+import MapView from 'react-native-maps';
 
-const BottomSheetClientDetails = () => {
+interface BottomSheetClientDetailsProps {
+  mapRef: RefObject<MapView | null>;
+}
+
+const BottomSheetClientDetails: React.FC<BottomSheetClientDetailsProps> = ({ mapRef }) => {
   const { selectedCustomerLocation, setUpdateCustomerLocation, updateCustomerLocation } = useAppStore();
   const clearSelectedCustomerLocation = useAppStore((s) => s.clearSelectedCustomerLocation);
   const { fetchUrl } = useAppStore();
@@ -130,6 +135,38 @@ const BottomSheetClientDetails = () => {
     }
   };
 
+  const handleSelectAddress = (address: CustomerAddress) => {
+    if (address.u_Latitud && address.u_Longitud) {
+      const latitude = parseFloat(address.u_Latitud);
+      const longitude = parseFloat(address.u_Longitud);
+
+      if (!isNaN(latitude) && !isNaN(longitude)) {
+        setUpdateCustomerLocation({
+          latitude,
+          longitude,
+          updateLocation: false,
+        });
+
+        // Mover la cámara del mapa a la nueva ubicación
+        if (mapRef.current && (mapRef.current as any).animateToRegion) {
+          const newRegion = {
+            latitude,
+            longitude,
+            latitudeDelta: 0.02,
+            longitudeDelta: 0.02,
+          };
+          (mapRef.current as any).animateToRegion(newRegion, 500);
+        }
+
+        bottomSheetModalRef.current?.dismiss();
+      } else {
+        Alert.alert('Error', 'La dirección seleccionada no tiene una ubicación válida.');
+      }
+    } else {
+      Alert.alert('Error', 'La dirección seleccionada no tiene latitud o longitud.');
+    }
+  };
+
   // renders
   const renderBackdrop = useCallback(
     (props: any) => (
@@ -174,7 +211,7 @@ const BottomSheetClientDetails = () => {
               className='flex-1 bg-yellow-300 h-[50px] items-center justify-center rounded-full'
             >
               <Text className='text-black text-center font-[Poppins-SemiBold] tracking-[0.3px]'>
-                Ver Detalles
+                Ubicaciones
               </Text>
             </TouchableOpacity>
 
@@ -188,7 +225,7 @@ const BottomSheetClientDetails = () => {
                   <ActivityIndicator size="small" color="#000" />
                 ) : (
                   <>
-                    <Feather name="save" size={22} color="black" />
+                    <LocationIcon size={22} />
                     <Text className='text-black text-center font-[Poppins-SemiBold] tracking-[0.3px]'>
                       Actualizar
                     </Text>
@@ -229,14 +266,31 @@ const BottomSheetClientDetails = () => {
                 <Text className="font-[Poppins-SemiBold] text-lg text-black tracking-[-0.3px]">Direcciones:</Text>
                 {customerAddresses ? (
                   customerAddresses.map((address, index) => (
-                    <View key={index} className="mt-2 bg-gray-100 p-4 rounded-3xl relative">
+                    <View
+                      key={index}
+                      className="mt-2 bg-gray-100 p-4 rounded-3xl relative"
+                    >
                       <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px] w-[90%]">{address.street}</Text>
                       <Text className="text-black font-[Poppins-Regular] tracking-[-0.3px]">{address.ciudadName} - {address.stateName}</Text>
                       <Text className="text-black font-[Poppins-Regular] tracking-[-0.3px]">{address.addressName}</Text>
 
-                      <TouchableOpacity onPress={() => handleUpdateLocation(address.rowNum)} className='h-[28px] w-[28px] rounded-full bg-yellow-300 items-center justify-center absolute top-3 right-3'>
-                        <MaterialCommunityIcons name="pencil" size={18} color="black" />
-                      </TouchableOpacity>
+                      <View className="flex-row gap-2 mt-4">
+                        <TouchableOpacity
+                          onPress={() => handleUpdateLocation(address.rowNum)}
+                          className='flex-1 h-[40px] bg-yellow-300 items-center justify-center rounded-full'
+                        >
+                          <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px]">Editar</Text>
+                        </TouchableOpacity>
+
+                        {address.u_Latitud && address.u_Longitud && (
+                          <TouchableOpacity
+                            onPress={() => handleSelectAddress(address)}
+                            className='flex-1 h-[40px] bg-blue-300 items-center justify-center rounded-full'
+                          >
+                            <Text className="text-blue-900 font-[Poppins-SemiBold] tracking-[-0.3px]">Mostrar Ubicación</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
                     </View>
                   ))
                 ) : (

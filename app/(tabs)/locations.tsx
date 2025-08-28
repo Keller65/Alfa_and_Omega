@@ -88,6 +88,9 @@ const LocationsScreen = () => {
     if (updateCustomerLocation.updateLocation) {
       const { latitude, longitude } = event.nativeEvent.coordinate;
 
+      // Limpiar el lugar seleccionado por búsqueda
+      setSelectedPlace(null);
+
       // Guardar en zustand
       setUpdateCustomerLocation({
         latitude,
@@ -255,7 +258,7 @@ const LocationsScreen = () => {
         })}
       </MapView>
 
-      <BottomSheetClientDetails />
+      <BottomSheetClientDetails mapRef={mapRef} />
       <BottomSheetSearchClients ref={bottomSheetRef} />
     </View>
   );
