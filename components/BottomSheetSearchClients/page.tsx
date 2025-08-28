@@ -6,6 +6,8 @@ import axios from 'axios';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
+import { useAuth } from '@/context/auth';
+import api from '@/lib/api';
 
 export interface Client {
   cardCode: string;
@@ -32,6 +34,7 @@ const BottomSheetSearchClients = forwardRef<BottomSheetSearchClientsHandle, Prop
   const fetchControllerRef = useRef<AbortController | null>(null);
   const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { fetchUrl } = useAppStore();
+  const { user } = useAuth();
 
   const fetchClients = async () => {
     try {
@@ -41,9 +44,17 @@ const BottomSheetSearchClients = forwardRef<BottomSheetSearchClientsHandle, Prop
       const controller = new AbortController();
       fetchControllerRef.current = controller;
 
-      const { data } = await axios.get(
-        `${fetchUrl}/api/Customers/by-sales-emp?slpCode=3&page=1&pageSize=1000`,
-        { signal: controller.signal }
+      const { data } = await api.get(
+        `/api/Customers/by-sales-emp?slpCode=${user?.salesPersonCode}&page=1&pageSize=1000`,
+        {
+          baseURL: fetchUrl,
+          signal: controller.signal,
+          headers: {
+            Authorization: `Bearer ${user?.token}`,
+            'Content-Type': 'application/json',
+          }
+
+        }
       );
 
       const items = data && Array.isArray(data.items) ? data.items : Array.isArray(data) ? data : [];

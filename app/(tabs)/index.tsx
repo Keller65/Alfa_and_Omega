@@ -44,8 +44,18 @@ export default function App() {
             'Content-Encoding': 'gzip'
           }
         }),
-        fetch(`${fetchUrl}/api/Kpi/sales-vs-collections/${slpCode}`).then(res => res.json()),
-        fetch(`${fetchUrl}/api/Kpi/monthly/${slpCode}`).then(res => res.json())
+        fetch(`${fetchUrl}/api/Kpi/sales-vs-collections/${slpCode}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${user.token}`,
+          }
+        }).then(res => res.json()),
+        fetch(`${fetchUrl}/api/Kpi/monthly/${slpCode}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${user.token}`,
+          }
+        }).then(res => res.json())
       ]);
 
       const goalData = goalRes.data;

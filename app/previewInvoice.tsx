@@ -41,7 +41,7 @@ const generateInvoiceHTML = async (
   if (!invoiceDetails) return '';
 
   const base64Logo = await getBase64Logo();
-  const folio = `${invoiceDetails?.docEntry ?? ''}`;
+  const folio = `${invoiceDetails?.docNum ?? ''}`;
   const dateStr = invoiceDetails?.docDate
     ? new Date(invoiceDetails.docDate).toLocaleString()
     : '';
@@ -109,7 +109,7 @@ const generateInvoiceHTML = async (
         <div class="title-bold" style="font-size:18px; margin-bottom:34px;">Grupo Alfa & Omega</div>
       </div>
       <div>
-        <div class="row"><span class="bold">Folio</span><span>${folio}</span></div>
+        <div class="row"><span class="bold">Recibo</span><span>${folio}</span></div>
         <div class="row"><span class="bold">Cliente</span><span>${invoiceDetails?.cardCode} - ${invoiceDetails?.cardName}</span></div>
         <div class="row"><span class="bold">Vendedor</span><span>${userFullName}</span></div>
         <div class="row"><span class="bold">Fecha</span><span>${dateStr}</span></div>

@@ -102,7 +102,9 @@ export default function PedidosScreen() {
           </View>
           <View>
             <Text className="text-xs text-gray-500">Total</Text>
-            <Text className="text-lg font-[Poppins-SemiBold] text-gray-900">L. {item.docTotal.toLocaleString()}</Text>
+            <Text className="text-lg font-[Poppins-SemiBold] text-gray-900">
+              L. {item.docTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </Text>
           </View>
         </View>
 

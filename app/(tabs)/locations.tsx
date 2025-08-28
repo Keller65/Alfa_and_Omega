@@ -3,6 +3,7 @@ import BottomSheetClientDetails from '@/components/BottomSheetClientDetails/page
 import BottomSheetSearchClients, { BottomSheetSearchClientsHandle } from '@/components/BottomSheetSearchClients/page';
 import { useAppStore } from '@/state';
 import { CustomerAddress } from '@/types/types';
+import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import MapView, { MapPressEvent, Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
@@ -16,12 +17,45 @@ const LocationsScreen = () => {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [selectedPlace, setSelectedPlace] = useState<{ lat: number; lon: number; display_name: string } | null>(null);
-  const [region, setRegion] = useState<Region>({
-    latitude: 15.469768175349492,
-    longitude: -88.02536107599735,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  });
+  const [region, setRegion] = useState<Region | null>(null);
+
+  // Obtener ubicación del dispositivo al montar
+  useEffect(() => {
+    const getDeviceLocation = async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          console.warn('Permiso de ubicación denegado');
+          setRegion({
+            latitude: 15.469768175349492,
+            longitude: -88.02536107599735,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          });
+          return;
+        }
+
+        const location = await Location.getCurrentPositionAsync({});
+        const { latitude, longitude } = location.coords;
+        setRegion({
+          latitude,
+          longitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        });
+      } catch (error) {
+        console.error('Error al obtener la ubicación del dispositivo:', error);
+        setRegion({
+          latitude: 15.469768175349492,
+          longitude: -88.02536107599735,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        });
+      }
+    };
+
+    getDeviceLocation();
+  }, []);
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleOpenModal = () => bottomSheetRef.current?.present();
@@ -39,7 +73,7 @@ const LocationsScreen = () => {
       const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&addressdetails=1&limit=5`;
       const res = await fetch(url, {
         headers: {
-          'User-Agent': 'alfaOmegaExpoRouter/1.0 (lopezkeller65@gmail.com)',
+          'User-Agent': 'alfaOmegaExpoRouter/1.0 (lenin.barahona@alfayomega-hn.com)',
         },
       });
       const data = await res.json();
@@ -215,8 +249,8 @@ const LocationsScreen = () => {
           mapRef.current = r;
         }}
         provider={PROVIDER_GOOGLE}
-        initialRegion={region}
-        region={region}
+        initialRegion={region ?? undefined}
+        region={region ?? undefined}
         style={styles.map}
         zoomControlEnabled={true}
         onPress={handleMapPress}
@@ -256,6 +290,16 @@ const LocationsScreen = () => {
             />
           );
         })}
+
+        {/* Pin de la ubicación actual */}
+        {region && (
+          <Marker
+            coordinate={{ latitude: region.latitude, longitude: region.longitude }}
+            title="Mi ubicación"
+            description="Esta es tu ubicación actual"
+            pinColor="blue"
+          />
+        )}
       </MapView>
 
       <BottomSheetClientDetails mapRef={mapRef} />
