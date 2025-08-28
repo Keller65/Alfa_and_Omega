@@ -63,7 +63,7 @@ export default function Layout() {
           >
             <Drawer.Screen
               name="index"
-              component={IndexScreen}
+              component={LocationScreen}
               options={{
                 title: 'Dashboard',
                 drawerIcon: ({ focused }) => (

@@ -5,7 +5,8 @@ import { useAppStore } from '@/state';
 import { CustomerAddress } from '@/types/types';
 import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
-import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import GooglePlacesTextInput from 'react-native-google-places-textinput';
 import MapView, { MapPressEvent, Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 
@@ -18,87 +19,41 @@ const LocationsScreen = () => {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [selectedPlace, setSelectedPlace] = useState<{ lat: number; lon: number; display_name: string } | null>(null);
   const [region, setRegion] = useState<Region | null>(null);
+  const [deviceLocation, setDeviceLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [highlightedPlace, setHighlightedPlace] = useState<{ lat: number; lon: number; display_name: string } | null>(null);
 
-  // Obtener ubicación del dispositivo al montar
+  const [addresses, setAddresses] = useState<CustomerAddress[]>([]);
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 👉 Obtener ubicación del dispositivo
   useEffect(() => {
     const getDeviceLocation = async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
           console.warn('Permiso de ubicación denegado');
-          setRegion({
-            latitude: 15.469768175349492,
-            longitude: -88.02536107599735,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
-          });
+          const fallback = { latitude: 15.469768, longitude: -88.025361 };
+          setDeviceLocation(fallback);
+          setRegion({ ...fallback, latitudeDelta: 0.0922, longitudeDelta: 0.0421 });
           return;
         }
 
         const location = await Location.getCurrentPositionAsync({});
         const { latitude, longitude } = location.coords;
-        setRegion({
-          latitude,
-          longitude,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        });
+        setDeviceLocation({ latitude, longitude });
+        setRegion({ latitude, longitude, latitudeDelta: 0.0922, longitudeDelta: 0.0421 });
       } catch (error) {
         console.error('Error al obtener la ubicación del dispositivo:', error);
-        setRegion({
-          latitude: 15.469768175349492,
-          longitude: -88.02536107599735,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        });
+        const fallback = { latitude: 15.469768, longitude: -88.025361 };
+        setDeviceLocation(fallback);
+        setRegion({ ...fallback, latitudeDelta: 0.0922, longitudeDelta: 0.0421 });
       }
     };
 
     getDeviceLocation();
   }, []);
 
-  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const handleOpenModal = () => bottomSheetRef.current?.present();
-
-  const [addresses, setAddresses] = useState<CustomerAddress[]>([]);
-
-  // Busca usando Nominatim (OpenStreetMap). Devuelve sugerencias.
-  const fetchPlaces = async (q: string) => {
-    if (!q) {
-      setSuggestions([]);
-      return;
-    }
-
-    try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&addressdetails=1&limit=5`;
-      const res = await fetch(url, {
-        headers: {
-          'User-Agent': 'alfaOmegaExpoRouter/1.0 (lenin.barahona@alfayomega-hn.com)',
-        },
-      });
-      const data = await res.json();
-      setSuggestions(data || []);
-    } catch (error) {
-      console.warn('Error buscando lugar:', error);
-      setSuggestions([]);
-    }
-  };
-
-  useEffect(() => {
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    if (!query.trim()) {
-      setSuggestions([]);
-      return;
-    }
-    searchTimeout.current = setTimeout(() => {
-      fetchPlaces(query);
-    }, 250);
-
-    return () => {
-      if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    };
-  }, [query]);
-
+  // 👉 Obtener detalles de un lugar (lat/lng)
   const handleSelectPlace = (place: any) => {
     if (!place) return;
     const lat = parseFloat(place.lat);
@@ -117,25 +72,17 @@ const LocationsScreen = () => {
     setSuggestions([]);
   };
 
-  // 👉 Manejo del toque en el mapa para capturar lat/lng
+  // 👉 Capturar toque en el mapa
   const handleMapPress = (event: MapPressEvent) => {
     if (updateCustomerLocation.updateLocation) {
       const { latitude, longitude } = event.nativeEvent.coordinate;
-
-      // Limpiar el lugar seleccionado por búsqueda
       setSelectedPlace(null);
-
-      // Guardar en zustand
-      setUpdateCustomerLocation({
-        latitude,
-        longitude,
-      });
-
-      // Mostrar en consola
+      setUpdateCustomerLocation({ latitude, longitude });
       console.log("Nueva ubicación seleccionada:", { latitude, longitude });
     }
   };
 
+  // 👉 Animación de pulso (punto verde)
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
 
@@ -166,24 +113,100 @@ const LocationsScreen = () => {
     };
   });
 
+  const handlePlaceSelect = async (place: any) => {
+    try {
+      if (!place.placeId) {
+        console.warn('No se encontró un placeId en el lugar seleccionado.');
+        return;
+      }
+
+      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.placeId}&key=AIzaSyAjUmggc5C_bvkHjsAT_o3Y_uOVwqIjwX4`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.result && data.result.geometry && data.result.geometry.location) {
+        const { lat, lng } = data.result.geometry.location;
+        handleSelectPlace({ lat, lon: lng, display_name: place.structuredFormat.mainText.text });
+      } else {
+        console.warn('No se encontraron coordenadas para el lugar seleccionado.');
+      }
+    } catch (error) {
+      console.error('Error al obtener detalles del lugar:', error);
+    }
+  };
+
+  const handleHighlightPlace = (lat: number, lon: number, display_name: string) => {
+    setHighlightedPlace({ lat, lon, display_name });
+    const newRegion: Region = {
+      latitude: lat,
+      longitude: lon,
+      latitudeDelta: 0.02,
+      longitudeDelta: 0.02,
+    };
+    setRegion(newRegion);
+    if (mapRef.current && (mapRef.current as any).animateToRegion) {
+      (mapRef.current as any).animateToRegion(newRegion, 500);
+    }
+  };
+
   return (
     <View className="flex-1 bg-white relative">
       <View className="z-20">
         <View className="bg-white px-4 pb-4 gap-2">
           <View className="flex-row gap-2">
-            <TextInput
-              placeholder="Buscar ciudad, país..."
-              className="bg-gray-200 rounded-2xl flex-1 py-3 px-4 text-black font-[Poppins-Medium] tracking-[-0.3px]"
+            <GooglePlacesTextInput
+              debounceDelay={250}
+              apiKey="AIzaSyAjUmggc5C_bvkHjsAT_o3Y_uOVwqIjwX4"
+              onPlaceSelect={handlePlaceSelect}
+              placeHolderText='Buscar ciudad, país...'
+              showClearButton={false}
               value={query}
-              onChangeText={setQuery}
-              onSubmitEditing={() => {
-                if (suggestions.length > 0) handleSelectPlace(suggestions[0]);
+              style={{
+                placeholder: {
+                  color: '#9ca3af',
+                },
+                container: {
+                  flex: 1,
+                },
+                suggestionsContainer: {
+                  backgroundColor: '#fff',
+                  padding: 0,
+                },
+                suggestionsList: {
+                  maxHeight: 200,
+                  borderRadius: 16,
+                  overflow: 'hidden',
+                },
+                suggestionText: {
+                  main: {
+                    fontFamily: 'Poppins-Medium',
+                    letterSpacing: -0.3,
+                    color: '#222',
+                    fontSize: 14,
+                    marginBottom: -6,
+                  },
+                  secondary: {
+                    fontFamily: 'Poppins-Medium',
+                    letterSpacing: -0.3,
+                    color: '#6b7280',
+                    fontSize: 12,
+                  },
+                },
+                input: {
+                  backgroundColor: '#e5e7eb',
+                  fontFamily: 'Poppins-Medium',
+                  letterSpacing: -0.3,
+                  borderWidth: 0,
+                  borderRadius: 16,
+                  height: 48,
+                  lineHeight: 10,
+                }
               }}
             />
 
             <TouchableOpacity
               className="h-[46px] w-[46px] items-center justify-center rounded-2xl bg-yellow-300"
-              onPress={handleOpenModal}
+              onPress={() => bottomSheetRef.current?.present()}
             >
               <PlusIcon color="black" />
             </TouchableOpacity>
@@ -199,7 +222,7 @@ const LocationsScreen = () => {
                       height: 16,
                       width: 16,
                       borderRadius: 10,
-                      backgroundColor: '#86efac', // green-400
+                      backgroundColor: '#86efac',
                       position: 'absolute',
                     },
                     animatedStyle,
@@ -245,9 +268,7 @@ const LocationsScreen = () => {
       </View>
 
       <MapView
-        ref={(r) => {
-          mapRef.current = r;
-        }}
+        ref={(r) => { mapRef.current = r; }}
         provider={PROVIDER_GOOGLE}
         initialRegion={region ?? undefined}
         region={region ?? undefined}
@@ -255,49 +276,34 @@ const LocationsScreen = () => {
         zoomControlEnabled={true}
         onPress={handleMapPress}
       >
-        {/* Lugar seleccionado por búsqueda */}
+        {/* Ubicación buscada → marcador verde */}
         {selectedPlace && (
           <Marker
             coordinate={{ latitude: selectedPlace.lat, longitude: selectedPlace.lon }}
             title={selectedPlace.display_name}
+            pinColor="green"
           />
         )}
 
-        {/* Marker de actualización de ubicación */}
-        {updateCustomerLocation.latitude && updateCustomerLocation.longitude && (
-          <Marker
-            coordinate={{
-              latitude: updateCustomerLocation.latitude,
-              longitude: updateCustomerLocation.longitude,
-            }}
-            title="Nueva ubicación"
-            description="Ubicación seleccionada para el cliente"
-            pinColor="red"
-          />
-        )}
-
-        {/* Marcadores de direcciones del cliente */}
-        {addresses.map((a, idx) => {
-          const lat = parseFloat(a.u_Latitud || '0');
-          const lon = parseFloat(a.u_Longitud || '0');
-          if (!lat || !lon) return null;
-          return (
+        {/* Ubicación resaltada → marcador rojo */}
+        {updateCustomerLocation &&
+          typeof updateCustomerLocation.latitude === 'number' &&
+          typeof updateCustomerLocation.longitude === 'number' && (
             <Marker
-              key={`addr-${idx}`}
-              coordinate={{ latitude: lat, longitude: lon }}
-              title={a.addressName}
-              description={`${a.street} - ${a.ciudadName}`}
+              coordinate={{ latitude: updateCustomerLocation.latitude, longitude: updateCustomerLocation.longitude }}
+              title="Ubicación del Cliente"
+              pinColor="red"
             />
-          );
-        })}
+        )}
 
-        {/* Pin de la ubicación actual */}
-        {region && (
+        {/* Ubicación actual del dispositivo → marcador azul */}
+        {deviceLocation && (
           <Marker
-            coordinate={{ latitude: region.latitude, longitude: region.longitude }}
+            coordinate={deviceLocation}
             title="Mi ubicación"
             description="Esta es tu ubicación actual"
             pinColor="blue"
+            identifier="current-location"
           />
         )}
       </MapView>

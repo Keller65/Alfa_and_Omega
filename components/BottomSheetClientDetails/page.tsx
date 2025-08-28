@@ -29,7 +29,8 @@ const BottomSheetClientDetails: React.FC<BottomSheetClientDetailsProps> = ({ map
   function clearSelected() {
     clearSelectedCustomerLocation();
     setUpdateCustomerLocation({
-      ...updateCustomerLocation,
+      latitude: undefined,
+      longitude: undefined,
       updateLocation: false,
     });
   }
@@ -191,9 +192,9 @@ const BottomSheetClientDetails: React.FC<BottomSheetClientDetailsProps> = ({ map
   );
 
   return (
-    <View>
+    <View className=''>
       {selectedCustomerLocation && (
-        <View className='p-4 gap-4'>
+        <View className='p-4 gap-4 bg-white'>
           <View className="flex-row gap-4 items-center">
             <View className="bg-[#fcde41] w-[38px] h-[38px] items-center justify-center rounded-full">
               <ClientIcon size={24} color="#000" />
