@@ -2,7 +2,6 @@ import PlusIcon from '@/assets/icons/PlusIcon';
 import BottomSheetClientDetails from '@/components/BottomSheetClientDetails/page';
 import BottomSheetSearchClients, { BottomSheetSearchClientsHandle } from '@/components/BottomSheetSearchClients/page';
 import { useAppStore } from '@/state';
-import { CustomerAddress } from '@/types/types';
 import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -20,10 +19,6 @@ const LocationsScreen = () => {
   const [selectedPlace, setSelectedPlace] = useState<{ lat: number; lon: number; display_name: string } | null>(null);
   const [region, setRegion] = useState<Region | null>(null);
   const [deviceLocation, setDeviceLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [highlightedPlace, setHighlightedPlace] = useState<{ lat: number; lon: number; display_name: string } | null>(null);
-
-  const [addresses, setAddresses] = useState<CustomerAddress[]>([]);
-  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 👉 Obtener ubicación del dispositivo
   useEffect(() => {
@@ -132,20 +127,6 @@ const LocationsScreen = () => {
       }
     } catch (error) {
       console.error('Error al obtener detalles del lugar:', error);
-    }
-  };
-
-  const handleHighlightPlace = (lat: number, lon: number, display_name: string) => {
-    setHighlightedPlace({ lat, lon, display_name });
-    const newRegion: Region = {
-      latitude: lat,
-      longitude: lon,
-      latitudeDelta: 0.02,
-      longitudeDelta: 0.02,
-    };
-    setRegion(newRegion);
-    if (mapRef.current && (mapRef.current as any).animateToRegion) {
-      (mapRef.current as any).animateToRegion(newRegion, 500);
     }
   };
 
