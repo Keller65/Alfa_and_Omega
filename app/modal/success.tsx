@@ -12,7 +12,7 @@ const Success = () => {
   const animation = useRef<LottieView>(null);
   const router = useRouter();
   const player = useAudioPlayer(audioSource);
-  const { OrderDetails } = useLocalSearchParams();
+  const { OrderDetails, message, buttonMessage } = useLocalSearchParams();
 
   useEffect(() => {
     animation.current?.play();
@@ -38,26 +38,37 @@ const Success = () => {
       />
 
       <Text style={{ fontSize: 28, fontFamily: 'Poppins-SemiBold', color: '#1a753c', marginTop: 20, textAlign: 'center' }}>
-        ¡Pedido realizado con exito!
+        {message ?? '¡Pedido realizado con exito!'}
       </Text>
       <Text style={{ fontSize: 16, color: '#333', marginTop: 10, marginBottom: 40, textAlign: 'center', fontFamily: 'Poppins-Regular' }}>
-        Tu pedido se ha enviado correctamente.
+        {message ? 'Acción realizada con éxito.' : 'Tu pedido se ha enviado correctamente.'}
       </Text>
 
-      <TouchableOpacity
-        onPress={() => router.push({
-          pathname: '/order',
-          params: {
-            OrderDetails: OrderDetails
-          }
-        })}
-        className='rounded-full'
-        style={{ backgroundColor: '#28a745', width: '100%', height: 50, alignItems: 'center', justifyContent: 'center', marginBottom: 15 }}
-      >
-        <Text style={{ fontFamily: 'Poppins-Medium', color: '#fff', fontSize: 18 }}>
-          Ver Pedido
-        </Text>
-      </TouchableOpacity>
+      {message ?
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className='rounded-full'
+          style={{ backgroundColor: '#28a745', width: '100%', height: 50, alignItems: 'center', justifyContent: 'center', marginBottom: 15 }}
+        >
+          <Text style={{ fontFamily: 'Poppins-Medium', color: '#fff', fontSize: 18 }}>
+            {buttonMessage}
+          </Text>
+        </TouchableOpacity> :
+        <TouchableOpacity
+          onPress={() => router.push({
+            pathname: '/order',
+            params: {
+              OrderDetails: OrderDetails
+            }
+          })}
+          className='rounded-full'
+          style={{ backgroundColor: '#28a745', width: '100%', height: 50, alignItems: 'center', justifyContent: 'center', marginBottom: 15 }}
+        >
+          <Text style={{ fontFamily: 'Poppins-Medium', color: '#fff', fontSize: 18 }}>
+            Ver Pedido
+          </Text>
+        </TouchableOpacity>
+      }
     </SafeAreaView>
   );
 };
