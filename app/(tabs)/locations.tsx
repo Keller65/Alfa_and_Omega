@@ -258,7 +258,7 @@ const LocationsScreen = () => {
         onPress={handleMapPress}
       >
         {/* Ubicación buscada → marcador verde */}
-        {selectedPlace && (
+        {selectedPlace && !updateCustomerLocation.updateLocation && (
           <Marker
             coordinate={{ latitude: selectedPlace.lat, longitude: selectedPlace.lon }}
             title={selectedPlace.display_name}
