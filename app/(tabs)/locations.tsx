@@ -52,7 +52,7 @@ const LocationsScreen = () => {
 
   useEffect(() => {
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    if (!query) {
+    if (!query.trim()) {
       setSuggestions([]);
       return;
     }

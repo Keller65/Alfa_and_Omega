@@ -244,7 +244,7 @@ const BottomSheetClientDetails: React.FC<BottomSheetClientDetailsProps> = ({ map
         backdropComponent={renderBackdrop}
       // enableDynamicSizing={false}
       >
-        <BottomSheetView className='px-4'>
+        <BottomSheetView className='px-4 pb-4'>
           {selectedCustomerLocation ? (
             <View className='gap-4 pb-4'>
               <View className="flex-row gap-4 items-center">
@@ -263,7 +263,7 @@ const BottomSheetClientDetails: React.FC<BottomSheetClientDetailsProps> = ({ map
               </View>
 
               <View className="mt-4">
-                <Text className="font-[Poppins-SemiBold] text-lg text-black tracking-[-0.3px]">Direcciones:</Text>
+                <Text className="font-[Poppins-SemiBold] text-lg text-black tracking-[-0.3px]">Ubicaciones:</Text>
                 {customerAddresses ? (
                   customerAddresses.map((address, index) => (
                     <View
