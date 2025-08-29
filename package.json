@@ -1,7 +1,7 @@
 {
   "name": "alfaomegaexporouter",
   "main": "expo-router/entry",
-  "version": "1.0.2",
+  "version": "1.0.0",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -56,7 +56,6 @@
     "react-dom": "19.0.0",
     "react-native": "0.79.5",
     "react-native-gesture-handler": "~2.24.0",
-    "react-native-get-random-values": "^1.11.0",
     "react-native-gifted-charts": "^1.4.63",
     "react-native-google-places-textinput": "^0.8.0",
     "react-native-maps": "1.20.1",
