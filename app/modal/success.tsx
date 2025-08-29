@@ -1,11 +1,11 @@
-import LottieView from 'lottie-react-native';
-import { useEffect, useRef, useCallback } from 'react';
-import { Text, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import * as Haptics from 'expo-haptics';
-import { useAudioPlayer } from 'expo-audio';
 import { useFocusEffect } from '@react-navigation/native';
+import { useAudioPlayer } from 'expo-audio';
+import * as Haptics from 'expo-haptics';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import LottieView from 'lottie-react-native';
+import { useCallback, useEffect, useRef } from 'react';
+import { BackHandler, Text, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const audioSource = require('@/assets/sound/success.mp3');
 
@@ -26,12 +26,19 @@ const Success = () => {
 
   useFocusEffect(
     useCallback(() => {
-      return () => {
+      const onBackPress = () => {
         if (!message) {
           router.replace('/explore');
         }
+        return true;
       };
-    }, [])
+
+      const backHandlerSubscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+      return () => {
+        backHandlerSubscription.remove();
+      };
+    }, [router, message])
   );
 
   return (
