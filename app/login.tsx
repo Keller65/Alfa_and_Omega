@@ -230,7 +230,10 @@ export default function Login() {
           disabled={!isFormValid || loading}
         >
           {loading ? (
-            <ActivityIndicator color="#000" size="small" />
+            <View className='flex-row gap-2 items-center justify-center'>
+              <ActivityIndicator color="#6b7280" size="small" />
+              <Text style={{ color: '#6b7280', textAlign: 'center', fontFamily: 'Poppins-SemiBold', lineHeight: 12 }}>Iniciando Sesión...</Text>
+            </View>
           ) : (
             <Text style={{ color: isFormValid && !loading ? '#fff' : '#6b7280', textAlign: 'center', fontFamily: 'Poppins-SemiBold', lineHeight: 12 }}>Iniciar Sesión</Text>
           )}

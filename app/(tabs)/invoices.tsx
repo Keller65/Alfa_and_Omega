@@ -4,7 +4,7 @@ import { useAuth } from '@/context/auth';
 import api from '@/lib/api';
 import { useAppStore } from '@/state';
 import { PaymentData } from '@/types/types';
-import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -36,7 +36,6 @@ const Invoices = () => {
 
     setLoading(true);
     try {
-      // const url = `${fetchUrl}/api/Payments/received/${salesPersonCode}?page=${page}&pageSize=${PAGE_SIZE}`;
       const response = await api.get<PaymentData[]>(`/api/Payments/received/${salesPersonCode}?page=${page}&pageSize=${PAGE_SIZE}`, {
         baseURL: fetchUrl,
         headers: {
@@ -70,7 +69,6 @@ const Invoices = () => {
     setPage(1);
     setHasMore(true);
     try {
-      // const url = `${fetchUrl}/api/Payments/received/${salesPersonCode}?page=1&pageSize=${PAGE_SIZE}`;
       const response = await api.get<PaymentData[]>(`/api/Payments/received/${salesPersonCode}?page=1&pageSize=${PAGE_SIZE}`, {
         baseURL: fetchUrl,
         headers: {

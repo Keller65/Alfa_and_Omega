@@ -175,9 +175,12 @@ export default function PedidosScreen() {
       ) : (
         <View className="flex-1 justify-center items-center bg-white">
           {isRefreshing ? (
-            <ActivityIndicator size="large" color="#000" />
+            <View className='flex-1 bg-white gap-2 items-center justify-center'>
+              <ActivityIndicator size="small" color="#000" />
+              <Text className="text-lg text-black font-[Poppins-Medium] tracking-[-0.3px]">Cargando Pedidos...</Text>
+            </View>
           ) : (
-            <Text className="text-lg text-gray-500">No hay pedidos cargados.</Text>
+            <Text className="text-lg text-gray-500 font-[Poppins-Medium] tracking-[-0.3px]">No hay pedidos cargados.</Text>
           )}
         </View>
       )}

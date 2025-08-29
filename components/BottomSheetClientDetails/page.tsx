@@ -10,6 +10,8 @@ import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Text, TouchableOpacity, View } from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import AntDesign from '@expo/vector-icons/AntDesign';
 import MapView from 'react-native-maps';
 
 interface BottomSheetClientDetailsProps {
@@ -111,7 +113,7 @@ const BottomSheetClientDetails: React.FC<BottomSheetClientDetailsProps> = ({ map
 
     setIsLoading(true);
 
-    const URL = `http://200.115.188.54:4325/api/Customers/${selectedCustomerLocation.cardCode}/addresses/${updateCustomerLocation.rowNum}/geo`;
+    const URL = `${fetchUrl}/api/Customers/${selectedCustomerLocation.cardCode}/addresses/${updateCustomerLocation.rowNum}/geo`;
 
     try {
       const response = await axios.patch(
@@ -201,7 +203,7 @@ const BottomSheetClientDetails: React.FC<BottomSheetClientDetailsProps> = ({ map
             </View>
 
             <View>
-              <Text className="font-[Poppins-SemiBold] tracking-[-0.3px] text-md text-black leading-5">
+              <Text className="font-[Poppins-SemiBold] tracking-[-0.3px] text-md text-black leading-5 w-[85%]">
                 {selectedCustomerLocation?.cardName ?? 'Sin nombre'}
               </Text>
               <Text className="text-gray-600 font-[Poppins-SemiBold] tracking-[-0.3px] text-sm">
@@ -219,8 +221,9 @@ const BottomSheetClientDetails: React.FC<BottomSheetClientDetailsProps> = ({ map
           <View className='flex-row gap-4'>
             <TouchableOpacity
               onPress={handlePresentModalPress}
-              className='flex-1 bg-yellow-300 h-[50px] items-center justify-center rounded-full'
+              className='flex-1 bg-yellow-300 h-[50px] flex-row gap-2 items-center justify-center rounded-full'
             >
+              <LocationIcon size={22} />
               <Text className='text-black text-center font-[Poppins-SemiBold] tracking-[0.3px]'>
                 Ubicaciones
               </Text>
@@ -236,7 +239,7 @@ const BottomSheetClientDetails: React.FC<BottomSheetClientDetailsProps> = ({ map
                   <ActivityIndicator size="small" color="#000" />
                 ) : (
                   <>
-                    <LocationIcon size={22} />
+                    <AntDesign name="cloudupload" size={24} color="black" />
                     <Text className='text-black text-center font-[Poppins-SemiBold] tracking-[0.3px]'>
                       Actualizar
                     </Text>
@@ -258,12 +261,12 @@ const BottomSheetClientDetails: React.FC<BottomSheetClientDetailsProps> = ({ map
         <BottomSheetView className='px-4 pb-4'>
           {selectedCustomerLocation ? (
             <View className='gap-4 pb-4'>
-              <View className="flex-row gap-4 items-center">
+              <View className="flex-row gap-4 items-center flex-1">
                 <View className="bg-[#fcde41] w-[50px] h-[50px] items-center justify-center rounded-full">
                   <ClientIcon size={28} color="#000" />
                 </View>
 
-                <View>
+                <View className="flex-1">
                   <Text className="font-[Poppins-SemiBold] tracking-[-0.3px] text-md text-black leading-5">
                     {selectedCustomerLocation?.cardName ?? 'Sin nombre'}
                   </Text>
@@ -305,7 +308,7 @@ const BottomSheetClientDetails: React.FC<BottomSheetClientDetailsProps> = ({ map
                     </View>
                   ))
                 ) : (
-                  <Text className="text-gray-600">Cargando direcciones...</Text>
+                  <Text className="text-gray-600 font-[Poppins-SemiBold] tracking-[-0.3px]">Cargando Ubicaciones...</Text>
                 )}
               </View>
             </View>

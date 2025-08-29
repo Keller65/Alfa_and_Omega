@@ -2,7 +2,7 @@ import { useAuth } from '@/context/auth'
 import { useAppStore } from '@/state/index'
 import { Picker } from '@react-native-picker/picker'
 import { useCallback, useEffect, useState } from 'react'
-import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, Text, TextInput, TouchableOpacity, View, ToastAndroid } from 'react-native'
 import api from '@/lib/api'
 
 const Settings = () => {
@@ -55,6 +55,7 @@ const Settings = () => {
     setAppPort(port);
 
     console.log('Configuración guardada:', fullUrl);
+    ToastAndroid.show('Configuración guardada, es posible que necesites reiniciar la aplicación.', ToastAndroid.SHORT);
     setIsSaving(false);
   }
 
@@ -89,12 +90,13 @@ const Settings = () => {
       console.log('Informacion de pago sincronizada');
 
       if (!chequeRes || !efectivoRes || !transfRes || !creditCardRes) {
+        ToastAndroid.show('Error al Sincronizar los datos.', ToastAndroid.SHORT);
         throw new Error('No se pudieron obtener los datos de una o más cuentas.');
       }
 
       await new Promise(resolve => setTimeout(resolve, 1000));
     } catch (err) {
-      console.error('Error al cargar datos de cuentas:', err);
+      console.error('Error al Sincronizar los datos:', err);
     }
   }, [API_BASE_URL, user?.token]);
 
