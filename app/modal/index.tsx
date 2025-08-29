@@ -33,7 +33,7 @@ const IndexScreen = () => {
 
   useFocusEffect(
     useCallback(() => {
-      proceedingRef.current = false;
+      // proceedingRef.current = false;
       return () => {
         if (!proceedingRef.current) {
           clearInvoices();
@@ -41,6 +41,12 @@ const IndexScreen = () => {
         }
       };
     }, [clearInvoices, clearPaymentForm])
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => bottomSheetModalRef.current?.close()
+    }, [])
   );
 
   const fetchInvoices = async () => {
