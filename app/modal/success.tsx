@@ -1,10 +1,11 @@
 import LottieView from 'lottie-react-native';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useAudioPlayer } from 'expo-audio';
+import { useFocusEffect } from '@react-navigation/native';
 
 const audioSource = require('@/assets/sound/success.mp3');
 
@@ -22,6 +23,16 @@ const Success = () => {
       player.play()
     }, 350);
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        if (!message) {
+          router.replace('/explore');
+        }
+      };
+    }, [])
+  );
 
   return (
     <SafeAreaView style={{ backgroundColor: '#e0ffe7', flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 }}>

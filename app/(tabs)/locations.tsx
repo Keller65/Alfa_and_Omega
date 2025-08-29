@@ -3,14 +3,16 @@ import BottomSheetClientDetails from '@/components/BottomSheetClientDetails/page
 import BottomSheetSearchClients, { BottomSheetSearchClientsHandle } from '@/components/BottomSheetSearchClients/page';
 import { useAppStore } from '@/state';
 import * as Location from 'expo-location';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import GooglePlacesTextInput from 'react-native-google-places-textinput';
 import MapView, { MapPressEvent, Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import { useFocusEffect } from '@react-navigation/native';
 
 const LocationsScreen = () => {
-  const { updateCustomerLocation, setUpdateCustomerLocation } = useAppStore();
+  const { updateCustomerLocation, setUpdateCustomerLocation, selectedCustomerLocation } = useAppStore();
+  const clearSelectedCustomerLocation = useAppStore((s) => s.clearSelectedCustomerLocation);
   const bottomSheetRef = useRef<BottomSheetSearchClientsHandle>(null);
   const mapRef = useRef<MapView | null>(null);
 
@@ -19,7 +21,6 @@ const LocationsScreen = () => {
   const [selectedPlace, setSelectedPlace] = useState<{ lat: number; lon: number; display_name: string } | null>(null);
   const [region, setRegion] = useState<Region | null>(null);
   const [deviceLocation, setDeviceLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-
   // 👉 Obtener ubicación del dispositivo
   useEffect(() => {
     const getDeviceLocation = async () => {
@@ -129,6 +130,33 @@ const LocationsScreen = () => {
       console.error('Error al obtener detalles del lugar:', error);
     }
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      // Lógica que se ejecuta cuando la pantalla está en foco
+      return () => {
+        // Lógica que se ejecuta cuando se pierde el foco o se desmonta el componente
+        console.log("Locations Screen unfocused or unmounted, resetting updateCustomerLocation.");
+        clearSelectedCustomerLocation();
+        if (selectedCustomerLocation) {
+          selectedCustomerLocation.cardCode = '';
+          selectedCustomerLocation.cardName = '';
+          selectedCustomerLocation.federalTaxID = '';
+          selectedCustomerLocation.priceListNum = '';
+        }
+        setUpdateCustomerLocation({
+          updateLocation: false,
+          latitude: null,
+          longitude: null,
+          addressName: null,
+          rowNum: null,
+        });
+        setSelectedPlace(null);
+        setSuggestions([]);
+        setRegion(null);
+      };
+    }, [])
+  );
 
   return (
     <View className="flex-1 bg-white relative">
@@ -275,7 +303,7 @@ const LocationsScreen = () => {
               title="Ubicación del Cliente"
               pinColor="red"
             />
-        )}
+          )}
 
         {/* Ubicación actual del dispositivo → marcador azul */}
         {deviceLocation && (
