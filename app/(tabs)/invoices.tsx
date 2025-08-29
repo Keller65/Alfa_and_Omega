@@ -1,10 +1,11 @@
+import ClientIcon from '@/assets/icons/ClientIcon';
 import PlusIcon from '@/assets/icons/PlusIcon';
 import { useAuth } from '@/context/auth';
+import api from '@/lib/api';
 import { useAppStore } from '@/state';
 import { PaymentData } from '@/types/types';
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
-import api from '@/lib/api';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
@@ -106,52 +107,69 @@ const Invoices = () => {
       onPress={() =>
         router.push({
           pathname: '/invoicesDetails',
-          params: {
-            item: JSON.stringify(item),
-          },
+          params: { item: JSON.stringify(item) },
         })
       }
-      className="bg-white rounded-3xl mb-4 overflow-hidden border border-gray-200"
+      className="bg-white rounded-3xl mb-4 shadow-sm overflow-hidden"
     >
-      <View className="bg-blue-100 p-4 rounded-t-3xl">
-        <View className="flex-row justify-between items-center mb-2">
-          <View className="flex-row items-center space-x-2">
+      {/* Header */}
+      <View className="bg-indigo-100 p-4">
+        <View className="flex-row justify-between items-center mb-3">
+          <View className="flex-row items-center gap-x-2">
+            {/* Número documento */}
             <View className="bg-yellow-300 px-2 py-0.5 rounded-full">
-              <Text className="text-xs text-blue-800 font-[Poppins-SemiBold]">
+              <Text className="text-xs text-black font-[Poppins-SemiBold]">
                 {item.docNum}
               </Text>
             </View>
+
+            {/* Estado */}
+            {item.cancelled === 'tYES' && (
+              <View className="bg-rose-200 px-2 py-0.5 rounded-full flex-row items-center justify-center gap-x-1">
+                <View className='bg-rose-700 h-[6px] w-[6px] rounded-full' />
+                <Text className="text-xs text-rose-700 font-[Poppins-SemiBold]">
+                  Cancelado
+                </Text>
+              </View>
+            )}
           </View>
-          <View className="bg-blue-100 px-2 py-0.5 rounded-full">
-            <Text className="text-xs text-blue-800 font-[Poppins-SemiBold]">
-              {new Date(item.docDate).toLocaleDateString()}
-            </Text>
-          </View>
+
+          {/* Fecha */}
+          <Text className="text-xs text-indigo-700 font-[Poppins-Medium]">
+            {new Date(item.docDate).toLocaleDateString()}
+          </Text>
         </View>
 
-        <View className="flex-row items-center gap-2">
-          <View className="w-[36px] h-[36px] bg-gray-800 rounded-full items-center justify-center">
-            <MaterialCommunityIcons name="account-circle" size={30} color="#fde047" />
+        {/* Cliente */}
+        <View className="flex-row items-center gap-3">
+          <View className="w-[36px] h-[36px] bg-indigo-500 rounded-full items-center justify-center">
+            <ClientIcon size={30} color="#fde047" />
           </View>
           <View>
-            <Text className="text-base font-[Poppins-Bold] text-gray-800">{item.cardName}</Text>
-            <Text className="text-xs text-gray-700 font-[Poppins-Regular]">{item.cardCode}</Text>
+            <Text className="text-lg font-[Poppins-Bold] text-gray-900 tracking-[-0.3px]">
+              {item.cardName}
+            </Text>
+            <Text className="text-md text-gray-700 font-[Poppins-Regular] tracking-[-0.3px]">
+              {item.cardCode}
+            </Text>
           </View>
         </View>
       </View>
 
-      <View className="bg-yellow-300 px-4 py-2 flex-row justify-between items-center">
+      {/* Footer */}
+      <View style={{ backgroundColor: item.cancelled === 'tYES' ? '#f87171' : '#4f46e5' }} className="px-4 py-2 flex-row justify-between items-center">
         <View className="flex-row items-center gap-2">
-          <FontAwesome name="credit-card" size={14} color="#374151" />
-          <Text className="text-sm font-[Poppins-Regular] text-gray-700">
+          <FontAwesome name="credit-card" size={18} color="#fff" />
+          <Text className="text-md font-[Poppins-Medium] text-white">
             {item.paymentMeans}
           </Text>
         </View>
-        <Text className="text-sm font-[Poppins-SemiBold] text-gray-700">
+        <Text className="text-md font-[Poppins-Bold] text-white">
           L. {formatMoney(item.total)}
         </Text>
       </View>
     </TouchableOpacity>
+
   );
 
   const renderFooter = () =>

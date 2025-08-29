@@ -95,6 +95,7 @@ export interface PaymentData {
   transfer: number;
   check: number;
   credit: number;
+  cancelled: 'tYES' | 'tNo';
   payment: {
     transferDate: string | null;
     transferReference: string | null;
