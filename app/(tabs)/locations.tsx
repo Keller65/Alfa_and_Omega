@@ -15,6 +15,7 @@ const LocationsScreen = () => {
   const clearSelectedCustomerLocation = useAppStore((s) => s.clearSelectedCustomerLocation);
   const bottomSheetRef = useRef<BottomSheetSearchClientsHandle>(null);
   const mapRef = useRef<MapView | null>(null);
+  const GOOGLE_API_KEY = 'AIzaSyAAHjttmr1uloKr30pqnc1TT_1dRyxuw48';
 
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -116,7 +117,7 @@ const LocationsScreen = () => {
         return;
       }
 
-      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.placeId}&key=AIzaSyDBDLwjFDxpVG475deiKtyxdovql0njxlk`;
+      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.placeId}&key=${GOOGLE_API_KEY}`;
       const response = await fetch(url);
       const data = await response.json();
 
@@ -165,7 +166,7 @@ const LocationsScreen = () => {
           <View className="flex-row gap-2">
             <GooglePlacesTextInput
               debounceDelay={250}
-              apiKey="AIzaSyDBDLwjFDxpVG475deiKtyxdovql0njxlk"
+              apiKey={GOOGLE_API_KEY}
               onPlaceSelect={handlePlaceSelect}
               placeHolderText='Buscar ciudad, país...'
               showClearButton={false}
