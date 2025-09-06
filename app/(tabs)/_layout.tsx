@@ -1,37 +1,88 @@
-import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
-import { useAuth } from '@/context/auth';
-import { View, Text, Platform } from 'react-native';
 import ConnectivityBanner from '@/components/ConnectivityBanner';
+import { useAuth } from '@/context/auth';
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
+import { useRouter } from 'expo-router';
+import { Platform, Text, TouchableOpacity, View } from 'react-native';
 
 import ProtectedLayout from '../ProtectedLayout';
 
+import CatalogIcon from '@/assets/icons/CatalogIcon';
+import ClientIcon from '@/assets/icons/ClientIcon';
 import HomeIcon from '@/assets/icons/HomeIcon';
 import InvoicesIcon from '@/assets/icons/InvoicesIcon';
-import SettingsIcon from '@/assets/icons/SettingsIcon';
-import OrderIcon from '@/assets/icons/OrdeIcon';
-import ClientIcon from '@/assets/icons/ClientIcon';
-import CatalogIcon from '@/assets/icons/CatalogIcon';
 import LocationIcon from '@/assets/icons/Locations';
+import OrderIcon from '@/assets/icons/OrdeIcon';
+import SettingsIcon from '@/assets/icons/SettingsIcon';
 
+import { BottomSheetBackdrop, BottomSheetModal, BottomSheetModalProvider, BottomSheetView } from '@gorhom/bottom-sheet';
+import { useEffect, useRef } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
-import IndexScreen from './index';
-import ExploreScreen from './explore';
-import InvoicesScreen from './invoices';
-import SettingsScreen from './setting';
 import ProductScreen from './catalog';
+import ExploreScreen from './explore';
+import IndexScreen from './index';
+import InvoicesScreen from './invoices';
 import LocationScreen from './locations';
+import SettingsScreen from './setting';
 
 const Drawer = createDrawerNavigator();
 
 export default function Layout() {
   const ActiveColor = '#000';
   const InActiveColor = '#c9c9c9';
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const { user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Solo presentamos el modal automáticamente si no hay usuario (sesión expirada)
+    bottomSheetModalRef.current?.present();
+    if (!user) {
+    }
+  }, [user]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
+        <BottomSheetModal
+          enableDynamicSizing={false}
+          ref={bottomSheetModalRef}
+          index={0}
+          snapPoints={['40%']}
+          bottomInset={16}
+          style={{ marginHorizontal: 16, paddingHorizontal: 20 }}
+          backgroundStyle={{ borderRadius: 30 }}
+          detached={true}
+          backdropComponent={(props) => (
+            <BottomSheetBackdrop
+              {...props}
+              appearsOnIndex={0}
+              disappearsOnIndex={-1}
+              opacity={0.5}
+              pressBehavior="close"
+            />
+          )}
+        >
+          <BottomSheetView>
+            <View className="items-center gap-4">
+              <Text className="font-[Poppins-SemiBold] text-xl mb-2 text-red-600">
+                Sesión expirada
+              </Text>
+
+              <Text className="font-[Poppins-Regular] text-base text-gray-700 text-center mb-5">
+                Vuelve a iniciar sesión para continuar usando la aplicación.
+              </Text>
+
+              <TouchableOpacity
+                onPress={() => { bottomSheetModalRef.current?.dismiss(); router.push('/login'); }}
+                className="bg-red-500 items-center justify-center h-[50px] rounded-full w-full mb-2"
+              >
+                <Text className="text-white font-[Poppins-Medium] text-lg">Iniciar sesión</Text>
+              </TouchableOpacity>
+            </View>
+          </BottomSheetView>
+        </BottomSheetModal>
+
         <ProtectedLayout>
           <ConnectivityBanner />
           <Drawer.Navigator

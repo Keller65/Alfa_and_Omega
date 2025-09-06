@@ -10,7 +10,6 @@ import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Text, TouchableOpacity, View } from 'react-native';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import MapView from 'react-native-maps';
 

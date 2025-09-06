@@ -116,7 +116,7 @@ const LocationsScreen = () => {
         return;
       }
 
-      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.placeId}&key=AIzaSyAjUmggc5C_bvkHjsAT_o3Y_uOVwqIjwX4`;
+      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.placeId}&key=AIzaSyDBDLwjFDxpVG475deiKtyxdovql0njxlk`;
       const response = await fetch(url);
       const data = await response.json();
 
@@ -165,7 +165,7 @@ const LocationsScreen = () => {
           <View className="flex-row gap-2">
             <GooglePlacesTextInput
               debounceDelay={250}
-              apiKey="AIzaSyAjUmggc5C_bvkHjsAT_o3Y_uOVwqIjwX4"
+              apiKey="AIzaSyDBDLwjFDxpVG475deiKtyxdovql0njxlk"
               onPlaceSelect={handlePlaceSelect}
               placeHolderText='Buscar ciudad, país...'
               showClearButton={false}
