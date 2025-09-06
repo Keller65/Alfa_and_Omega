@@ -15,7 +15,7 @@ const LocationsScreen = () => {
   const clearSelectedCustomerLocation = useAppStore((s) => s.clearSelectedCustomerLocation);
   const bottomSheetRef = useRef<BottomSheetSearchClientsHandle>(null);
   const mapRef = useRef<MapView | null>(null);
-  const GOOGLE_API_KEY = 'AIzaSyAAHjttmr1uloKr30pqnc1TT_1dRyxuw48';
+  const GOOGLE_API_KEY = 'AIzaSyA7NqiFB9gytcXmbVXU6p7xDGFlajoDwaA';
 
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
