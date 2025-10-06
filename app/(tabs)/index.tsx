@@ -20,7 +20,6 @@ export default function App() {
   const [loadingGoal, setLoadingGoal] = useState(false);
   const [goalError, setGoalError] = useState<string | null>(null);
   const [sales, setSales] = useState<SalesDataType | null>(null);
-  const { valid, loading, uuid } = useLicense();
   const { isUpdating, error, isUpdateAvailable, checkAndUpdate } = useOtaUpdates();
   const [kpiData, setKpiData] = useState(null);
   const [loadingKpi, setLoadingKpi] = useState(true);
@@ -144,42 +143,23 @@ export default function App() {
     { fecha: "2024-06-02", cliente: "Cliente B", monto: 8500 },
   ];
 
-  if (loading) {
-    return (
-      <View className="flex-1 bg-white items-center justify-center gap-2">
-        <ActivityIndicator size="large" color="#000" />
-        <Text className='font-[Poppins-SemiBold] tracking-[-0.3px]'>Validando Licencia...</Text>
-      </View>
-    );
-  }
-
-  if (!valid) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <Text className="text-red-500 font-[Poppins-SemiBold] tracking-[-0.3px]">
-          Licencia Expirada
-        </Text>
-      </View>
-    );
-  }
-
   return (
     <View className='flex-1 bg-white relative'>
       <View className="absolute bottom-4 right-8 gap-3 items-end">
         {products.length > 0 && (<BottomSheetCart />)}
       </View>
 
+      <UpdateBanner
+        visible={isUpdateAvailable}
+        onReload={checkAndUpdate}
+        message="Actualización disponible"
+      />
+
       <FlatList
         data={ventas}
         keyExtractor={(item, idx) => item.fecha + item.cliente + idx}
         ListHeaderComponent={
           <>
-            <UpdateBanner
-              visible={isUpdateAvailable}
-              onReload={checkAndUpdate}
-              message="Actualización disponible"
-            />
-
             <View className='px-4 gap-6'>
               <View>
                 <Text className="text-xl font-[Poppins-SemiBold] tracking-[-0.6px] text-gray-900">Ventas vs Cobros</Text>

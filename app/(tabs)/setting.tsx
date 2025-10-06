@@ -38,7 +38,6 @@ const SettingsScreen = () => {
   const [exportingLogs, setExportingLogs] = useState(false);
   const [locationServicesEnabled, setLocationServicesEnabled] = useState(false);
   const [macAddress, setMacAddress] = useState<string | null>(null);
-  const [pushToken, setPushToken] = useState<string | null>(null);
   const { uuid } = useLicense();
   const { fetchUrl } = useAppStore();
   const API_BASE_URL = fetchUrl;
@@ -71,7 +70,6 @@ const SettingsScreen = () => {
   useEffect(() => {
     const fetchMacAddress = async () => {
       try {
-        const networkState = await Network.getNetworkStateAsync();
         setMacAddress(await Network.getIpAddressAsync());
       } catch (e) {
         console.warn('Error obteniendo la dirección MAC', e);
@@ -121,7 +119,7 @@ const SettingsScreen = () => {
             if (toDelete.length) await AsyncStorage.multiRemove(toDelete);
             Alert.alert('Listo', 'Caché limpia.');
           } catch (e) {
-            Alert.alert('Error', 'No se pudo limpiar la caché.');
+            Alert.alert('Error', 'No se pudo limpiar la caché.', e as any);
           } finally {
             setLoading(false);
           }
@@ -198,13 +196,6 @@ const SettingsScreen = () => {
     }
   }, [API_BASE_URL, user?.token, syncLoading]);
 
-  // Apariencia
-  const toggleDarkMode = async () => {
-    const next = !darkMode;
-    setDarkMode(next);
-    await AsyncStorage.setItem('settings:darkMode', String(next));
-  };
-
   // Seguridad / Biometría
   const toggleBiometric = async () => {
     const next = !biometricEnabled;
@@ -225,7 +216,7 @@ const SettingsScreen = () => {
         setBiometricEnabled(true);
         await AsyncStorage.setItem('settings:biometricEnabled', 'true');
       } catch (e) {
-        Alert.alert('Error', 'No se pudo activar.');
+        Alert.alert('Error', 'No se pudo activar.', e as any);
       }
     } else {
       setBiometricEnabled(false);
@@ -249,7 +240,7 @@ const SettingsScreen = () => {
         Alert.alert('Permiso denegado', 'No se habilitarán notificaciones.');
       }
     } catch (e) {
-      Alert.alert('Error', 'No se pudo solicitar permiso.');
+      Alert.alert('Error', 'No se pudo solicitar permiso.', e as any);
     }
   };
 

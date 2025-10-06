@@ -4,7 +4,7 @@ import { ProductDiscount } from '@/types/types';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import axios from 'axios';
-import Checkbox from 'expo-checkbox';
+import { Checkbox } from 'expo-checkbox';
 import * as FileSystem from 'expo-file-system';
 import { Image as ExpoImage } from 'expo-image';
 import * as Print from 'expo-print';
@@ -257,7 +257,7 @@ const ProductScreen = () => {
         </Animated.View>
       </View>
 
-      <View className="flex-1 bg-white rounded-t-[30px] p-4 z-1 shadow-xl">
+      <View className="flex-1 bg-white rounded-t-[30px] p-4 z-1">
         <Text className="text-md text-gray-400 font-[Poppins-SemiBold] tracking-[-0.4px] mb-2">
           Exportar Catálogo
         </Text>

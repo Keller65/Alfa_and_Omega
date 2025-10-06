@@ -28,7 +28,7 @@ const ProductItem = memo(({ item, onPress }: { item: ProductDiscount, onPress: (
           style={{ height: 180, width: 180, objectFit: "contain", borderRadius: 16 }}
           // contentFit="contain"
           onError={() => console.log("Error loading image for item:", item.itemCode)}
-          // transition={500}
+        // transition={500}
         />
       </View>
 
@@ -55,7 +55,7 @@ const CategoryProductScreen = memo(() => {
   const updateQuantity = useAppStore(state => state.updateQuantity);
   const productsInCart = useAppStore(state => state.products);
   const debouncedSearchText = useAppStore(state => state.debouncedSearchText);
-  const { products, fetchUrl } = useAppStore()
+  const { fetchUrl } = useAppStore()
 
   const pagesCacheRef = useRef<Map<number, ProductDiscount[]>>(new Map());
   const [items, setItems] = useState<ProductDiscount[]>([]);
@@ -121,9 +121,9 @@ const CategoryProductScreen = memo(() => {
 
       const itemsResponse = await axios.get(url, { headers });
       const newItems = itemsResponse.data.items;
-      
+
       console.log(itemsResponse.headers['content-encoding']);
-      
+
       if (forceRefresh) pagesCacheRef.current = new Map();
       pagesCacheRef.current.set(currentPage, newItems);
 
@@ -394,8 +394,8 @@ const CategoryProductScreen = memo(() => {
                 <Image
                   source={{ uri: `https://pub-266f56f2e24d4d3b8e8abdb612029f2f.r2.dev/${selectedItem.itemCode}.jpg` }}
                   style={{ height: 230, width: 230, aspectRatio: 1, objectFit: "contain" }}
-                  // contentFit="contain"
-                  // transition={500}
+                // contentFit="contain"
+                // transition={500}
                 />
               </View>
 

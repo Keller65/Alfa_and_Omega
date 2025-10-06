@@ -2,8 +2,7 @@ import ClientIcon from '@/assets/icons/ClientIcon';
 import { useAppStore } from '@/state';
 import { Customer } from '@/types/types';
 import { BottomSheetBackdrop, BottomSheetFlashList, BottomSheetModal } from '@gorhom/bottom-sheet';
-import axios from 'axios';
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useAuth } from '@/context/auth';
@@ -91,7 +90,6 @@ const BottomSheetSearchClients = forwardRef<BottomSheetSearchClientsHandle, Prop
   );
 
   const setSelectedCustomerLocation = useAppStore((s) => s.setSelectedCustomerLocation);
-  const clearSelectedCustomerLocation = useAppStore((s) => s.clearSelectedCustomerLocation);
 
   return (
     <BottomSheetModal
@@ -121,6 +119,7 @@ const BottomSheetSearchClients = forwardRef<BottomSheetSearchClientsHandle, Prop
               className="w-[86%] font-[Poppins-Medium] tracking-[-0.3px]"
               autoCapitalize="none"
               autoCorrect={false}
+              placeholderTextColor="#9ca3af"
             />
           </View>
         </View>

@@ -37,39 +37,34 @@ export default function Layout() {
   useEffect(() => {
     // Solo presentamos el modal automáticamente si no hay usuario (sesión expirada)
     bottomSheetModalRef.current?.present();
-    if (!user) {
-    }
   }, [user]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
         <BottomSheetModal
-          enableDynamicSizing={false}
-          ref={bottomSheetModalRef}
           index={0}
-          snapPoints={['40%']}
-          bottomInset={16}
-          style={{ marginHorizontal: 16, paddingHorizontal: 20 }}
+          ref={bottomSheetModalRef}
+          style={{ paddingHorizontal: 20 }}
           backgroundStyle={{ borderRadius: 30 }}
-          detached={true}
+          enableDynamicSizing={true}
           backdropComponent={(props) => (
             <BottomSheetBackdrop
               {...props}
               appearsOnIndex={0}
               disappearsOnIndex={-1}
               opacity={0.5}
-              pressBehavior="close"
+              pressBehavior="none"
             />
           )}
         >
           <BottomSheetView>
             <View className="items-center gap-4">
-              <Text className="font-[Poppins-SemiBold] text-xl mb-2 text-red-600">
+              <Text className="font-[Poppins-SemiBold] text-xl mb-2 text-red-600 tracking-[-0.3px]">
                 Sesión expirada
               </Text>
 
-              <Text className="font-[Poppins-Regular] text-base text-gray-700 text-center mb-5">
+              <Text className="font-[Poppins-Regular] text-base text-gray-700 text-center mb-5 tracking-[-0.3px]">
                 Vuelve a iniciar sesión para continuar usando la aplicación.
               </Text>
 
@@ -77,7 +72,7 @@ export default function Layout() {
                 onPress={() => { bottomSheetModalRef.current?.dismiss(); router.push('/login'); }}
                 className="bg-red-500 items-center justify-center h-[50px] rounded-full w-full mb-2"
               >
-                <Text className="text-white font-[Poppins-Medium] text-lg">Iniciar sesión</Text>
+                <Text className="text-white tracking-[-0.3px] font-[Poppins-Medium] text-lg">Iniciar sesión nuevamente</Text>
               </TouchableOpacity>
             </View>
           </BottomSheetView>

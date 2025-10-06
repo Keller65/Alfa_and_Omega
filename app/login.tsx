@@ -199,6 +199,7 @@ export default function Login() {
               onChangeText={setSalesPersonCode}
               keyboardType="numeric"
               editable={!loading}
+              placeholderTextColor="#9ca3af"
             />
           </View>
 
@@ -212,6 +213,7 @@ export default function Login() {
               secureTextEntry
               keyboardType="numeric"
               editable={!loading}
+              placeholderTextColor="#9ca3af"
             />
           </View>
         </View>

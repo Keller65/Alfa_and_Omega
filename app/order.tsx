@@ -4,7 +4,6 @@ import api from '@/lib/api';
 import { useAppStore } from '@/state';
 import { OrderDataType } from '@/types/types';
 import Entypo from '@expo/vector-icons/Entypo';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRoute } from '@react-navigation/native';
 import { Image } from 'expo-image';
