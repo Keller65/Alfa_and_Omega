@@ -1,4 +1,4 @@
-import api from './api';
+import axios from 'axios';
 
 export interface OrderDetailsResponse {
   docEntry: number;
@@ -27,7 +27,7 @@ export const fetchOrderDetails = async (
   token: string
 ): Promise<OrderDetailsResponse> => {
   try {
-    const response = await api.get<OrderDetailsResponse>(
+    const response = await axios.get<OrderDetailsResponse>(
       `/api/Quotations/${docEntry}`,
       {
         baseURL: fetchUrl,
@@ -35,13 +35,9 @@ export const fetchOrderDetails = async (
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        cache: {
-          ttl: 1000 * 60 * 5, // 5 minutos de cache para edición
-        },
       }
     );
-
-    console.log(response.cached ? 'Detalles del pedido cargados desde CACHE' : 'Detalles del pedido cargados desde RED');
+    // console.log(response.cached ? 'Detalles del pedido cargados desde CACHE' : 'Detalles del pedido cargados desde RED');
     return response.data;
   } catch (error) {
     console.error('Error fetching order details for edit:', error);
