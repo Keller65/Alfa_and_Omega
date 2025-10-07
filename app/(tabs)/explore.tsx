@@ -66,6 +66,7 @@ export default function PedidosScreen() {
             <MaterialCommunityIcons name="truck-fast" size={22} color="#1f2937" />
             <Text className="text-sm text-gray-600">
               Pedido <Text className="font-[Poppins-Medium] text-gray-800">#{item.docNum}</Text>
+              <Text className="font-[Poppins-Medium] text-red-500">{item.docEntry}</Text>
             </Text>
           </View>
           <Text className="text-xs text-orange-700 font-[Poppins-Medium] bg-orange-100 px-2 py-1 rounded-full">

@@ -1,6 +1,5 @@
 import ClientIcon from '@/assets/icons/ClientIcon';
 import { useAuth } from '@/context/auth';
-import api from '@/lib/api';
 import { fetchOrderDetails } from '@/lib/orderUtils';
 import { useAppStore } from '@/state';
 import { OrderDataType } from '@/types/types';
@@ -13,7 +12,8 @@ import * as Print from 'expo-print';
 import { useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View, } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View, } from 'react-native';4
+import axios from 'axios';
 
 const OrderDetails = () => {
   const route = useRoute();
@@ -40,20 +40,17 @@ const OrderDetails = () => {
     const fetchOrderDetails = async () => {
       console.log(docEntryParam);
       try {
-        const response = await api.get(
+        const response = await axios.get(
           `/api/Quotations/${docEntryParam}`,
           {
             baseURL: fetchUrl,
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${user?.token}`,
-            },
-            cache: {
-              ttl: 1000 * 60 * 60 * 24, // 24 horas
-            },
+            }
           }
         );
-        console.log(response.cached ? 'Pedido cargado desde CACHE' : 'Pedido cargado desde RED');
+        // console.log(response.cached ? 'Pedido cargado desde CACHE' : 'Pedido cargado desde RED');
         if (isMounted) {
           setOrderData(response.data);
         }
