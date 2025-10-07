@@ -348,6 +348,30 @@ const LocationsScreen = () => {
         style={styles.map}
         zoomControlEnabled={true}
         onPress={handleMapPress}
+        //nuevas opciones
+        showsUserLocation={true}
+        showsMyLocationButton={true}
+        showsCompass={true}
+        loadingEnabled={true}
+        loadingIndicatorColor="#666666"
+        loadingBackgroundColor="#ffffff"
+        moveOnMarkerPress={false}
+        toolbarEnabled={true}
+        pitchEnabled={true}
+        rotateEnabled={true}
+        zoomEnabled={true}
+        mapType="standard"
+        googleRenderer='LATEST'
+        renderToHardwareTextureAndroid={true}
+        // Actualizaciones frecuentes de ubicación
+        followsUserLocation={true}
+        userLocationAnnotationTitle="Mi ubicación"
+        userLocationCalloutEnabled={true}
+        userLocationPriority='high'
+        showsScale={true}
+        // userLocationUpdateInterval={3000}
+        // userLocationFastestInterval={2000}
+        // showsTraffic={true}
       >
         {/* Ubicación buscada → marcador verde */}
         {selectedPlace && !updateCustomerLocation.updateLocation && (

@@ -293,7 +293,9 @@ export default function BottomSheetCart() {
       router.replace({
         pathname: '/modal/success',
         params: {
-          OrderDetails: docEntry
+          OrderDetails: docEntry,
+          message: editMode.isEditing ? '¡Pedido actualizado con éxito!' : undefined,
+          buttonMessage: editMode.isEditing ? 'Volver al pedido' : undefined,
         }
       });
 

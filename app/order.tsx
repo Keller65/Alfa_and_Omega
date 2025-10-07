@@ -109,12 +109,6 @@ const OrderDetails = () => {
       // Navegar a la tienda
       router.push('/shop');
 
-      Alert.alert(
-        'Modo Edición Activado',
-        'Los productos del pedido se han cargado en el carrito. Puedes modificarlos y guardar los cambios.',
-        [{ text: 'Entendido', style: 'default' }]
-      );
-
     } catch (error) {
       console.error('Error al cargar pedido para edición:', error);
       Alert.alert(
