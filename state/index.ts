@@ -105,6 +105,20 @@ interface AppStoreState {
     rowNum: number | null;
   }>) => void;
   clearUpdateCustomerLocation: () => void;
+
+  // Estado NO persistente para modo edición de pedidos
+  editMode: {
+    isEditing: boolean;
+    docEntry: number | null;
+    orderData: any | null;
+  };
+  setEditMode: (editData: Partial<{
+    isEditing: boolean;
+    docEntry: number | null;
+    orderData: any | null;
+  }>) => void;
+  clearEditMode: () => void;
+  loadOrderForEdit: (docEntry: number, orderData: any) => void;
 }
 
 export const useAppStore = create<AppStoreState>()(
@@ -294,6 +308,63 @@ export const useAppStore = create<AppStoreState>()(
       },
       clearUpdateCustomerLocation: () => {
         set({ updateCustomerLocation: { updateLocation: false, latitude: null, longitude: null, addressName: null, rowNum: null } });
+      },
+
+      // Estado NO persistente para modo edición de pedidos
+      editMode: {
+        isEditing: false,
+        docEntry: null,
+        orderData: null,
+      },
+      setEditMode: (editData) => {
+        set({ editMode: { ...get().editMode, ...editData } });
+      },
+      clearEditMode: () => {
+        set({ editMode: { isEditing: false, docEntry: null, orderData: null } });
+      },
+      loadOrderForEdit: (docEntry, orderData) => {
+        // Limpiar carrito actual
+        get().clearCart();
+        
+        // Establecer modo edición
+        set({ editMode: { isEditing: true, docEntry, orderData } });
+        
+        // Establecer cliente seleccionado basado en orderData
+        if (orderData) {
+          get().setSelectedCustomer({
+            cardCode: orderData.cardCode,
+            cardName: orderData.cardName,
+            federalTaxID: orderData.federalTaxID || '',
+            priceListNum: '1', // valor por defecto
+          });
+          
+          // Cargar productos al carrito
+          if (orderData.lines && orderData.lines.length > 0) {
+            orderData.lines.forEach((line: any) => {
+              get().addProduct({
+                itemCode: line.itemCode,
+                itemName: line.itemDescription,
+                barCode: line.barCode || '',
+                price: line.priceAfterVAT,
+                originalPrice: line.priceAfterVAT,
+                quantity: line.quantity,
+                unitPrice: line.priceAfterVAT,
+                groupName: '',
+                groupCode: 0,
+                imageUrl: null,
+                tiers: [],
+                taxType: 'INA',
+                inStock: 0,
+                committed: 0,
+                ordered: 0,
+                hasDiscount: false,
+                salesUnit: null,
+                salesItemsPerUnit: 0,
+                categoryCode: '',
+              });
+            });
+          }
+        }
       },
     }),
     {

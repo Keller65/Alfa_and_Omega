@@ -2,7 +2,9 @@ import CartIcon from '@/assets/icons/CartIcon';
 import TrashIcon from '@/assets/icons/TrashIcon';
 import { useAuth } from '@/context/auth';
 import { useAppStore } from '@/state/index';
+import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetFlatList, BottomSheetFooter, BottomSheetFooterProps, BottomSheetModal, } from '@gorhom/bottom-sheet';
 import axios from 'axios';
 import * as Haptics from 'expo-haptics';
@@ -11,7 +13,6 @@ import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Keyboard, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, { Easing, interpolate, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
-import '../../global.css';
 
 interface CartItemType {
   imageUrl: string | null;
@@ -34,7 +35,7 @@ interface CartItemProps {
   onRemove: (code: string, name: string) => void;
 }
 
-const snapPoints: string[] = ['60%', '85%'];
+const snapPoints: string[] = ['60%', '95%'];
 
 const areEqual = (prev: CartItemProps, next: CartItemProps) =>
   prev.item.itemCode === next.item.itemCode &&
@@ -138,6 +139,7 @@ const MemoizedCommentInput = memo(({ comments, onCommentsChange }: { comments: s
         textAlignVertical="top"
         autoCorrect={false}
         autoCapitalize="none"
+        placeholderTextColor={"#999"}
       />
     </View>
   );
@@ -152,6 +154,8 @@ export default function BottomSheetCart() {
   const clearCart = useAppStore((s) => s.clearCart);
   const customerSelected = useAppStore((s) => s.selectedCustomer);
   const setLastOrderDocEntry = useAppStore((s) => s.setLastOrderDocEntry);
+  const editMode = useAppStore((s) => s.editMode);
+  const clearEditMode = useAppStore((s) => s.clearEditMode);
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const { user } = useAuth();
   const token = user?.token || '';
@@ -160,6 +164,16 @@ export default function BottomSheetCart() {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const { fetchUrl } = useAppStore();
   const FETCH_URL_CREATE_ORDER = fetchUrl + "/sap/orders";
+  const FETCH_URL_UPDATE_ORDER = fetchUrl + "/api/Quotations";
+
+  // Cargar comentarios del pedido cuando esté en modo edición
+  useEffect(() => {
+    if (editMode.isEditing && editMode.orderData?.comments) {
+      setComments(editMode.orderData.comments);
+    } else if (!editMode.isEditing) {
+      setComments('');
+    }
+  }, [editMode.isEditing, editMode.orderData?.comments]);
 
   // Pulse trail animation for the floating cart button
   const pulse = useSharedValue(0);
@@ -228,17 +242,6 @@ export default function BottomSheetCart() {
       return;
     }
 
-    const now = new Date();
-    const formatter = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'America/Tegucigalpa',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
-
-    const [{ value: year }, , { value: month }, , { value: day }] = formatter.formatToParts(now);
-    const hondurasDate = `${year}-${month}-${day}`;
-
     const lines = products.map(p => {
       const price = p.unitPrice;
 
@@ -247,14 +250,11 @@ export default function BottomSheetCart() {
         quantity: p.quantity,
         priceList: p.originalPrice, // es el precio real de la lista
         priceAfterVAT: price, // precio de descuento si existe
-        taxCode: p.taxType,
       };
     });
 
     const payload = {
       cardCode: customerSelected.cardCode,
-      docDate: hondurasDate,
-      docDueDate: hondurasDate,
       comments: comments || '',
       lines,
     };
@@ -263,26 +263,50 @@ export default function BottomSheetCart() {
 
     try {
       setIsLoading(true);
-      const res = await axios.post(FETCH_URL_CREATE_ORDER, payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      let res: any;
+
+      if (editMode.isEditing && editMode.docEntry) {
+        // Modo edición - actualizar pedido existente con PATCH
+        res = await axios.patch(`${FETCH_URL_UPDATE_ORDER}/${editMode.docEntry}`, payload, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        console.log("Pedido actualizado con PATCH", payload);
+      } else {
+        // Modo creación - crear nuevo pedido
+        res = await axios.post(FETCH_URL_CREATE_ORDER, payload, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        console.log("Pedido creado", payload);
+      }
 
       closeCart();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      console.log("Pedido enviado", payload);
-      router.push({
+
+      const docEntry = res.data.docEntry || editMode.docEntry;
+
+      router.replace({
         pathname: '/modal/success',
         params: {
-          OrderDetails: res.data.docEntry
+          OrderDetails: docEntry
         }
       });
+
       clearCart();
       setComments('');
-      if (res.data.docEntry) {
-        setLastOrderDocEntry(res.data.docEntry);
+
+      // Limpiar modo edición si estaba activo
+      if (editMode.isEditing) {
+        clearEditMode();
+      }
+
+      if (docEntry) {
+        setLastOrderDocEntry(docEntry);
       }
     } catch (err: any) {
       if (axios.isAxiosError(err)) {
@@ -290,10 +314,12 @@ export default function BottomSheetCart() {
           Alert.alert('Error', 'No se encontró la ruta del servidor (Error 404). Por favor, verifica la dirección de la API.');
         } else {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-          Alert.alert('Error', `No se pudo enviar el pedido. Código: ${err.response?.status || 'Desconocido'}. Mensaje: ${err.response?.data?.message || 'Intenta nuevamente.'}`);
+          const action = editMode.isEditing ? 'actualizar' : 'enviar';
+          Alert.alert('Error', `No se pudo ${action} el pedido. Código: ${err.response?.status || 'Desconocido'}. Mensaje: ${err.response?.data?.message || 'Intenta nuevamente.'}`);
         }
       } else {
-        Alert.alert('Error', 'No se pudo enviar el pedido. Intenta nuevamente.');
+        const action = editMode.isEditing ? 'actualizar' : 'enviar';
+        Alert.alert('Error', `No se pudo ${action} el pedido. Intenta nuevamente.`);
       }
       router.push({
         pathname: '/modal/error',
@@ -305,7 +331,7 @@ export default function BottomSheetCart() {
     } finally {
       setIsLoading(false);
     }
-  }, [products, customerSelected, token, comments, setLastOrderDocEntry, clearCart]);
+  }, [products, customerSelected, token, comments, setLastOrderDocEntry, clearCart, editMode, clearEditMode]);
 
   const total = useMemo(() => {
     return products.reduce((sum, item) => {
@@ -381,12 +407,16 @@ export default function BottomSheetCart() {
             {isLoading ? (
               <>
                 <ActivityIndicator color="black" size="small" />
-                <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px] ml-2">Realizando Pedido...</Text>
+                <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px] ml-2">
+                  {editMode.isEditing ? 'Actualizando Pedido...' : 'Realizando Pedido...'}
+                </Text>
               </>
             ) : (
               <>
-                <CartIcon color="black" />
-                <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px] ml-2">Realizar Pedido</Text>
+                {editMode.isEditing ? <AntDesign name="cloudupload" size={24} color="black" /> : <CartIcon color="black" />}
+                <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px] ml-2">
+                  {editMode.isEditing ? 'Actualizar Pedido' : 'Realizar Pedido'}
+                </Text>
               </>
             )}
           </TouchableOpacity>
@@ -405,6 +435,17 @@ export default function BottomSheetCart() {
     </BottomSheetFooter>
   ), [total, customerSelected?.cardName, handleSubmitOrder, isLoading, router]);
 
+  const CancelEdit = useCallback(() => {
+    Alert.alert(
+      'Cancelar edición',
+      '¿Estás seguro de que quieres cancelar la edición de la consignación? Se perderán los cambios no guardados.',
+      [
+        { text: 'No', style: 'cancel' },
+        { text: 'Sí', onPress: () => { clearCart(); clearEditMode(); router.replace('/explore'); } }
+      ]
+    );
+  }, [clearCart, clearEditMode, router]);
+
   return (
     <View style={{ flex: 1, zIndex: 100 }}>
       {products.length !== 0 && (
@@ -417,7 +458,7 @@ export default function BottomSheetCart() {
             className="rounded-full flex items-center justify-center h-[50px] w-[50px] bg-yellow-300 shadow-lg shadow-[#09f]/30"
             onPress={openCart}
           >
-            <CartIcon color="black" />
+            {editMode.isEditing === true ? <MaterialIcons name="edit-document" size={24} color="black" /> : <CartIcon color="black" />}
             <View className="absolute -top-2 -right-2 bg-red-500 rounded-full w-6 h-6 items-center justify-center">
               <Text className="text-white text-xs font-bold">{products.length}</Text>
             </View>
@@ -432,6 +473,11 @@ export default function BottomSheetCart() {
         onChange={handleSheetChanges}
         footerComponent={renderFooter}
         backgroundStyle={{ borderRadius: 30 }}
+        enableDynamicSizing={false}
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
+        // Ajusta el bottom inset dinámicamente según la altura del teclado
+        bottomInset={keyboardHeight}
         backdropComponent={(props: BottomSheetBackdropProps) => (
           <BottomSheetBackdrop
             {...props}
@@ -442,10 +488,20 @@ export default function BottomSheetCart() {
           />
         )}
       >
-        <View className='px-4'>
+        <View className='px-4 pb-2'>
           <Text className="text-lg text-start font-[Poppins-Bold] tracking-[-0.3px]">Resumen del Pedido</Text>
         </View>
+
         <MemoizedCommentInput comments={comments} onCommentsChange={setComments} />
+
+        {editMode.isEditing && (
+          <View className="px-4 bg-red-200 mb-4 p-2 flex-row justify-between items-center gap-4">
+            <Text className="text-sm text-red-500 font-[Poppins-SemiBold]">Cancelar edición de pedido</Text>
+            <TouchableOpacity onPress={CancelEdit} className='bg-red-500 px-3 py-1 rounded-full items-center justify-center'>
+              <Text className="text-xs text-white font-[Poppins-SemiBold]">Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {products.length === 0 ? (
           <EmptyCart onClose={closeCart} onAddProducts={() => router.push('/client')} />

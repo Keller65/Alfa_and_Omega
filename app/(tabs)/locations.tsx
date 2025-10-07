@@ -2,27 +2,55 @@ import PlusIcon from '@/assets/icons/PlusIcon';
 import BottomSheetClientDetails from '@/components/BottomSheetClientDetails/page';
 import BottomSheetSearchClients, { BottomSheetSearchClientsHandle } from '@/components/BottomSheetSearchClients/page';
 import { useAppStore } from '@/state';
+import { useFocusEffect } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import GooglePlacesTextInput from 'react-native-google-places-textinput';
-import MapView, { MapPressEvent, Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
+import MapView, { MapPressEvent, Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
-import { useFocusEffect } from '@react-navigation/native';
+
+function decodePolyline(encoded: string) {
+  let points = [];
+  let index = 0, len = encoded.length;
+  let lat = 0, lng = 0;
+  while (index < len) {
+    let b, shift = 0, result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    let dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lat += dlat;
+    shift = 0;
+    result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    let dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lng += dlng;
+    points.push({ latitude: lat / 1e5, longitude: lng / 1e5 });
+  }
+  return points;
+}
 
 const LocationsScreen = () => {
   const { updateCustomerLocation, setUpdateCustomerLocation, selectedCustomerLocation } = useAppStore();
   const clearSelectedCustomerLocation = useAppStore((s) => s.clearSelectedCustomerLocation);
   const bottomSheetRef = useRef<BottomSheetSearchClientsHandle>(null);
   const mapRef = useRef<MapView | null>(null);
-  const GOOGLE_API_KEY = 'AIzaSyA7NqiFB9gytcXmbVXU6p7xDGFlajoDwaA';
 
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [selectedPlace, setSelectedPlace] = useState<{ lat: number; lon: number; display_name: string } | null>(null);
   const [region, setRegion] = useState<Region | null>(null);
   const [deviceLocation, setDeviceLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  // 👉 Obtener ubicación del dispositivo
+  const [routeCoords, setRouteCoords] = useState<Array<{ latitude: number; longitude: number }>>([]);
+  const GOOGLE_MAPS_API_KEY = 'AIzaSyAbBbz7aDcMYUrHDXMJ49XNylMthLh1v-Y';
+
   useEffect(() => {
     const getDeviceLocation = async () => {
       try {
@@ -50,7 +78,6 @@ const LocationsScreen = () => {
     getDeviceLocation();
   }, []);
 
-  // 👉 Obtener detalles de un lugar (lat/lng)
   const handleSelectPlace = (place: any) => {
     if (!place) return;
     const lat = parseFloat(place.lat);
@@ -117,7 +144,7 @@ const LocationsScreen = () => {
         return;
       }
 
-      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.placeId}&key=${GOOGLE_API_KEY}`;
+      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.placeId}&key=${GOOGLE_MAPS_API_KEY}`;
       const response = await fetch(url);
       const data = await response.json();
 
@@ -131,6 +158,42 @@ const LocationsScreen = () => {
       console.error('Error al obtener detalles del lugar:', error);
     }
   };
+
+  // Obtener ruta entre ubicaciones
+  useEffect(() => {
+    const fetchRoute = async () => {
+      if (
+        deviceLocation &&
+        updateCustomerLocation &&
+        typeof updateCustomerLocation.latitude === 'number' &&
+        typeof updateCustomerLocation.longitude === 'number'
+      ) {
+        const origin = `${deviceLocation.latitude},${deviceLocation.longitude}`;
+        const destination = `${updateCustomerLocation.latitude},${updateCustomerLocation.longitude}`;
+        const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${GOOGLE_MAPS_API_KEY}`;
+        try {
+          const response = await fetch(url);
+          const data = await response.json();
+          if (
+            data.routes &&
+            data.routes.length > 0 &&
+            data.routes[0].overview_polyline &&
+            data.routes[0].overview_polyline.points
+          ) {
+            const points = decodePolyline(data.routes[0].overview_polyline.points);
+            setRouteCoords(points);
+          } else {
+            setRouteCoords([]);
+          }
+        } catch (err) {
+          setRouteCoords([]);
+        }
+      } else {
+        setRouteCoords([]);
+      }
+    };
+    fetchRoute();
+  }, [deviceLocation, updateCustomerLocation]);
 
   useFocusEffect(
     useCallback(() => {
@@ -166,7 +229,7 @@ const LocationsScreen = () => {
           <View className="flex-row gap-2">
             <GooglePlacesTextInput
               debounceDelay={250}
-              apiKey={GOOGLE_API_KEY}
+              apiKey={GOOGLE_MAPS_API_KEY}
               onPlaceSelect={handlePlaceSelect}
               placeHolderText='Buscar ciudad, país...'
               showClearButton={false}
@@ -314,6 +377,15 @@ const LocationsScreen = () => {
             description="Esta es tu ubicación actual"
             pinColor="blue"
             identifier="current-location"
+          />
+        )}
+
+        {/* Dibuja la ruta si existe */}
+        {routeCoords.length > 0 && (
+          <Polyline
+            coordinates={routeCoords}
+            strokeColor="#2563eb"
+            strokeWidth={5}
           />
         )}
       </MapView>

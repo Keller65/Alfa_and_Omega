@@ -8,7 +8,6 @@ import { BottomSheetBackdrop, BottomSheetFooter, BottomSheetModal, BottomSheetSc
 import { useRoute } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import axios from 'axios';
-// import { Image } from 'expo-image';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, RefreshControl, Text, TextInput, TouchableOpacity, View, Image } from 'react-native';
 

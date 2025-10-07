@@ -1,13 +1,16 @@
 import ClientIcon from '@/assets/icons/ClientIcon';
 import { useAuth } from '@/context/auth';
 import api from '@/lib/api';
+import { fetchOrderDetails } from '@/lib/orderUtils';
 import { useAppStore } from '@/state';
 import { OrderDataType } from '@/types/types';
 import Entypo from '@expo/vector-icons/Entypo';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRoute } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import * as Print from 'expo-print';
+import { useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View, } from 'react-native';
@@ -18,8 +21,9 @@ const OrderDetails = () => {
   const [orderData, setOrderData] = useState<OrderDataType | null>(null);
   const [loading, setLoading] = useState(true);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const { fetchUrl } = useAppStore();
-
+  const [isLoadingEdit, setIsLoadingEdit] = useState(false);
+  const { fetchUrl, loadOrderForEdit, clearEditMode } = useAppStore();
+  const router = useRouter();
   const { user } = useAuth();
 
   // Helper para formatear valores monetarios con 2 decimales usando toLocaleString
@@ -79,6 +83,48 @@ const OrderDetails = () => {
   const totalItems = useMemo(() => {
     return orderData?.lines?.reduce((sum, line) => sum + (line.quantity ?? 0), 0) || 0;
   }, [orderData]);
+
+  const handleEditOrder = useCallback(async () => {
+    if (!orderData || !user?.token) {
+      Alert.alert('Error', 'No hay datos del pedido o no tienes permisos para editarlo.');
+      return;
+    }
+
+    setIsLoadingEdit(true);
+
+    try {
+      // Limpiar cualquier modo de edición anterior
+      clearEditMode();
+
+      // Obtener los detalles actualizados del pedido
+      const updatedOrderData = await fetchOrderDetails(
+        orderData.docEntry,
+        fetchUrl,
+        user.token
+      );
+
+      // Cargar el pedido en modo edición
+      loadOrderForEdit(orderData.docEntry, updatedOrderData);
+
+      // Navegar a la tienda
+      router.push('/shop');
+
+      Alert.alert(
+        'Modo Edición Activado',
+        'Los productos del pedido se han cargado en el carrito. Puedes modificarlos y guardar los cambios.',
+        [{ text: 'Entendido', style: 'default' }]
+      );
+
+    } catch (error) {
+      console.error('Error al cargar pedido para edición:', error);
+      Alert.alert(
+        'Error',
+        'No se pudo cargar el pedido para edición. Por favor, intenta de nuevo.'
+      );
+    } finally {
+      setIsLoadingEdit(false);
+    }
+  }, [orderData, user?.token, fetchUrl, loadOrderForEdit, clearEditMode, router]);
 
   const handleShareAsPdf = useCallback(async () => {
     if (!orderData) {
@@ -349,7 +395,7 @@ const OrderDetails = () => {
 
   return (
     <ScrollView className="flex-1 p-4 bg-white">
-      <View className="p-5 bg-white rounded-b-[36px] shadow-sm border border-gray-100">
+      <View className="p-5 bg-white rounded-b-[36px] border border-gray-100">
         <View className="flex-row justify-between items-center mb-5">
           <View className="flex-row items-center gap-2">
             <View className="bg-[#fcde41] w-[40px] h-[40px] items-center justify-center rounded-full">
@@ -415,27 +461,41 @@ const OrderDetails = () => {
           </View>
         </View>
 
-        <TouchableOpacity
-          className="w-full bg-yellow-300 h-[50px] rounded-full flex-row gap-3 p-2 items-center justify-center"
-          onPress={handleShareAsPdf}
-          disabled={isGeneratingPdf}
-        >
-          {isGeneratingPdf ? (
-            <>
-              <ActivityIndicator color="black" />
-              <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px]">
-                Generando PDF
-              </Text>
-            </>
-          ) : (
-            <>
-              <Entypo name="share" size={24} color="black" />
-              <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px]">
-                Compartir como PDF
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
+        <View className='flex-row gap-4'>
+          <TouchableOpacity
+            className="flex-1 bg-yellow-300 h-[50px] rounded-full flex-row gap-3 p-2 items-center justify-center"
+            onPress={handleShareAsPdf}
+            disabled={isGeneratingPdf}
+          >
+            {isGeneratingPdf ? (
+              <>
+                <ActivityIndicator color="black" />
+                <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px]">
+                  Generando PDF
+                </Text>
+              </>
+            ) : (
+              <>
+                <Entypo name="share" size={24} color="black" />
+                <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px]">
+                  Compartir como PDF
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className='h-[50px] w-[50px] items-center justify-center bg-yellow-300 rounded-full'
+            onPress={handleEditOrder}
+            disabled={isLoadingEdit}
+          >
+            {isLoadingEdit ? (
+              <ActivityIndicator size="small" color="black" />
+            ) : (
+              <MaterialIcons name="edit" size={24} color="black" />
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View className="my-5 ">
@@ -444,7 +504,7 @@ const OrderDetails = () => {
           orderData.lines.map((item, index) => (
             <View
               key={index}
-              className="flex-row items-center bg-white p-3 rounded-lg mb-3 shadow-sm border border-gray-100"
+              className="flex-row items-center bg-white p-3 rounded-lg mb-3 border border-gray-100"
             >
               <View className="bg-white rounded-xl overflow-hidden mr-3">
                 <Image

@@ -22,7 +22,7 @@ export default function TopTabNavigatorLayout() {
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { fetchUrl } = useAppStore();
+  const { fetchUrl, editMode } = useAppStore();
 
   const priceListNum = selectedCustomer?.priceListNum?.toString() || '1';
 
@@ -144,6 +144,14 @@ export default function TopTabNavigatorLayout() {
 
   return (
     <View style={{ flex: 1, position: 'relative' }}>
+      {editMode.isEditing && (
+        <View className='w-full h-fit p-2 bg-yellow-300 justify-center items-center'>
+          <Text className='font-[Poppins-SemiBold] tracking-[-0.3px] text-sm'>
+            Modo Edición - Modificando Pedido #{editMode.docEntry}
+          </Text>
+        </View>
+      )}
+
       <Tab.Navigator
         initialRouteName={categories[0]?.slug || 'todas'}
         screenOptions={{

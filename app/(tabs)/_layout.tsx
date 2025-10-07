@@ -15,7 +15,7 @@ import OrderIcon from '@/assets/icons/OrdeIcon';
 import SettingsIcon from '@/assets/icons/SettingsIcon';
 
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetModalProvider, BottomSheetView } from '@gorhom/bottom-sheet';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import ProductScreen from './catalog';
