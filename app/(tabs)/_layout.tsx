@@ -1,7 +1,6 @@
 import ConnectivityBanner from '@/components/ConnectivityBanner';
 import { useAuth } from '@/context/auth';
 import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
-import { useRouter } from 'expo-router';
 import { Platform, Text, View } from 'react-native';
 
 import ProtectedLayout from '../ProtectedLayout';
@@ -14,8 +13,7 @@ import LocationIcon from '@/assets/icons/Locations';
 import OrderIcon from '@/assets/icons/OrdeIcon';
 import SettingsIcon from '@/assets/icons/SettingsIcon';
 
-import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import { useEffect, useRef } from 'react';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import ProductScreen from './catalog';
