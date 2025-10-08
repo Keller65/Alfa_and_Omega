@@ -370,7 +370,7 @@ const LocationsScreen = () => {
         userLocationPriority='high'
         showsScale={true}
         // userLocationUpdateInterval={3000}
-        // userLocationFastestInterval={2000}
+        userLocationFastestInterval={2000}
         // showsTraffic={true}
       >
         {/* Ubicación buscada → marcador verde */}

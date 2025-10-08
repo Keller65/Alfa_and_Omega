@@ -1,4 +1,3 @@
-import { useLicense } from "@/auth/useLicense";
 import BottomSheetCart from '@/components/BottomSheetCart/page';
 import BottomSheetWelcome from '@/components/BottomSheetWelcome/page';
 import GoalDonut from '@/components/Dashboard/GoalDonut';
@@ -8,14 +7,15 @@ import { useAuth } from '@/context/auth';
 import { useOtaUpdates } from "@/hooks/useOtaUpdates";
 import { useAppStore } from '@/state';
 import { GoalDonutType, SalesDataType, TableDataType } from "@/types/DasboardType";
+import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import axios from 'axios';
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, Text, View } from 'react-native';
-import "../../global.css";
+import { useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, FlatList, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
 
 export default function App() {
   const { fetchUrl } = useAppStore();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [goalData, setGoalData] = useState<GoalDonutType | null>(null);
   const [loadingGoal, setLoadingGoal] = useState(false);
   const [goalError, setGoalError] = useState<string | null>(null);
@@ -27,6 +27,8 @@ export default function App() {
   const [loadingTableData, setLoadingTableData] = useState(false);
   const [tableError, setTableError] = useState<string | null>(null);
   const [loadingSales, setLoadingSales] = useState(false);
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const router = useRouter();
 
   const fetchData = async () => {
     if (!user?.token) return;
@@ -48,13 +50,23 @@ export default function App() {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${user.token}`,
           }
-        }).then(res => res.json()),
+        }).then(res => {
+          if (res.status === 401) {
+            throw new Error('UNAUTHORIZED');
+          }
+          return res.json();
+        }),
         fetch(`${fetchUrl}/api/Kpi/monthly/${slpCode}`, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${user.token}`,
           }
-        }).then(res => res.json())
+        }).then(res => {
+          if (res.status === 401) {
+            throw new Error('UNAUTHORIZED');
+          }
+          return res.json();
+        })
       ]);
 
       const goalData = goalRes.data;
@@ -70,8 +82,15 @@ export default function App() {
 
       setKpiData(kpiRes);
       setSales(salesRes);
-    } catch (e) {
+    } catch (e: any) {
       console.error('Error fetching data:', e);
+
+      // Verificar si es un error 401 (token inválido)
+      if (e.response?.status === 401 || e.message === 'UNAUTHORIZED') {
+        bottomSheetModalRef.current?.present();
+        return;
+      }
+
       setGoalError('No se pudieron cargar los datos');
     } finally {
       setLoadingKpi(false);
@@ -119,7 +138,7 @@ export default function App() {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchData().finally(() => {
+    Promise.all([fetchData(), fetchTableData()]).finally(() => {
       setRefreshKey((k) => k + 1);
       setRefreshing(false);
     });
@@ -140,8 +159,13 @@ export default function App() {
 
   const ventas = [
     { fecha: "2024-06-01", cliente: "Cliente A", monto: 12000 },
-    { fecha: "2024-06-02", cliente: "Cliente B", monto: 8500 },
   ];
+
+  function handleLogout() {
+    logout();
+    bottomSheetModalRef.current?.dismiss();
+    router.replace('/login');
+  }
 
   return (
     <View className='flex-1 bg-white relative'>
@@ -224,6 +248,44 @@ export default function App() {
       />
 
       <BottomSheetWelcome />
+
+      <BottomSheetModal
+        index={0}
+        ref={bottomSheetModalRef}
+        style={{ paddingHorizontal: 20 }}
+        backgroundStyle={{ borderRadius: 30 }}
+        enableDynamicSizing={true}
+        enableDismissOnClose={false}
+        enablePanDownToClose={false}
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop
+            {...props}
+            appearsOnIndex={0}
+            disappearsOnIndex={-1}
+            opacity={0.5}
+            pressBehavior="none"
+          />
+        )}
+      >
+        <BottomSheetView>
+          <View className="items-center gap-4">
+            <Text className="font-[Poppins-SemiBold] text-xl mb-2 text-red-600 tracking-[-0.3px]">
+              Sesión expirada
+            </Text>
+
+            <Text className="font-[Poppins-Regular] text-base text-gray-700 text-center mb-4 tracking-[-0.3px]">
+              Vuelve a iniciar sesión para continuar usando la aplicación.
+            </Text>
+
+            <TouchableOpacity
+              onPress={handleLogout}
+              className="bg-red-500 items-center justify-center h-[50px] rounded-full w-full mb-4"
+            >
+              <Text className="text-white tracking-[-0.3px] font-[Poppins-Medium] text-lg">Iniciar sesión nuevamente</Text>
+            </TouchableOpacity>
+          </View>
+        </BottomSheetView>
+      </BottomSheetModal>
     </View>
   );
 }

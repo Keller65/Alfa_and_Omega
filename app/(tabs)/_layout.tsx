@@ -2,7 +2,7 @@ import ConnectivityBanner from '@/components/ConnectivityBanner';
 import { useAuth } from '@/context/auth';
 import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
 import { useRouter } from 'expo-router';
-import { Platform, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 
 import ProtectedLayout from '../ProtectedLayout';
 
@@ -14,8 +14,8 @@ import LocationIcon from '@/assets/icons/Locations';
 import OrderIcon from '@/assets/icons/OrdeIcon';
 import SettingsIcon from '@/assets/icons/SettingsIcon';
 
-import { BottomSheetBackdrop, BottomSheetModal, BottomSheetModalProvider, BottomSheetView } from '@gorhom/bottom-sheet';
-import { useEffect, useRef, useCallback } from 'react';
+import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { useEffect, useRef } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import ProductScreen from './catalog';
@@ -30,54 +30,10 @@ const Drawer = createDrawerNavigator();
 export default function Layout() {
   const ActiveColor = '#000';
   const InActiveColor = '#c9c9c9';
-  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const { user } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    // Solo presentamos el modal automáticamente si no hay usuario (sesión expirada)
-    bottomSheetModalRef.current?.present();
-  }, [user]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
-        <BottomSheetModal
-          index={0}
-          ref={bottomSheetModalRef}
-          style={{ paddingHorizontal: 20 }}
-          backgroundStyle={{ borderRadius: 30 }}
-          enableDynamicSizing={true}
-          backdropComponent={(props) => (
-            <BottomSheetBackdrop
-              {...props}
-              appearsOnIndex={0}
-              disappearsOnIndex={-1}
-              opacity={0.5}
-              pressBehavior="none"
-            />
-          )}
-        >
-          <BottomSheetView>
-            <View className="items-center gap-4">
-              <Text className="font-[Poppins-SemiBold] text-xl mb-2 text-red-600 tracking-[-0.3px]">
-                Sesión expirada
-              </Text>
-
-              <Text className="font-[Poppins-Regular] text-base text-gray-700 text-center mb-5 tracking-[-0.3px]">
-                Vuelve a iniciar sesión para continuar usando la aplicación.
-              </Text>
-
-              <TouchableOpacity
-                onPress={() => { bottomSheetModalRef.current?.dismiss(); router.push('/login'); }}
-                className="bg-red-500 items-center justify-center h-[50px] rounded-full w-full mb-2"
-              >
-                <Text className="text-white tracking-[-0.3px] font-[Poppins-Medium] text-lg">Iniciar sesión nuevamente</Text>
-              </TouchableOpacity>
-            </View>
-          </BottomSheetView>
-        </BottomSheetModal>
-
         <ProtectedLayout>
           <ConnectivityBanner />
           <Drawer.Navigator

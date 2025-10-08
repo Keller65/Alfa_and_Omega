@@ -1,5 +1,3 @@
-import 'react-native-gesture-handler';
-import 'react-native-reanimated';
 import { useAppStore } from '@/state';
 import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -11,6 +9,8 @@ import * as Notifications from 'expo-notifications';
 import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import 'react-native-gesture-handler';
+import 'react-native-reanimated';
 import Animated, { useAnimatedKeyboard, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useAuth } from "../context/auth";
 import "../global.css";
@@ -21,6 +21,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { fetchUrl } = useAppStore()
   const FETCH_URL = fetchUrl + "/auth/employee";
@@ -205,16 +206,28 @@ export default function Login() {
 
           <View>
             <Text style={{ fontFamily: 'Poppins-Medium', letterSpacing: -0.8, fontSize: 15 }}>Contraseña</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Ingrese su Contraseña"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              keyboardType="numeric"
-              editable={!loading}
-              placeholderTextColor="#9ca3af"
-            />
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Ingrese su Contraseña"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                keyboardType="numeric"
+                editable={!loading}
+                placeholderTextColor="#9ca3af"
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Feather 
+                  name={showPassword ? "eye" : "eye-off"} 
+                  size={20} 
+                  color="#6b7280" 
+                />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -284,5 +297,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 24,
     fontFamily: 'Poppins-Medium'
+  },
+  passwordContainer: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  passwordInput: {
+    height: 56,
+    backgroundColor: '#f3f4f6',
+    color: '#6b7280',
+    paddingHorizontal: 24,
+    paddingRight: 56,
+    borderRadius: 24,
+    fontFamily: 'Poppins-Medium',
+    flex: 1,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 20,
+    padding: 4,
   }
 });
