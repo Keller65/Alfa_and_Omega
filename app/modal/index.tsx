@@ -1,10 +1,10 @@
-import AntDesign from '@expo/vector-icons/AntDesign';
 import ClientIcon from '@/assets/icons/ClientIcon';
 import InvoicesIcon from '@/assets/icons/InvoicesIcon';
 import TrashIcon from '@/assets/icons/TrashIcon';
 import { useAuth } from '@/context/auth';
 import { SelectedInvoice, useAppStore } from '@/state';
 import { Invoice } from '@/types/types';
+import AntDesign from '@expo/vector-icons/AntDesign';
 import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useFocusEffect } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
@@ -49,7 +49,7 @@ const IndexScreen = () => {
     }, [])
   );
 
-  const fetchInvoices = async () => {
+  const fetchInvoices = useCallback(async () => {
     if (!user?.token || !cardCode) return;
     setLoading(true);
 
@@ -66,7 +66,7 @@ const IndexScreen = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.token, cardCode, FETCH_URL]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -76,7 +76,7 @@ const IndexScreen = () => {
 
   useEffect(() => {
     fetchInvoices();
-  }, [cardCode, user?.token]);
+  }, [fetchInvoices]);
 
   const formatDate = useCallback((isoDate: string): string => {
     const date = new Date(isoDate);

@@ -6,7 +6,7 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetFlatList, BottomSheetFooter, BottomSheetFooterProps, BottomSheetModal, } from '@gorhom/bottom-sheet';
-import axios from 'axios';
+import axios, { isAxiosError } from 'axios';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -110,6 +110,8 @@ const EmptyCart: React.FC<{ onClose: () => void; onAddProducts: () => void }> = 
   </View>
 );
 
+CartItem.displayName = 'CartItem';
+
 const MemoizedCommentInput = memo(({ comments, onCommentsChange }: { comments: string, onCommentsChange: (text: string) => void }) => {
   const [inputText, setInputText] = useState(comments);
 
@@ -144,6 +146,8 @@ const MemoizedCommentInput = memo(({ comments, onCommentsChange }: { comments: s
     </View>
   );
 });
+
+MemoizedCommentInput.displayName = 'MemoizedCommentInput';
 
 
 export default function BottomSheetCart() {
@@ -236,6 +240,15 @@ export default function BottomSheetCart() {
     };
   }, []);
 
+  const openCart = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    bottomSheetRef.current?.present();
+  }, []);
+
+  const closeCart = useCallback(() => {
+    bottomSheetRef.current?.dismiss();
+  }, []);
+
   const handleSubmitOrder = useCallback(async () => {
     if (!customerSelected || products.length === 0) {
       Alert.alert('Error', 'Faltan datos para enviar el pedido.');
@@ -311,7 +324,7 @@ export default function BottomSheetCart() {
         setLastOrderDocEntry(docEntry);
       }
     } catch (err: any) {
-      if (axios.isAxiosError(err)) {
+      if (isAxiosError(err)) {
         if (err.response?.status === 404) {
           Alert.alert('Error', 'No se encontró la ruta del servidor (Error 404). Por favor, verifica la dirección de la API.');
         } else {
@@ -333,7 +346,7 @@ export default function BottomSheetCart() {
     } finally {
       setIsLoading(false);
     }
-  }, [products, customerSelected, token, comments, setLastOrderDocEntry, clearCart, editMode, clearEditMode]);
+  }, [products, customerSelected, token, comments, setLastOrderDocEntry, clearCart, editMode, clearEditMode, FETCH_URL_CREATE_ORDER, FETCH_URL_UPDATE_ORDER, closeCart, router]);
 
   const total = useMemo(() => {
     return products.reduce((sum, item) => {
@@ -342,15 +355,6 @@ export default function BottomSheetCart() {
       return sum + item.quantity * price;
     }, 0);
   }, [products]);
-
-  const openCart = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    bottomSheetRef.current?.present();
-  }, []);
-
-  const closeCart = useCallback(() => {
-    bottomSheetRef.current?.dismiss();
-  }, []);
 
   const handleSheetChanges = useCallback((index: number) => {
     if (index === -1) closeCart();
@@ -435,7 +439,7 @@ export default function BottomSheetCart() {
         </View>
       </View>
     </BottomSheetFooter>
-  ), [total, customerSelected?.cardName, handleSubmitOrder, isLoading, router]);
+  ), [total, customerSelected?.cardName, handleSubmitOrder, isLoading, router, closeCart, editMode.isEditing]);
 
   const CancelEdit = useCallback(() => {
     Alert.alert(

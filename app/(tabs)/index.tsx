@@ -6,7 +6,7 @@ import UpdateBanner from '@/components/UpdateBanner';
 import { useAuth } from '@/context/auth';
 import { useOtaUpdates } from "@/hooks/useOtaUpdates";
 import { useAppStore } from '@/state';
-import { GoalDonutType, SalesDataType, TableDataType } from "@/types/DasboardType";
+import { GoalDonutType, TableDataType } from "@/types/DasboardType";
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
@@ -17,27 +17,21 @@ export default function App() {
   const { fetchUrl } = useAppStore();
   const { user, logout } = useAuth();
   const [goalData, setGoalData] = useState<GoalDonutType | null>(null);
-  const [loadingGoal, setLoadingGoal] = useState(false);
-  const [goalError, setGoalError] = useState<string | null>(null);
-  const [sales, setSales] = useState<SalesDataType | null>(null);
+  const [loadingGoal] = useState(false);
   const { isUpdating, error, isUpdateAvailable, checkAndUpdate } = useOtaUpdates();
   const [kpiData, setKpiData] = useState(null);
   const [loadingKpi, setLoadingKpi] = useState(true);
   const [tableData, setTableData] = useState<TableDataType | null>(null);
-  const [loadingTableData, setLoadingTableData] = useState(false);
-  const [tableError, setTableError] = useState<string | null>(null);
-  const [loadingSales, setLoadingSales] = useState(false);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const router = useRouter();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!user?.token) return;
     const slpCode = user.salesPersonCode;
 
     try {
       setLoadingKpi(true);
-      setLoadingSales(true);
-      const [goalRes, kpiRes, salesRes] = await Promise.all([
+      const [goalRes, kpiRes] = await Promise.all([
         axios.get(`${fetchUrl}/api/Metrics/sales-progress/${slpCode}?mode=net`, {
           headers: {
             'Content-Type': 'application/json',
@@ -81,7 +75,6 @@ export default function App() {
       });
 
       setKpiData(kpiRes);
-      setSales(salesRes);
     } catch (e: any) {
       console.error('Error fetching data:', e);
 
@@ -91,25 +84,28 @@ export default function App() {
         return;
       }
 
-      setGoalError('No se pudieron cargar los datos');
+      console.error('Error: No se pudieron cargar los datos');
     } finally {
       setLoadingKpi(false);
-      setLoadingSales(false);
     }
-  };
+  }, [fetchUrl, user]);
 
-  const fetchTableData = async () => {
+  const fetchTableData = useCallback(async () => {
     if (!user?.token) return;
     const slpCode = user.salesPersonCode;
 
     try {
-      setLoadingTableData(true);
       const response = await fetch(`${fetchUrl}/api/Kpi/aging-36-60/${slpCode}`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${user.token}`,
         },
       });
+
+      if (response.status === 401) {
+        bottomSheetModalRef.current?.present();
+        return;
+      }
 
       if (!response.ok) {
         throw new Error("Error al obtener los datos de la tabla");
@@ -119,30 +115,25 @@ export default function App() {
       setTableData(data);
     } catch (error) {
       console.error("Error fetching table data:", error);
-      setTableError("No se pudieron cargar los datos de la tabla");
-    } finally {
-      setLoadingTableData(false);
     }
-  };
+  }, [fetchUrl, user, bottomSheetModalRef]);
 
   useEffect(() => {
     fetchData();
     fetchTableData();
-  }, [user?.token]);
+  }, [fetchData, fetchTableData, user?.token]);
 
   const goal = { current: goalData?.current || 0, target: goalData?.target || 0 };
   const products = useAppStore((s) => s.products);
 
   const [refreshing, setRefreshing] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     Promise.all([fetchData(), fetchTableData()]).finally(() => {
-      setRefreshKey((k) => k + 1);
       setRefreshing(false);
     });
-  }, []);
+  }, [fetchData, fetchTableData]);
 
   if (isUpdating) {
     return (

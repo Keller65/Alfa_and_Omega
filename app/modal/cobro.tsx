@@ -9,7 +9,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { memo, useCallback, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
-const InvoiceItem = memo(({ item, formatDate, formatCurrency }: { item: SelectedInvoice, formatDate: (date: string) => string, formatCurrency: (amount: number) => string }) => (
+const InvoiceItem = memo(function InvoiceItem({ item, formatDate, formatCurrency }: { item: SelectedInvoice, formatDate: (date: string) => string, formatCurrency: (amount: number) => string }) {
+  return (
   <View key={item.numAtCard} className="flex-row items-start gap-4 bg-gray-100 p-4 rounded-xl mb-3">
     <View className="bg-yellow-300 p-2 rounded-xl">
       <InvoicesIcon />
@@ -25,7 +26,8 @@ const InvoiceItem = memo(({ item, formatDate, formatCurrency }: { item: Selected
       </View>
     </View>
   </View>
-));
+  );
+});
 
 const Cobro = () => {
   const [loading, setLoading] = useState(false);

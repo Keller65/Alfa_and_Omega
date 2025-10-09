@@ -4,20 +4,20 @@ import { useAuth } from '@/context/auth';
 import api from '@/lib/api';
 import { useAppStore } from '@/state';
 import { CustomerAddress } from '@/types/types';
+import AntDesign from '@expo/vector-icons/AntDesign';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Text, TouchableOpacity, View } from 'react-native';
-import AntDesign from '@expo/vector-icons/AntDesign';
 import MapView from 'react-native-maps';
 
 interface BottomSheetClientDetailsProps {
   mapRef: RefObject<MapView | null>;
 }
 
-const BottomSheetClientDetails: React.FC<BottomSheetClientDetailsProps> = ({ mapRef }) => {
+const BottomSheetClientDetails: FC<BottomSheetClientDetailsProps> = ({ mapRef }) => {
   const { selectedCustomerLocation, setUpdateCustomerLocation, updateCustomerLocation } = useAppStore();
   const clearSelectedCustomerLocation = useAppStore((s) => s.clearSelectedCustomerLocation);
   const { fetchUrl } = useAppStore();
@@ -66,7 +66,7 @@ const BottomSheetClientDetails: React.FC<BottomSheetClientDetailsProps> = ({ map
     };
 
     fetchCustomerAddresses();
-  }, [selectedCustomerLocation?.cardCode]);
+  }, [fetchUrl, user?.token, selectedCustomerLocation?.cardCode]);
 
   useEffect(() => {
     // Limpiar estados cuando cambia el cliente seleccionado
@@ -76,16 +76,24 @@ const BottomSheetClientDetails: React.FC<BottomSheetClientDetailsProps> = ({ map
       addressName: undefined,
       rowNum: undefined,
     });
-  }, [selectedCustomerLocation]);
+  }, [selectedCustomerLocation, setUpdateCustomerLocation]);
 
   const handleUpdateLocation = (rowNum: number) => {
-    if (customerAddresses && customerAddresses[rowNum]) {
-      setUpdateCustomerLocation({
-        ...updateCustomerLocation,
-        updateLocation: true,
-        addressName: customerAddresses[rowNum].addressName,
-        rowNum: customerAddresses[rowNum].rowNum,
-      });
+    if (customerAddresses) {
+      const address = customerAddresses.find(addr => addr.rowNum === rowNum);
+      if (address) {
+        setUpdateCustomerLocation({
+          ...updateCustomerLocation,
+          updateLocation: true,
+          addressName: address.addressName,
+          rowNum: address.rowNum,
+        });
+      } else {
+        setUpdateCustomerLocation({
+          ...updateCustomerLocation,
+          updateLocation: true,
+        });
+      }
     } else {
       setUpdateCustomerLocation({
         ...updateCustomerLocation,
@@ -280,7 +288,7 @@ const BottomSheetClientDetails: React.FC<BottomSheetClientDetailsProps> = ({ map
                 {customerAddresses ? (
                   customerAddresses.map((address, index) => (
                     <View
-                      key={index}
+                      key={address.rowNum}
                       className="mt-2 bg-gray-100 p-4 rounded-3xl relative"
                     >
                       <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px] w-[90%]">{address.street}</Text>

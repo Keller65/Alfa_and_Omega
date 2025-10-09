@@ -1,17 +1,17 @@
-import { useCallback, useEffect, useState, memo } from 'react';
-import { View, Text, ActivityIndicator, TouchableOpacity, Alert, TextInput, RefreshControl, } from 'react-native';
+import ClientIcon from '@/assets/icons/ClientIcon';
 import { useAuth } from '@/context/auth';
-import { useRouter } from 'expo-router';
+import api from '@/lib/api';
 import { useAppStore } from '@/state/index';
 import { Customer } from '@/types/types';
-import { FlashList } from '@shopify/flash-list';
-import ClientIcon from '../assets/icons/ClientIcon';
 import Feather from '@expo/vector-icons/Feather';
-import api from '@/lib/api';
+import { FlashList } from '@shopify/flash-list';
+import { useRouter } from 'expo-router';
+import { memo, useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, RefreshControl, Text, TextInput, TouchableOpacity, View, } from 'react-native';
 
 const PAGE_SIZE = 1000;
 
-const ClientScreen = memo(() => {
+const ClientScreen = memo(function ClientScreen() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState('');
@@ -28,7 +28,7 @@ const ClientScreen = memo(() => {
   const { fetchUrl } = useAppStore();
   const FETCH_URL = fetchUrl + "/api/customers/";
 
-  const fetchCustomers = async (pageNumber: number) => {
+  const fetchCustomers = useCallback(async (pageNumber: number) => {
     if (!user?.salesPersonCode || !user?.token) return;
 
     try {
@@ -66,22 +66,27 @@ const ClientScreen = memo(() => {
       setLoadingMore(false);
       setRefreshing(false);
     }
-  };
+  }, [FETCH_URL, user?.salesPersonCode, user?.token, refreshing]);
 
   useEffect(() => {
     fetchCustomers(1);
-  }, [user?.salesPersonCode, user?.token]);
+  }, [fetchCustomers]);
 
   useEffect(() => {
+    // Eliminar duplicados basándose en cardCode
+    const uniqueCustomers = customers.filter((customer, index, self) => 
+      index === self.findIndex(c => c.cardCode === customer.cardCode)
+    );
+
     if (!search.trim()) {
-      setFilteredCustomers(customers);
+      setFilteredCustomers(uniqueCustomers);
       return;
     }
 
     const lowerSearch = search.toLowerCase();
 
     setFilteredCustomers(
-      customers.filter(
+      uniqueCustomers.filter(
         (c) =>
           c.cardName.toLowerCase().includes(lowerSearch) ||
           c.cardCode.toLowerCase().includes(lowerSearch) ||

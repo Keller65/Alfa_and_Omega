@@ -93,7 +93,6 @@ function generateCoverPage() {
 const ProductScreen = () => {
   const { fetchUrl } = useAppStore();
   const { user } = useAuth();
-  const [products, setProducts] = useState<ProductDiscount[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(false); // Estado de carga
   const bottomSheetRef = useRef<BottomSheetModal>(null);
@@ -110,19 +109,25 @@ const ProductScreen = () => {
     };
 
     fetchCategories();
-  }, []);
+  }, [fetchUrl]);
 
   useEffect(() => {
-    if (selectedCategories.includes('all')) {
-      setSelectedCategories(['all', ...categories.map((category) => category.code)]);
-    }
+    setSelectedCategories((prev) => {
+      if (prev.includes('all')) {
+        return ['all', ...categories.map((category) => category.code)];
+      }
+      return prev;
+    });
   }, [categories]);
 
   useEffect(() => {
-    if (categories.length > 0 && categories.every((category) => selectedCategories.includes(category.code))) {
-      setSelectedCategories((prev) => (prev.includes('all') ? prev : ['all', ...prev]));
-    }
-  }, [selectedCategories, categories]);
+    setSelectedCategories((prev) => {
+      if (categories.length > 0 && categories.every((category) => prev.includes(category.code))) {
+        return prev.includes('all') ? prev : ['all', ...prev];
+      }
+      return prev;
+    });
+  }, [categories]);
 
   const handleGeneratePdf = async (htmlContent: string) => {
     try {
@@ -197,8 +202,6 @@ const ProductScreen = () => {
           },
         }
       );
-
-      setProducts(response.data);
 
       const groupedProducts = groupProductsByCategory(response.data, filteredCategories);
 

@@ -1,14 +1,14 @@
 import PlusIcon from '@/assets/icons/PlusIcon';
+import BottomSheetCart from '@/components/BottomSheetCart/page';
 import { useAuth } from '@/context/auth';
 import { useAppStore } from '@/state/index';
 import { OrderDataType } from '@/types/types';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
+import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import BottomSheetCart from '@/components/BottomSheetCart/page';
-import axios from 'axios';
 import '../../global.css';
 
 export default function PedidosScreen() {
@@ -30,7 +30,11 @@ export default function PedidosScreen() {
   const fetchOrders = useCallback(async (pageToFetch: number, initialLoad = false) => {
     if ((!initialLoad && isLastPage) || isLoading) return;
 
-    initialLoad ? setIsRefreshing(true) : setIsLoading(true);
+    if (initialLoad) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
 
     try {
       const res = await axios.get(`${FETCH_URL}/${user?.salesPersonCode}?page=${pageToFetch}&pageSize=${PAGE_SIZE}`, {
@@ -53,9 +57,13 @@ export default function PedidosScreen() {
       console.error('Error al obtener órdenes:', err);
       Alert.alert('Error', 'No se pudieron obtener las órdenes. Intenta nuevamente.');
     } finally {
-      initialLoad ? setIsRefreshing(false) : setIsLoading(false);
+      if (initialLoad) {
+        setIsRefreshing(false);
+      } else {
+        setIsLoading(false);
+      }
     }
-  }, [token, isLastPage, isLoading, user?.salesPersonCode]);
+  }, [FETCH_URL, token, isLastPage, isLoading, user?.salesPersonCode]);
 
   const renderItem = useCallback(({ item }: { item: OrderDataType }) => (
     <View key={item.docEntry} className="w-full mb-4">
@@ -122,7 +130,7 @@ export default function PedidosScreen() {
         </TouchableOpacity>
       </View>
     </View>
-  ), []);
+  ), [router]);
 
   const handleRefresh = useCallback(() => {
     setPage(1);
@@ -140,7 +148,7 @@ export default function PedidosScreen() {
     if (user?.salesPersonCode) {
       fetchOrders(1, true);
     }
-  }, [user?.salesPersonCode]);
+  }, [fetchOrders, user?.salesPersonCode]);
 
   return (
     <View className="flex-1 bg-white" style={{ paddingHorizontal: 10 }}>

@@ -38,17 +38,17 @@ function decodePolyline(encoded: string) {
 }
 
 const LocationsScreen = () => {
-  const { updateCustomerLocation, setUpdateCustomerLocation, selectedCustomerLocation } = useAppStore();
+  const { updateCustomerLocation, setUpdateCustomerLocation } = useAppStore();
   const clearSelectedCustomerLocation = useAppStore((s) => s.clearSelectedCustomerLocation);
   const bottomSheetRef = useRef<BottomSheetSearchClientsHandle>(null);
   const mapRef = useRef<MapView | null>(null);
 
-  const [query, setQuery] = useState('');
+  const [query] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [selectedPlace, setSelectedPlace] = useState<{ lat: number; lon: number; display_name: string } | null>(null);
   const [region, setRegion] = useState<Region | null>(null);
   const [deviceLocation, setDeviceLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [routeCoords, setRouteCoords] = useState<Array<{ latitude: number; longitude: number }>>([]);
+  const [routeCoords, setRouteCoords] = useState<{ latitude: number; longitude: number }[]>([]);
   const GOOGLE_MAPS_API_KEY = 'AIzaSyAbBbz7aDcMYUrHDXMJ49XNylMthLh1v-Y';
 
   useEffect(() => {
@@ -187,6 +187,7 @@ const LocationsScreen = () => {
           }
         } catch (err) {
           setRouteCoords([]);
+          console.error('Error fetching directions:', err);
         }
       } else {
         setRouteCoords([]);
@@ -202,12 +203,6 @@ const LocationsScreen = () => {
         // Lógica que se ejecuta cuando se pierde el foco o se desmonta el componente
         console.log("Locations Screen unfocused or unmounted, resetting updateCustomerLocation.");
         clearSelectedCustomerLocation();
-        if (selectedCustomerLocation) {
-          selectedCustomerLocation.cardCode = '';
-          selectedCustomerLocation.cardName = '';
-          selectedCustomerLocation.federalTaxID = '';
-          selectedCustomerLocation.priceListNum = '';
-        }
         setUpdateCustomerLocation({
           updateLocation: false,
           latitude: null,
@@ -219,7 +214,7 @@ const LocationsScreen = () => {
         setSuggestions([]);
         setRegion(null);
       };
-    }, [])
+    }, [clearSelectedCustomerLocation, setUpdateCustomerLocation])
   );
 
   return (

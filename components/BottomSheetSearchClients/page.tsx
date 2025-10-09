@@ -1,12 +1,12 @@
 import ClientIcon from '@/assets/icons/ClientIcon';
-import { useAppStore } from '@/state';
-import { Customer } from '@/types/types';
-import { BottomSheetBackdrop, BottomSheetFlashList, BottomSheetModal } from '@gorhom/bottom-sheet';
-import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { Text, TextInput, TouchableOpacity, View } from 'react-native';
-import Feather from '@expo/vector-icons/Feather';
 import { useAuth } from '@/context/auth';
 import api from '@/lib/api';
+import { useAppStore } from '@/state';
+import { Customer } from '@/types/types';
+import Feather from '@expo/vector-icons/Feather';
+import { BottomSheetBackdrop, BottomSheetFlashList, BottomSheetModal } from '@gorhom/bottom-sheet';
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export interface Client {
   cardCode: string;
@@ -24,10 +24,8 @@ interface Props {
   onSelect?: (client: Client) => void;
 }
 
-const BottomSheetSearchClients = forwardRef<BottomSheetSearchClientsHandle, Props>(({ onSelect }, ref) => {
+const BottomSheetSearchClients = forwardRef<BottomSheetSearchClientsHandle, Props>(function BottomSheetSearchClients({ onSelect }, ref) {
   const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
   const modalRef = useRef<BottomSheetModal>(null);
   const fetchControllerRef = useRef<AbortController | null>(null);
@@ -35,10 +33,8 @@ const BottomSheetSearchClients = forwardRef<BottomSheetSearchClientsHandle, Prop
   const { fetchUrl } = useAppStore();
   const { user } = useAuth();
 
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     try {
-      setError(null);
-      setLoading(true);
       fetchControllerRef.current?.abort();
       const controller = new AbortController();
       fetchControllerRef.current = controller;
@@ -62,13 +58,11 @@ const BottomSheetSearchClients = forwardRef<BottomSheetSearchClientsHandle, Prop
       if (err?.name === 'CanceledError' || err?.message === 'canceled') {
         return;
       }
-      setError('Error al cargar clientes');
-      console.error(err);
+      console.error('Error al cargar clientes:', err);
     } finally {
-      setLoading(false);
       fetchControllerRef.current = null;
     }
-  };
+  }, [fetchUrl, user?.salesPersonCode, user?.token]);
 
   useImperativeHandle(ref, () => ({
     present: () => {
@@ -83,9 +77,14 @@ const BottomSheetSearchClients = forwardRef<BottomSheetSearchClientsHandle, Prop
       }
       modalRef.current?.close();
     },
-  }), []);
+  }), [fetchClients]);
 
-  const filteredClients = clients.filter(client =>
+  // Eliminar duplicados basándose en cardCode antes de filtrar
+  const uniqueClients = clients.filter((client, index, self) => 
+    index === self.findIndex(c => c.cardCode === client.cardCode)
+  );
+
+  const filteredClients = uniqueClients.filter(client =>
     client.cardName.toLowerCase().includes(searchText.toLowerCase())
   );
 

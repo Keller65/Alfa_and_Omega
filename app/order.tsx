@@ -7,13 +7,13 @@ import Entypo from '@expo/vector-icons/Entypo';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRoute } from '@react-navigation/native';
+import axios from 'axios';
 import { Image } from 'expo-image';
 import * as Print from 'expo-print';
 import { useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View, } from 'react-native';4
-import axios from 'axios';
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View, } from 'react-native';
 
 const OrderDetails = () => {
   const route = useRoute();
@@ -75,7 +75,7 @@ const OrderDetails = () => {
     return () => {
       isMounted = false;
     };
-  }, [docEntryParam]);
+  }, [docEntryParam, fetchUrl, user?.token]);
 
   const totalItems = useMemo(() => {
     return orderData?.lines?.reduce((sum, line) => sum + (line.quantity ?? 0), 0) || 0;

@@ -9,11 +9,11 @@ import { useRoute } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import axios from 'axios';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, RefreshControl, Text, TextInput, TouchableOpacity, View, Image } from 'react-native';
+import { ActivityIndicator, Alert, Image, RefreshControl, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const PAGE_SIZE = 20;
 
-const ProductItem = memo(({ item, onPress }: { item: ProductDiscount, onPress: (item: ProductDiscount) => void }) => {
+const ProductItem = memo(function ProductItem({ item, onPress }: { item: ProductDiscount, onPress: (item: ProductDiscount) => void }) {
   return (
     <TouchableOpacity onPress={() => onPress(item)} className="mb-4 bg-white w-[190px] gap-3 p-2">
       <View className="rounded-2xl bg-white items-center justify-center h-[180px] relative overflow-hidden border border-gray-200">
@@ -45,7 +45,7 @@ const ProductItem = memo(({ item, onPress }: { item: ProductDiscount, onPress: (
   );
 });
 
-const CategoryProductScreen = memo(() => {
+const CategoryProductScreen = memo(function CategoryProductScreen() {
   const { user } = useAuth();
   const route = useRoute();
   const { groupCode, priceListNum } = route.params as { groupCode?: string, priceListNum?: string };
@@ -100,7 +100,11 @@ const CategoryProductScreen = memo(() => {
       setLoading(false);
       return;
     }
-    loadMore ? setLoadingMore(true) : setLoading(true);
+    if (loadMore) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
     try {
       const headers = {
@@ -137,7 +141,7 @@ const CategoryProductScreen = memo(() => {
       setLoadingMore(false);
       setRefreshing(false);
     }
-  }, [user?.token, groupCode, priceListNum, page]);
+  }, [FETCH_URL, FETCH_URL_DISCOUNT, user?.token, groupCode, priceListNum, page]);
 
   useEffect(() => {
     pagesCacheRef.current = new Map();
@@ -145,7 +149,7 @@ const CategoryProductScreen = memo(() => {
     setPage(1);
     setLoading(true);
     fetchProducts();
-  }, [groupCode, priceListNum]);
+  }, [fetchProducts, groupCode, priceListNum]);
 
   useEffect(() => {
     if (!selectedItem) {

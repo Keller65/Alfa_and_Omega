@@ -1,9 +1,9 @@
 import { useAuth } from '@/context/auth'
+import api from '@/lib/api'
 import { useAppStore } from '@/state/index'
 import { Picker } from '@react-native-picker/picker'
 import { useCallback, useEffect, useState } from 'react'
-import { ActivityIndicator, Text, TextInput, TouchableOpacity, View, ToastAndroid } from 'react-native'
-import api from '@/lib/api'
+import { ActivityIndicator, Text, TextInput, ToastAndroid, TouchableOpacity, View } from 'react-native'
 
 const Settings = () => {
   const { appHost, appPort, setAppHost, setAppPort, fetchUrl } = useAppStore();
@@ -34,7 +34,8 @@ const Settings = () => {
         setHasInvalidUrl(true)
       }
       if (appPort) setPort(appPort)
-    } catch (e) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_) {
       setIp('')
       setHasInvalidUrl(true)
     }

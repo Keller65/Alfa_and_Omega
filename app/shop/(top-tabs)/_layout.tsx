@@ -1,14 +1,14 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import { View, ActivityIndicator, Text, StyleSheet, Button } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import slugify from 'slugify';
 import { useAuth } from '@/context/auth';
-import { useAppStore } from '@/state';
 import api from '@/lib/api';
+import { useAppStore } from '@/state';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Button, StyleSheet, Text, View } from 'react-native';
+import slugify from 'slugify';
+import CategoryProductScreen from './category-product-list';
 
 const Tab = createMaterialTopTabNavigator();
-import CategoryProductScreen from './category-product-list';
 
 interface ProductCategory {
   code: string;
@@ -94,7 +94,7 @@ export default function TopTabNavigatorLayout() {
         return;
       }
 
-      const response = await api.get<Array<{ code: string, name: string }>>(
+      const response = await api.get<{ code: string, name: string }[]>(
         '/sap/items/categories',
         {
           baseURL: fetchUrl,
@@ -135,7 +135,7 @@ export default function TopTabNavigatorLayout() {
     } finally {
       setLoading(false);
     }
-  }, [headers, user?.token]);
+  }, [fetchUrl, headers, user?.token]);
 
   useEffect(() => {
     fetchCategories();

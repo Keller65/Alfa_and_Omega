@@ -21,8 +21,6 @@ import { ActivityIndicator, Alert, Platform, ScrollView, Text, View } from 'reac
 
 const SettingsScreen = () => {
   const { logout, user } = useAuth();
-  // Apariencia
-  const [darkMode, setDarkMode] = useState(false);
   // Seguridad
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   // Sincronización
@@ -47,16 +45,14 @@ const SettingsScreen = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [bioEnabled, lastSync, dark, push, sound] = await Promise.all([
+        const [bioEnabled, lastSync, push, sound] = await Promise.all([
           AsyncStorage.getItem('settings:biometricEnabled').then(v => v ?? AsyncStorage.getItem('biometricEnabled')),
           AsyncStorage.getItem('lastSyncTime'),
-          AsyncStorage.getItem('settings:darkMode'),
           AsyncStorage.getItem('settings:pushEnabled'),
           AsyncStorage.getItem('settings:soundEnabled'),
         ]);
         if (bioEnabled) setBiometricEnabled(bioEnabled === 'true');
         if (lastSync) setSyncTime(lastSync);
-        if (dark) setDarkMode(dark === 'true');
         if (push) setPushEnabled(push === 'true');
         if (sound) setSoundEnabled(sound === 'true');
       } catch (e) {
@@ -314,7 +310,7 @@ const SettingsScreen = () => {
       } else {
         Alert.alert('No soportado', 'La función de compartir no está disponible.');
       }
-    } catch (e) {
+    } catch {
       Alert.alert('Error', 'No se pudo exportar.');
     } finally {
       setExportingLogs(false);
