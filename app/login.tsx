@@ -186,7 +186,7 @@ export default function Login() {
         style={[styles.block, animatedBlockStyles]}
       >
         <Image
-          source={require('../assets/images/LogoAlfayOmega.png')}
+          source={require('@/assets/images/LogoAlfayOmega.png')}
           style={{ height: 120, width: 260, resizeMode: 'contain', alignSelf: 'center', marginBottom: 60 }}
         />
 
@@ -234,7 +234,7 @@ export default function Login() {
         <TouchableOpacity
           style={{
             marginTop: 16,
-            backgroundColor: isFormValid && !loading ? '#3b82f6' : '#d1d5db',
+            backgroundColor: isFormValid && !loading ? '#1A3D59' : '#d1d5db',
             padding: 16,
             height: 56,
             borderRadius: 99,
@@ -258,7 +258,7 @@ export default function Login() {
           <View className='w-full items-center justify-center mt-16'>
 
             <TouchableOpacity
-              className="mt-4 w-[50px] h-[50px] bg-blue-500 rounded-full items-center justify-center"
+              className="mt-4 w-[50px] h-[50px] bg-primary rounded-full items-center justify-center"
               onPress={handleBiometricLogin}
             >
               <Ionicons name="finger-print-outline" size={28} color="white" />
@@ -271,7 +271,7 @@ export default function Login() {
         <TouchableOpacity
           onPress={() => router.push('/settings')}
         >
-          <Text className='font-[Poppins-SemiBold] text-sm tracking-[-0.3px] text-[#3b82f6]'>Configuraciones</Text>
+          <Text className='font-[Poppins-SemiBold] text-sm tracking-[-0.3px] text-primary'>Configuraciones</Text>
         </TouchableOpacity>
       </View>
     </View>

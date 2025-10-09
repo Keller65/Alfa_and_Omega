@@ -63,6 +63,9 @@ export const SettingItem: React.FC<SettingItemProps> = (p) => {
         <Switch
           value={p.value}
           onValueChange={(v) => p.onChange(v)}
+          trackColor={{ false: '#d1d5db', true: '#abc7de' }}
+          // thumbColor="#1A3D59"
+          thumbColor={{ true: '#1A3D59', false: '#f9fafb' }[String(p.value)]}
         />
       )}
       {p.kind !== 'toggle' && p.rightContent}

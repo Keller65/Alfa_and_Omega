@@ -281,7 +281,7 @@ const ProductScreen = () => {
               onPress={() => bottomSheetRef.current?.present()}
               className="bg-primary py-2 px-4 rounded-full w-[110px] h-fit items-center justify-center"
             >
-              <Text className="text-sm text-black font-[Poppins-SemiBold] tracking-[-0.4px]">
+              <Text className="text-sm text-white font-[Poppins-SemiBold] tracking-[-0.4px]">
                 Exportar PDF
               </Text>
             </TouchableOpacity>
@@ -323,7 +323,7 @@ const ProductScreen = () => {
               style={{ borderRadius: 6, borderColor: '#000' }}
               value={selectedCategories.includes('all')}
               onValueChange={() => handleCategorySelection('all')}
-              color={selectedCategories.includes('all') ? '#FFD700' : undefined}
+              color={selectedCategories.includes('all') ? '#1A3D59' : undefined}
             />
             <Text className="ml-2 leading-5 text-black tracking-[-0.3px] font-[Poppins-Regular] text-sm">Todas las categorías</Text>
           </View>
@@ -345,7 +345,7 @@ const ProductScreen = () => {
                   style={{ borderRadius: 6, borderColor: '#000' }}
                   value={selectedCategories.includes(category.code)}
                   onValueChange={() => handleCategorySelection(category.code)}
-                  color={selectedCategories.includes(category.code) ? '#FFD700' : undefined}
+                  color={selectedCategories.includes(category.code) ? '#1A3D59' : undefined}
                   onTouchEnd={() => handleCategorySelection(category.code)}
                 />
                 <Text className="ml-2 leading-5 text-black tracking-[-0.3px] font-[Poppins-Regular] text-sm">{category.name}</Text>
@@ -360,15 +360,15 @@ const ProductScreen = () => {
           >
             {isLoading ? (
               <View className="flex-row items-center">
-                <ActivityIndicator size="small" color="#000" />
-                <Text className="text-black text-md font-[Poppins-SemiBold] ml-2">
+                <ActivityIndicator size="small" color="white" />
+                <Text className="text-white text-md font-[Poppins-SemiBold] ml-2">
                   Generando Catálogo...
                 </Text>
               </View>
             ) : (
               <View className="flex-row items-center gap-3">
-                <FontAwesome name="file-text" size={20} color="black" />
-                <Text className="text-black text-md font-[Poppins-SemiBold]">
+                <FontAwesome name="file-text" size={20} color="white" />
+                <Text className="text-white text-md font-[Poppins-SemiBold]">
                   Generar Catálogo
                 </Text>
               </View>

@@ -147,7 +147,7 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
     setPage(1);
     setLoading(true);
     fetchProducts();
-  }, [fetchProducts, groupCode, priceListNum]);
+  }, [groupCode, priceListNum]);
 
   useEffect(() => {
     if (!selectedItem) {
