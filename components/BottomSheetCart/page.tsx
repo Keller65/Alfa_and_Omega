@@ -212,7 +212,7 @@ export default function BottomSheetCart() {
             height: 50,
             width: 50,
             borderRadius: 9999,
-            backgroundColor: '#FDE047', // tailwind yellow-300
+            backgroundColor: '#1A3D59',
           },
           style,
         ]}
@@ -406,21 +406,21 @@ export default function BottomSheetCart() {
 
         <View className='flex-row w-full gap-2 justify-between'>
           <TouchableOpacity
-            className="flex-row flex-1 items-center justify-center h-[50px] bg-yellow-300 rounded-full"
+            className="flex-row flex-1 items-center justify-center h-[50px] bg-primary rounded-full"
             onPress={handleSubmitOrder}
             disabled={isLoading}
           >
             {isLoading ? (
               <>
-                <ActivityIndicator color="black" size="small" />
-                <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px] ml-2">
+                <ActivityIndicator color="white" size="small" />
+                <Text className="text-white font-[Poppins-SemiBold] tracking-[-0.3px] ml-2">
                   {editMode.isEditing ? 'Actualizando Pedido...' : 'Realizando Pedido...'}
                 </Text>
               </>
             ) : (
               <>
-                {editMode.isEditing ? <AntDesign name="cloudupload" size={24} color="black" /> : <CartIcon color="black" />}
-                <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px] ml-2">
+                {editMode.isEditing ? <AntDesign name="cloudupload" size={24} color="white" /> : <CartIcon color="white" />}
+                <Text className="text-white font-[Poppins-SemiBold] tracking-[-0.3px] ml-2">
                   {editMode.isEditing ? 'Actualizar Pedido' : 'Realizar Pedido'}
                 </Text>
               </>
@@ -432,9 +432,9 @@ export default function BottomSheetCart() {
               pathname: '/shop',
               params: (closeCart(), {})
             })}
-            className='bg-yellow-300 items-center justify-center rounded-full h-[50px] w-[50px]'
+            className='bg-primary items-center justify-center rounded-full h-[50px] w-[50px]'
           >
-            <Feather name="edit" size={20} color="black" />
+            <Feather name="edit" size={20} color="white" />
           </TouchableOpacity>
         </View>
       </View>
@@ -461,10 +461,10 @@ export default function BottomSheetCart() {
           <PulsingCircle index={1} />
 
           <TouchableOpacity
-            className="rounded-full flex items-center justify-center h-[50px] w-[50px] bg-yellow-300 shadow-lg shadow-[#09f]/30"
+            className="rounded-full flex items-center justify-center h-[50px] w-[50px] bg-primary shadow-lg shadow-[#09f]/30"
             onPress={openCart}
           >
-            {editMode.isEditing === true ? <MaterialIcons name="edit-document" size={24} color="black" /> : <CartIcon color="black" />}
+            {editMode.isEditing === true ? <MaterialIcons name="edit-document" size={24} color="white" /> : <CartIcon color="white" />}
             <View className="absolute -top-2 -right-2 bg-red-500 rounded-full w-6 h-6 items-center justify-center">
               <Text className="text-white text-xs font-bold">{products.length}</Text>
             </View>

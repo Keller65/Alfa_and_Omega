@@ -279,7 +279,7 @@ const ProductScreen = () => {
 
             <TouchableOpacity
               onPress={() => bottomSheetRef.current?.present()}
-              className="bg-yellow-300 py-2 px-4 rounded-full w-[110px] h-fit items-center justify-center"
+              className="bg-primary py-2 px-4 rounded-full w-[110px] h-fit items-center justify-center"
             >
               <Text className="text-sm text-black font-[Poppins-SemiBold] tracking-[-0.4px]">
                 Exportar PDF
@@ -354,7 +354,7 @@ const ProductScreen = () => {
           </ScrollView>
 
           <TouchableOpacity
-            className="bg-yellow-300 py-3 h-[50px] flex-1 px-4 rounded-full items-center justify-center"
+            className="bg-primary py-3 h-[50px] flex-1 px-4 rounded-full items-center justify-center"
             onPress={handleGenerateCatalog}
             disabled={isLoading}
           >

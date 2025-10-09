@@ -26,7 +26,7 @@ import SettingsScreen from './setting';
 const Drawer = createDrawerNavigator();
 
 export default function Layout() {
-  const ActiveColor = '#000';
+  const ActiveColor = '#1A3D59';
   const InActiveColor = '#c9c9c9';
 
   return (
@@ -136,8 +136,8 @@ function CustomDrawerContent(props: any) {
   return (
     <DrawerContentScrollView {...props}>
       <View style={{ paddingTop: 16, paddingBottom: 24, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <View className="bg-[#fcde41] w-[50px] h-[50px] items-center justify-center rounded-full">
-          <ClientIcon size={30} color="#000" />
+        <View className="bg-primary w-[50px] h-[50px] items-center justify-center rounded-full">
+          <ClientIcon size={30} color="white" />
         </View>
 
         <View>

@@ -145,7 +145,7 @@ export default function TopTabNavigatorLayout() {
   return (
     <View style={{ flex: 1, position: 'relative' }}>
       {editMode.isEditing && (
-        <View className='w-full h-fit p-2 bg-yellow-300 justify-center items-center'>
+        <View className='w-full h-fit p-2 bg-primary justify-center items-center'>
           <Text className='font-[Poppins-SemiBold] tracking-[-0.3px] text-sm'>
             Modo Edición - Modificando Pedido #{editMode.docEntry}
           </Text>

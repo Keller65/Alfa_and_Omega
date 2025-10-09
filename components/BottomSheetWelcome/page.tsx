@@ -83,8 +83,8 @@ export default function BottomSheetWelcome() {
 
             </View>
 
-            <TouchableOpacity className='bg-yellow-300 w-full h-[50px] rounded-full items-center justify-center mt-6 z-50' onPress={handleStart}>
-              <Text className="text-black text-base font-[Poppins-SemiBold]">Empezar</Text>
+            <TouchableOpacity className='bg-primary w-full h-[50px] rounded-full items-center justify-center mt-6 z-50' onPress={handleStart}>
+              <Text className="text-white text-base font-[Poppins-SemiBold]">Empezar</Text>
             </TouchableOpacity>
           </View>
         </BottomSheetView>

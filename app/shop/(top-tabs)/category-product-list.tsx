@@ -25,9 +25,7 @@ const ProductItem = memo(function ProductItem({ item, onPress }: { item: Product
         <Image
           source={{ uri: `https://pub-266f56f2e24d4d3b8e8abdb612029f2f.r2.dev/${item.itemCode}.jpg` }}
           style={{ height: 180, width: 180, objectFit: "contain", borderRadius: 16 }}
-          // contentFit="contain"
           onError={() => console.log("Error loading image for item:", item.itemCode)}
-        // transition={500}
         />
       </View>
 
@@ -287,11 +285,11 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
             </Text>
           </View>
           <TouchableOpacity
-            className={`mt-4 rounded-full py-3 items-center justify-center h-[50px] ${!isPriceValid || quantity <= 0 ? 'bg-gray-300' : 'bg-yellow-300'}`}
+            className={`mt-4 rounded-full py-3 items-center justify-center h-[50px] ${!isPriceValid || quantity <= 0 ? 'bg-gray-300' : 'bg-primary'}`}
             onPress={handleAddToCart}
             disabled={!isPriceValid || quantity <= 0}
           >
-            <Text className="text-black font-[Poppins-Bold] tracking-[-0.3px]">Agregar al carrito</Text>
+            <Text className="text-white font-[Poppins-Bold] tracking-[-0.3px]">Agregar al carrito</Text>
           </TouchableOpacity>
         </View>
       </BottomSheetFooter>

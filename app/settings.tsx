@@ -129,8 +129,8 @@ const Settings = () => {
             mode="dropdown"
             dropdownIconColor="#4B5563"
           >
-            <Picker.Item label="http" value="http" />
-            <Picker.Item label="https" value="https" />
+            <Picker.Item label="http" value="http" color='#000' />
+            <Picker.Item label="https" value="https" color='#000' />
           </Picker>
         </View>
 
@@ -139,6 +139,7 @@ const Settings = () => {
           onChangeText={setIp}
           placeholder="Ej: 192.168.0.1"
           keyboardAppearance="light"
+          placeholderTextColor={'#9CA3AF'}
           className="flex-1 border border-gray-300 rounded-xl px-4 py-2 text-base h-[50px] bg-white"
         />
       </View>
@@ -149,6 +150,7 @@ const Settings = () => {
         onChangeText={setPort}
         placeholder="Puerto (ej: 3000)"
         keyboardAppearance="light"
+        placeholderTextColor={'#9CA3AF'}
         keyboardType="numeric"
         className="border border-gray-300 rounded-xl px-4 py-2 text-base h-[50px] bg-white"
       />
@@ -162,7 +164,7 @@ const Settings = () => {
       <TouchableOpacity
         onPress={handleSave}
         disabled={isSaving || !isUrlReady}
-        className={`mt-4 rounded-full py-3 items-center justify-center h-[50px] ${isSaving || !isUrlReady ? 'bg-gray-300' : 'bg-yellow-300'
+        className={`mt-4 rounded-full py-3 items-center justify-center h-[50px] ${isSaving || !isUrlReady ? 'bg-gray-300' : 'bg-primary'
           }`}
       >
         {isSaving ? (
@@ -171,13 +173,13 @@ const Settings = () => {
             <Text className='text-gray-500 tracking-[-0.3px] font-[Poppins-SemiBold] text-base'>Guardando configuración...</Text>
           </View>
         ) : (
-          <Text className="text-black tracking-[-0.3px] font-[Poppins-SemiBold] text-base">Guardar configuración</Text>
+          <Text className="text-white tracking-[-0.3px] font-[Poppins-SemiBold] text-base">Guardar configuración</Text>
         )}
       </TouchableOpacity>
 
       {fetchUrl && (
         <TouchableOpacity
-          className={`rounded-full py-3 items-center justify-center h-[50px] ${(isSyncing || !isUrlReady) ? 'bg-gray-300' : 'bg-yellow-300'}`}
+          className={`rounded-full py-3 items-center justify-center h-[50px] ${(isSyncing || !isUrlReady) ? 'bg-gray-300' : 'bg-primary'}`}
           onPress={handleSync}
           disabled={isSyncing || !isUrlReady}
         >
@@ -187,7 +189,7 @@ const Settings = () => {
               <Text className='text-gray-500 tracking-[-0.3px] font-[Poppins-SemiBold] text-base'>Sincronizando Datos...</Text>
             </View>
           ) : (
-            <Text className='text-black tracking-[-0.3px] font-[Poppins-SemiBold] text-base'>Sincronizar Datos</Text>
+            <Text className='text-white tracking-[-0.3px] font-[Poppins-SemiBold] text-base'>Sincronizar Datos</Text>
           )}
         </TouchableOpacity>
       )}

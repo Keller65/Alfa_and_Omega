@@ -311,7 +311,7 @@ const PaymentScreen = () => {
               <TouchableOpacity
                 key={option.name}
                 className={`bg-white w-[180px] h-[100px] rounded-xl p-6 items-center justify-center m-2 shadow-sm border-2 ${isSelected
-                  ? 'border-yellow-400 bg-yellow-50'
+                  ? 'border-primary bg-[#1a3d5941]'
                   : 'border-gray-100'
                   }`}
                 onPress={() => {
@@ -320,10 +320,10 @@ const PaymentScreen = () => {
                 }}
               >
                 <View className="mb-3">
-                  <Icon color={isSelected ? '#facc15' : '#888'} />
+                  <Icon color={isSelected ? '#1A3D59' : '#888'} />
                 </View>
                 <Text
-                  className={`font-[Poppins-SemiBold] text-base tracking-[-0.3px] ${isSelected ? 'text-yellow-400' : 'text-gray-500'
+                  className={`font-[Poppins-SemiBold] text-base tracking-[-0.3px] ${isSelected ? 'text-primary' : 'text-gray-500'
                     }`}
                 >
                   {option.name}
@@ -449,12 +449,12 @@ const PaymentScreen = () => {
       {/* Botón continuar */}
       <View className="p-4 bg-white border-t border-gray-200">
         <TouchableOpacity
-          className={`py-4 rounded-full items-center ${isFormComplete ? 'bg-yellow-300' : 'bg-gray-300'}`}
+          className={`py-4 rounded-full items-center ${isFormComplete ? 'bg-primary' : 'bg-gray-300'}`}
           disabled={!isFormComplete}
           onPress={handleContinue}
         >
           <Text
-            className={`font-[Poppins-SemiBold] text-lg tracking-[-0.3px] ${isFormComplete ? 'text-black' : 'text-gray-500'}`}
+            className={`font-[Poppins-SemiBold] text-lg tracking-[-0.3px] ${isFormComplete ? 'text-white' : 'text-gray-500'}`}
           >
             Continuar
           </Text>

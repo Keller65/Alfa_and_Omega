@@ -111,19 +111,19 @@ const Invoices = () => {
       className="bg-white rounded-3xl mb-4 shadow-sm overflow-hidden"
     >
       {/* Header */}
-      <View className="bg-indigo-100 p-4">
+      <View className="p-4" style={{ backgroundColor: item.cancelled === 'tYES' ? '#fecdd3' : '#c7d2fe' }}>
         <View className="flex-row justify-between items-center mb-3">
           <View className="flex-row items-center gap-x-2">
             {/* Número documento */}
-            <View className="bg-yellow-300 px-2 py-0.5 rounded-full">
-              <Text className="text-xs text-black font-[Poppins-SemiBold]">
+            <View className="bg-primary px-2 py-0.5 rounded-full">
+              <Text className="text-xs text-white font-[Poppins-SemiBold]">
                 {item.docNum}
               </Text>
             </View>
 
             {/* Estado */}
             {item.cancelled === 'tYES' && (
-              <View className="bg-rose-200 px-2 py-0.5 rounded-full flex-row items-center justify-center gap-x-1">
+              <View className="bg-rose-300 px-2 py-0.5 rounded-full flex-row items-center justify-center gap-x-1">
                 <View className='bg-rose-700 h-[6px] w-[6px] rounded-full' />
                 <Text className="text-xs text-rose-700 font-[Poppins-SemiBold]">
                   Cancelado
@@ -141,7 +141,7 @@ const Invoices = () => {
         {/* Cliente */}
         <View className="flex-row items-center gap-3">
           <View className="w-[36px] h-[36px] bg-indigo-500 rounded-full items-center justify-center">
-            <ClientIcon size={30} color="#fde047" />
+            <ClientIcon size={30} color="white" />
           </View>
           <View>
             <Text className="text-lg font-[Poppins-Bold] text-gray-900 tracking-[-0.3px]">
@@ -181,10 +181,10 @@ const Invoices = () => {
     <View className="flex-1 bg-white px-4 relative">
       <View className="absolute bottom-8 right-8 gap-3 items-end z-10">
         <TouchableOpacity
-          className="rounded-full flex items-center justify-center h-[50px] w-[50px] bg-yellow-300"
+          className="rounded-full flex items-center justify-center h-[50px] w-[50px] bg-primary"
           onPress={() => router.push('/InvoiceClient')}
         >
-          <PlusIcon color="black" />
+          <PlusIcon color="white" />
         </TouchableOpacity>
       </View>
 

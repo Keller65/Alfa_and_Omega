@@ -389,8 +389,8 @@ const OrderDetails = () => {
       <View className="p-5 bg-white rounded-b-[36px] border border-gray-100">
         <View className="flex-row justify-between items-center mb-5">
           <View className="flex-row items-center gap-2">
-            <View className="bg-[#fcde41] w-[40px] h-[40px] items-center justify-center rounded-full">
-              <ClientIcon size={24} color="#000" />
+            <View className="bg-primary w-[40px] h-[40px] items-center justify-center rounded-full">
+              <ClientIcon size={24} color="white" />
             </View>
 
             <View>
@@ -454,21 +454,21 @@ const OrderDetails = () => {
 
         <View className='flex-row gap-4'>
           <TouchableOpacity
-            className="flex-1 bg-yellow-300 h-[50px] rounded-full flex-row gap-3 p-2 items-center justify-center"
+            className="flex-1 bg-primary h-[50px] rounded-full flex-row gap-3 p-2 items-center justify-center"
             onPress={handleShareAsPdf}
             disabled={isGeneratingPdf}
           >
             {isGeneratingPdf ? (
               <>
-                <ActivityIndicator color="black" />
-                <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px]">
+                <ActivityIndicator color="white" />
+                <Text className="text-white font-[Poppins-SemiBold] tracking-[-0.3px]">
                   Generando PDF
                 </Text>
               </>
             ) : (
               <>
-                <Entypo name="share" size={24} color="black" />
-                <Text className="text-black font-[Poppins-SemiBold] tracking-[-0.3px]">
+                <Entypo name="share" size={24} color="white" />
+                <Text className="text-white font-[Poppins-SemiBold] tracking-[-0.3px]">
                   Compartir como PDF
                 </Text>
               </>
@@ -476,14 +476,14 @@ const OrderDetails = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            className='h-[50px] w-[50px] items-center justify-center bg-yellow-300 rounded-full'
+            className='h-[50px] w-[50px] items-center justify-center bg-primary rounded-full'
             onPress={handleEditOrder}
             disabled={isLoadingEdit}
           >
             {isLoadingEdit ? (
-              <ActivityIndicator size="small" color="black" />
+              <ActivityIndicator size="small" color="white" />
             ) : (
-              <MaterialIcons name="edit" size={24} color="black" />
+              <MaterialIcons name="edit" size={24} color="white" />
             )}
           </TouchableOpacity>
         </View>
