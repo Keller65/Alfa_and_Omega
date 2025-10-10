@@ -2,8 +2,10 @@ import CartIcon from '@/assets/icons/CartIcon';
 import TrashIcon from '@/assets/icons/TrashIcon';
 import { useAuth } from '@/context/auth';
 import { useAppStore } from '@/state/index';
+import { CustomerAddress } from '@/types/types';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetFlatList, BottomSheetFooter, BottomSheetFooterProps, BottomSheetModal, } from '@gorhom/bottom-sheet';
 import axios, { isAxiosError } from 'axios';
@@ -11,7 +13,7 @@ import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Keyboard, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Keyboard, Modal, Platform, ScrollView, Text, TextInput, ToastAndroid, TouchableOpacity, View } from 'react-native';
 import Animated, { Easing, interpolate, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
 interface CartItemType {
@@ -166,9 +168,14 @@ export default function BottomSheetCart() {
   const [isLoading, setIsLoading] = useState(false);
   const [comments, setComments] = useState('');
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [customerAddresses, setCustomerAddresses] = useState<CustomerAddress[]>([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<string>('');
+  const [showLocationModal, setShowLocationModal] = useState(false);
   const { fetchUrl } = useAppStore();
   const FETCH_URL_CREATE_ORDER = fetchUrl + "/sap/orders";
   const FETCH_URL_UPDATE_ORDER = fetchUrl + "/api/Quotations";
+  const FETCH_URL_ADDRESSES = "http://200.115.188.54:4325/api/Customers";
 
   // Cargar comentarios del pedido cuando esté en modo edición
   useEffect(() => {
@@ -178,6 +185,89 @@ export default function BottomSheetCart() {
       setComments('');
     }
   }, [editMode.isEditing, editMode.orderData?.comments]);
+
+  // Función para obtener las direcciones del cliente
+  const fetchCustomerAddresses = useCallback(async (cardCode: string) => {
+    if (!cardCode || !token) return;
+
+    try {
+      setLoadingAddresses(true);
+      const response = await axios.get(`${FETCH_URL_ADDRESSES}/${cardCode}/addresses`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      setCustomerAddresses(response.data);
+      console.log('Direcciones del cliente obtenidas:', response.data);
+    } catch (error) {
+      console.error('Error al obtener direcciones del cliente:', error);
+      if (isAxiosError(error)) {
+        console.error('Error response:', error.response?.data);
+      }
+      // No mostramos alert aquí para no interrumpir la UX
+      setCustomerAddresses([]);
+    } finally {
+      setLoadingAddresses(false);
+    }
+  }, [token, FETCH_URL_ADDRESSES]);
+
+  // Efecto para obtener direcciones cuando cambia el cliente seleccionado
+  useEffect(() => {
+    if (customerSelected?.cardCode) {
+      fetchCustomerAddresses(customerSelected.cardCode);
+    } else {
+      setCustomerAddresses([]);
+    }
+    // Resetear dirección seleccionada cuando cambie el cliente
+    setSelectedAddress('');
+  }, [customerSelected?.cardCode, fetchCustomerAddresses]);
+
+  // Comentado: No seleccionar automáticamente la primera dirección
+  // useEffect(() => {
+  //   if (customerAddresses.length > 0 && !selectedAddress) {
+  //     setSelectedAddress(customerAddresses[0].addressName);
+  //   }
+  // }, [customerAddresses, selectedAddress]);
+
+  // Función para obtener la dirección seleccionada completa
+  const getSelectedAddressData = useCallback((): CustomerAddress | null => {
+    return customerAddresses.find(addr => addr.addressName === selectedAddress) || null;
+  }, [customerAddresses, selectedAddress]);
+
+  // Función para manejar el click en el botón de ubicación
+  const handleLocationPress = useCallback(() => {
+    if (customerAddresses.length === 0) {
+      if (Platform.OS === 'android') {
+        ToastAndroid.show('Actualmente este cliente no tiene ninguna ubicación', ToastAndroid.SHORT);
+      } else {
+        Alert.alert('Sin ubicaciones', 'Actualmente este cliente no tiene ninguna ubicación');
+      }
+      return;
+    }
+
+    // Mostrar modal personalizado de direcciones
+    setShowLocationModal(true);
+  }, [customerAddresses]);
+
+  // Función para seleccionar una dirección
+  const handleSelectAddress = useCallback((address: CustomerAddress) => {
+    setSelectedAddress(address.addressName);
+    setShowLocationModal(false);
+
+    // Mostrar toast con la ubicación seleccionada
+    const locationText = `${address.street}, ${address.ciudadName || address.u_Ciudad}`;
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(`Ubicación seleccionada: ${locationText}`, ToastAndroid.LONG);
+    }
+
+    console.log('Dirección seleccionada:', address);
+    console.log('Coordenadas:', {
+      latitud: address.u_Latitud,
+      longitud: address.u_Longitud
+    });
+  }, []);
 
   // Pulse trail animation for the floating cart button
   const pulse = useSharedValue(0);
@@ -255,6 +345,15 @@ export default function BottomSheetCart() {
       return;
     }
 
+    if (customerAddresses.length > 0 && !selectedAddress) {
+      if (Platform.OS === 'android') {
+        ToastAndroid.show('Debe seleccionar una ubicación de entrega', ToastAndroid.SHORT);
+      } else {
+        Alert.alert('Error', 'Debe seleccionar una ubicación de entrega');
+      }
+      return;
+    }
+
     const lines = products.map(p => {
       const price = p.unitPrice;
 
@@ -266,13 +365,16 @@ export default function BottomSheetCart() {
       };
     });
 
+    const selectedAddressData = getSelectedAddressData();
     const payload = {
       cardCode: customerSelected.cardCode,
       comments: comments || '',
       lines,
+      selectedAddress: selectedAddressData,
     };
 
-    console.log(payload)
+    console.log('Payload con dirección seleccionada:', payload);
+    console.log('Dirección seleccionada completa:', selectedAddressData);
 
     try {
       setIsLoading(true);
@@ -346,7 +448,7 @@ export default function BottomSheetCart() {
     } finally {
       setIsLoading(false);
     }
-  }, [products, customerSelected, token, comments, setLastOrderDocEntry, clearCart, editMode, clearEditMode, FETCH_URL_CREATE_ORDER, FETCH_URL_UPDATE_ORDER, closeCart, router]);
+  }, [products, customerSelected, token, comments, setLastOrderDocEntry, clearCart, editMode, clearEditMode, FETCH_URL_CREATE_ORDER, FETCH_URL_UPDATE_ORDER, closeCart, router, getSelectedAddressData, customerAddresses.length, selectedAddress]);
 
   const total = useMemo(() => {
     return products.reduce((sum, item) => {
@@ -391,7 +493,7 @@ export default function BottomSheetCart() {
 
   const renderFooter = useCallback((props: BottomSheetFooterProps) => (
     <BottomSheetFooter {...props} bottomInset={0}>
-      <View className="bg-white border-t border-gray-200 px-4 py-4">
+      <View className="bg-white p-4">
         <View className="flex-row justify-between items-center">
           <Text className='text-base text-gray-700 font-[Poppins-Medium] tracking-[-0.3px]'>Cliente</Text>
           <Text className='font-[Poppins-Bold] text-black tracking-[-0.3px]'>{customerSelected?.cardName}</Text>
@@ -406,9 +508,13 @@ export default function BottomSheetCart() {
 
         <View className='flex-row w-full gap-2 justify-between'>
           <TouchableOpacity
-            className="flex-row flex-1 items-center justify-center h-[50px] bg-primary rounded-full"
+            className={`flex-row flex-1 items-center justify-center h-[50px] rounded-full ${
+              isLoading || (customerAddresses.length > 0 && !selectedAddress) 
+                ? 'bg-gray-300' 
+                : 'bg-primary'
+            }`}
             onPress={handleSubmitOrder}
-            disabled={isLoading}
+            disabled={isLoading || (customerAddresses.length > 0 && !selectedAddress)}
           >
             {isLoading ? (
               <>
@@ -419,11 +525,38 @@ export default function BottomSheetCart() {
               </>
             ) : (
               <>
-                {editMode.isEditing ? <AntDesign name="cloudupload" size={24} color="white" /> : <CartIcon color="white" />}
-                <Text className="text-white font-[Poppins-SemiBold] tracking-[-0.3px] ml-2">
+                {editMode.isEditing ? (
+                  <AntDesign 
+                    name="cloudupload" 
+                    size={24} 
+                    color={(customerAddresses.length > 0 && !selectedAddress) ? '#374151' : 'white'} 
+                  />
+                ) : (
+                  <CartIcon color={(customerAddresses.length > 0 && !selectedAddress) ? '#6b7280' : 'white'} />
+                )}
+                <Text className={`font-[Poppins-SemiBold] tracking-[-0.3px] ml-2 ${
+                  (customerAddresses.length > 0 && !selectedAddress) ? 'text-gray-500' : 'text-white'
+                }`}>
                   {editMode.isEditing ? 'Actualizar Pedido' : 'Realizar Pedido'}
                 </Text>
               </>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleLocationPress}
+            className={`items-center justify-center rounded-full h-[50px] w-[50px] ${customerAddresses.length > 0 && selectedAddress ? 'bg-primary' : 'bg-gray-300'
+              }`}
+            disabled={loadingAddresses}
+          >
+            {loadingAddresses ? (
+              <ActivityIndicator size="small" color="#6b7280" />
+            ) : (
+              <Ionicons
+                name="location-sharp"
+                size={24}
+                color={customerAddresses.length > 0 && selectedAddress ? 'white' : '#6b7280'}
+              />
             )}
           </TouchableOpacity>
 
@@ -439,7 +572,7 @@ export default function BottomSheetCart() {
         </View>
       </View>
     </BottomSheetFooter>
-  ), [total, customerSelected?.cardName, handleSubmitOrder, isLoading, router, closeCart, editMode.isEditing]);
+  ), [total, customerSelected?.cardName, handleSubmitOrder, isLoading, router, closeCart, editMode.isEditing, handleLocationPress, customerAddresses.length, selectedAddress, loadingAddresses]);
 
   const CancelEdit = useCallback(() => {
     Alert.alert(
@@ -525,6 +658,64 @@ export default function BottomSheetCart() {
           />
         )}
       </BottomSheetModal>
+
+      {/* Modal personalizado para seleccionar ubicación */}
+      <Modal
+        visible={showLocationModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowLocationModal(false)}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 20
+        }}>
+          <View className="bg-white rounded-3xl p-5 w-full max-w-[400px] max-h-[80%]">
+            {/* Título */}
+            <Text className="text-lg font-[Poppins-Bold] text-black mb-2 text-center">
+              Seleccionar Ubicación
+            </Text>
+
+            <Text className="text-sm font-[Poppins-Regular] text-gray-600 mb-5 text-center">
+              Selecciona una dirección de entrega:
+            </Text>
+
+            {/* Lista de direcciones */}
+            <ScrollView className="max-h-[300px]">
+              {customerAddresses.map((address, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => handleSelectAddress(address)}
+                  className={`py-3 px-4 mb-2 rounded-lg border-l-4 ${selectedAddress === address.addressName
+                    ? 'bg-blue-100 border-blue-700'
+                    : 'bg-gray-100 border-transparent'
+                    }`}
+                >
+                  <Text className="text-base font-[Poppins-Medium] text-black text-left">
+                    {address.addressName}
+                  </Text>
+                  <Text className="text-xs font-[Poppins-Regular] text-gray-600 text-left mt-1">
+                    {address.street}, {address.ciudadName || address.u_Ciudad}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            {/* Botón Cancelar */}
+            <TouchableOpacity
+              onPress={() => setShowLocationModal(false)}
+              className="mt-4 py-3 px-6 bg-red-600 rounded-full items-center"
+            >
+              <Text className="text-base font-[Poppins-Medium] text-white">
+                Cancelar
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
