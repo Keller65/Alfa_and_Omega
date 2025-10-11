@@ -346,7 +346,6 @@ const OrderDetails = () => {
 </html>
 `;
 
-
     try {
       const { uri } = await Print.printToFileAsync({ html: htmlContent });
 
@@ -450,6 +449,13 @@ const OrderDetails = () => {
               {totalItems.toLocaleString()}
             </Text>
           </View>
+        </View>
+
+        <View className="flex-1 p-3 bg-gray-50 rounded-lg mb-5">
+          <Text className="text-xs text-gray-500 font-[Poppins-Regular]">Ubicacion</Text>
+          <Text className="text-base font-[Poppins-SemiBold] text-gray-900 mt-1 tracking-[-0.3px]">
+            {orderData.address || 'No disponible'}
+          </Text>
         </View>
 
         <View className='flex-row gap-4'>

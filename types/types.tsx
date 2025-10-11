@@ -32,6 +32,7 @@ export type CreateOrder = {
   docDate: string,
   docDueDate: string,
   comments: string,
+  payToCode: string,
   lines: [
     {
       itemCode: string,

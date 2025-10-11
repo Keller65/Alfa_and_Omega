@@ -370,7 +370,7 @@ export default function BottomSheetCart() {
       cardCode: customerSelected.cardCode,
       comments: comments || '',
       lines,
-      selectedAddress: selectedAddressData,
+      payToCode: selectedAddressData?.addressName,
     };
 
     console.log('Payload con dirección seleccionada:', payload);
@@ -508,11 +508,10 @@ export default function BottomSheetCart() {
 
         <View className='flex-row w-full gap-2 justify-between'>
           <TouchableOpacity
-            className={`flex-row flex-1 items-center justify-center h-[50px] rounded-full ${
-              isLoading || (customerAddresses.length > 0 && !selectedAddress) 
-                ? 'bg-gray-300' 
+            className={`flex-row flex-1 items-center justify-center h-[50px] rounded-full ${isLoading || (customerAddresses.length > 0 && !selectedAddress)
+                ? 'bg-gray-300'
                 : 'bg-primary'
-            }`}
+              }`}
             onPress={handleSubmitOrder}
             disabled={isLoading || (customerAddresses.length > 0 && !selectedAddress)}
           >
@@ -526,17 +525,16 @@ export default function BottomSheetCart() {
             ) : (
               <>
                 {editMode.isEditing ? (
-                  <AntDesign 
-                    name="cloudupload" 
-                    size={24} 
-                    color={(customerAddresses.length > 0 && !selectedAddress) ? '#374151' : 'white'} 
+                  <AntDesign
+                    name="cloudupload"
+                    size={24}
+                    color={(customerAddresses.length > 0 && !selectedAddress) ? '#374151' : 'white'}
                   />
                 ) : (
                   <CartIcon color={(customerAddresses.length > 0 && !selectedAddress) ? '#6b7280' : 'white'} />
                 )}
-                <Text className={`font-[Poppins-SemiBold] tracking-[-0.3px] ml-2 ${
-                  (customerAddresses.length > 0 && !selectedAddress) ? 'text-gray-500' : 'text-white'
-                }`}>
+                <Text className={`font-[Poppins-SemiBold] tracking-[-0.3px] ml-2 ${(customerAddresses.length > 0 && !selectedAddress) ? 'text-gray-500' : 'text-white'
+                  }`}>
                   {editMode.isEditing ? 'Actualizar Pedido' : 'Realizar Pedido'}
                 </Text>
               </>
