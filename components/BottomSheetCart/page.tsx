@@ -175,7 +175,7 @@ export default function BottomSheetCart() {
   const { fetchUrl } = useAppStore();
   const FETCH_URL_CREATE_ORDER = fetchUrl + "/sap/orders";
   const FETCH_URL_UPDATE_ORDER = fetchUrl + "/api/Quotations";
-  const FETCH_URL_ADDRESSES = "http://200.115.188.54:4325/api/Customers";
+  const FETCH_URL_ADDRESSES = fetchUrl + "/api/Customers";
 
   // Cargar comentarios del pedido cuando esté en modo edición
   useEffect(() => {

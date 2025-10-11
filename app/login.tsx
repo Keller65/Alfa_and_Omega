@@ -1,5 +1,4 @@
 import { useAppStore } from '@/state';
-import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -8,11 +7,13 @@ import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Text, TextInput, TouchableOpacity, View } from "react-native";
 import 'react-native-gesture-handler';
+import 'react-native-reanimated';
 import Animated, { useAnimatedKeyboard, useAnimatedStyle, withTiming } from 'react-native-reanimated';
-
 import { useAuth } from "../context/auth";
+import { usePushNotificationsFCM } from '@/hooks/usePushNotificationsFCM'
+import { useLicense } from '@/auth/useLicense'
 import "../global.css";
 
 export default function Login() {
@@ -26,8 +27,10 @@ export default function Login() {
   const { fetchUrl } = useAppStore()
   const FETCH_URL = fetchUrl + "/auth/employee";
   const keyboard = useAnimatedKeyboard();
-
   const isFormValid = salesPersonCode !== "" && password !== "";
+
+  usePushNotificationsFCM();
+  useLicense();
 
   useEffect(() => {
     (async () => {
@@ -36,8 +39,6 @@ export default function Login() {
         console.log('Permiso de ubicación denegado');
         return;
       }
-      let location = await Location.getCurrentPositionAsync({});
-      console.log('Coordenadas:', location.coords);
     })();
   }, []);
 
@@ -66,7 +67,7 @@ export default function Login() {
         }
       }
     })();
-  }, [user, setUser]);
+  }, [user]);
 
   useEffect(() => {
     (async () => {
@@ -181,50 +182,57 @@ export default function Login() {
   if (user) return <Redirect href="/(tabs)" />;
 
   return (
-    <View style={styles.container}>
-      <Animated.View
-        style={[styles.block, animatedBlockStyles]}
-      >
-        <Image
-          source={require('@/assets/images/LogoAlfayOmega.png')}
-          style={{ height: 120, width: 260, resizeMode: 'contain', alignSelf: 'center', marginBottom: 60 }}
-        />
+    <View className="flex-1 bg-primary">
 
-        <View style={{ gap: 24 }}>
+      <View className='bg-primary h-[40%] p-4 items-center justify-center'>
+        <Image
+          source={require('@/assets/images/icon.png')}
+          height={200}
+          width={200}
+          className="h-[200px] w-[200px] self-center aspect-square"
+          style={{ resizeMode: 'contain' }}
+        />
+      </View>
+
+      <Animated.View
+        className="self-stretch items-stretch p-5 bg-white flex-1 rounded-t-3xl"
+        style={animatedBlockStyles}
+      >
+        <View className="gap-6">
           <View>
-            <Text style={{ fontFamily: 'Poppins-Medium', letterSpacing: -0.8, fontSize: 15 }}>Código de Vendedor</Text>
+            <Text className="font-[Poppins-Medium] text-[15px] tracking-[-0.3px] text-primary">Código de Vendedor</Text>
             <TextInput
-              style={styles.input}
+              className="h-[50px] bg-[#e5e7eb] text-[#6b7280] px-6 rounded-[20px] font-[Poppins-Medium]"
               placeholder="Ingrese su Código de Vendedor"
               value={salesPersonCode}
               onChangeText={setSalesPersonCode}
               keyboardType="numeric"
               editable={!loading}
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={'#9ca3af'}
             />
           </View>
 
           <View>
-            <Text style={{ fontFamily: 'Poppins-Medium', letterSpacing: -0.8, fontSize: 15 }}>Contraseña</Text>
-            <View style={styles.passwordContainer}>
+            <Text className="font-[Poppins-Medium] text-[15px] tracking-[-0.3px] text-primary">Contraseña</Text>
+            <View className="relative">
               <TextInput
-                style={styles.passwordInput}
+                className="h-[50px] bg-[#e5e7eb] text-[#6b7280] px-6 rounded-[20px] font-[Poppins-Medium] pr-14"
                 placeholder="Ingrese su Contraseña"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
-                keyboardType="numeric"
+                keyboardType="default"
                 editable={!loading}
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={'#9ca3af'}
               />
               <TouchableOpacity
-                style={styles.eyeIcon}
+                className="absolute right-4 top-4"
                 onPress={() => setShowPassword(!showPassword)}
               >
-                <Feather 
-                  name={showPassword ? "eye" : "eye-off"} 
-                  size={20} 
-                  color="#6b7280" 
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={24}
+                  color="gray"
                 />
               </TouchableOpacity>
             </View>
@@ -232,31 +240,24 @@ export default function Login() {
         </View>
 
         <TouchableOpacity
-          style={{
-            marginTop: 16,
-            backgroundColor: isFormValid && !loading ? '#1A3D59' : '#d1d5db',
-            padding: 16,
-            height: 56,
-            borderRadius: 99,
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
+          className={`mt-4 p-4 h-[50px] rounded-full items-center justify-center ${isFormValid && !loading ? 'bg-[#1A3D59]' : 'bg-gray-300'
+            }`}
           onPress={handleLogin}
           disabled={!isFormValid || loading}
         >
           {loading ? (
             <View className='flex-row gap-2 items-center justify-center'>
               <ActivityIndicator color="#6b7280" size="small" />
-              <Text style={{ color: '#6b7280', textAlign: 'center', fontFamily: 'Poppins-SemiBold', lineHeight: 12 }}>Iniciando Sesión...</Text>
+              <Text className="text-gray-500 text-center font-[Poppins-SemiBold] leading-3">Iniciando Sesión...</Text>
             </View>
           ) : (
-            <Text style={{ color: isFormValid && !loading ? '#fff' : '#6b7280', textAlign: 'center', fontFamily: 'Poppins-SemiBold', lineHeight: 12 }}>Iniciar Sesión</Text>
+            <Text className={`text-center font-[Poppins-SemiBold] leading-3 ${isFormValid && !loading ? 'text-white' : 'text-gray-500'
+              }`}>Iniciar Sesión</Text>
           )}
         </TouchableOpacity>
 
         {biometricAvailable && (
-          <View className='w-full items-center justify-center mt-16'>
-
+          <View className="w-full items-center justify-center mt-16">
             <TouchableOpacity
               className="mt-4 w-[50px] h-[50px] bg-primary rounded-full items-center justify-center"
               onPress={handleBiometricLogin}
@@ -265,57 +266,15 @@ export default function Login() {
             </TouchableOpacity>
           </View>
         )}
-      </Animated.View>
 
-      <View className='flex-1 items-center justify-center absolute bottom-4 right-0 left-0'>
-        <TouchableOpacity
-          onPress={() => router.push('/settings')}
-        >
-          <Text className='font-[Poppins-SemiBold] text-sm tracking-[-0.3px] text-primary'>Configuraciones</Text>
-        </TouchableOpacity>
-      </View>
+        <View className="flex-1 items-center justify-center absolute bottom-4 right-0 left-0">
+          <TouchableOpacity
+            onPress={() => router.push('/settings')}
+          >
+            <Text className="font-[Poppins-SemiBold] text-sm tracking-[-0.3px] text-primary">Configuraciones</Text>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "white",
-    position: 'relative',
-    justifyContent: 'center',
-  },
-  block: {
-    alignSelf: 'stretch',
-    alignItems: 'stretch'
-  },
-  input: {
-    height: 56,
-    backgroundColor: '#f3f4f6',
-    color: '#6b7280',
-    paddingHorizontal: 24,
-    borderRadius: 24,
-    fontFamily: 'Poppins-Medium'
-  },
-  passwordContainer: {
-    position: 'relative',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  passwordInput: {
-    height: 56,
-    backgroundColor: '#f3f4f6',
-    color: '#6b7280',
-    paddingHorizontal: 24,
-    paddingRight: 56,
-    borderRadius: 24,
-    fontFamily: 'Poppins-Medium',
-    flex: 1,
-  },
-  eyeIcon: {
-    position: 'absolute',
-    right: 20,
-    padding: 4,
-  }
-});
