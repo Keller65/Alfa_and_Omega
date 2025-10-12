@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Alfa & Omega",
-    "slug": "alfaOmegaExpoRouter",
+    "name": "iSync",
+    "slug": "iSync",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -17,7 +17,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#1A3D59"
       },
       "config": {
         "googleMaps": {
@@ -25,7 +25,7 @@
         }
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.aerley_adkins2.alfaOmegaExpoRouter",
+      "package": "com.aerley_adkins.iSync_alfaOmega",
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.RECORD_AUDIO",
@@ -46,7 +46,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#1A3D59"
         }
       ],
       "expo-audio",

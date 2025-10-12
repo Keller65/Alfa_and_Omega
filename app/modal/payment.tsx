@@ -310,9 +310,9 @@ const PaymentScreen = () => {
             return (
               <TouchableOpacity
                 key={option.name}
-                className={`bg-white w-[180px] h-[100px] rounded-xl p-6 items-center justify-center m-2 shadow-sm border-2 ${isSelected
-                  ? 'border-primary bg-[#1a3d5941]'
-                  : 'border-gray-100'
+                className={`w-[180px] h-[100px] rounded-xl p-6 items-center justify-center m-2 shadow-sm border-2 ${isSelected
+                  ? 'border-2 border-primary bg-[#e2f1ff]'
+                  : 'border-2 border-gray-100 bg-white'
                   }`}
                 onPress={() => {
                   handleSelectMethod(option.name as PaymentMethod);
@@ -356,7 +356,7 @@ const PaymentScreen = () => {
                   setPaymentForm({ amount: value });
                   const numValue = Number(value);
                   if (numValue < totalAbonado) {
-                    setAmountError(`El monto no puede ser menor al abono total: L. ${totalAbonado}`);
+                    setAmountError(`El monto no puede ser menor al abono total: L. ${totalAbonado.toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
                   } else {
                     setAmountError('');
                   }

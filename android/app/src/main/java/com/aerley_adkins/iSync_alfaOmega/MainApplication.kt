@@ -1,4 +1,4 @@
-package com.aerley_adkins2.alfaOmegaExpoRouter
+package com.aerley_adkins.iSync_alfaOmega
 
 import android.app.Application
 import android.content.res.Configuration

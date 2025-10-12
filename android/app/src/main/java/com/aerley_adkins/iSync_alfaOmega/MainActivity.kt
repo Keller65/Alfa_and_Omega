@@ -1,4 +1,4 @@
-package com.aerley_adkins2.alfaOmegaExpoRouter
+package com.aerley_adkins.iSync_alfaOmega
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

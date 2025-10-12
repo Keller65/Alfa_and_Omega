@@ -2,6 +2,7 @@ import { useAuth } from '@/context/auth'
 import api from '@/lib/api'
 import { useAppStore } from '@/state/index'
 import { Picker } from '@react-native-picker/picker'
+import Constants from 'expo-constants'
 import { useCallback, useEffect, useState } from 'react'
 import { ActivityIndicator, Text, TextInput, ToastAndroid, TouchableOpacity, View } from 'react-native'
 
@@ -34,7 +35,7 @@ const Settings = () => {
         setHasInvalidUrl(true)
       }
       if (appPort) setPort(appPort)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_) {
       setIp('')
       setHasInvalidUrl(true)
@@ -193,6 +194,13 @@ const Settings = () => {
           )}
         </TouchableOpacity>
       )}
+
+      {/* Versión de la aplicación */}
+      <View className="mt-6 pt-4 absolute bottom-4 left-0 right-0">
+        <Text className="text-center text-gray-500 text-sm font-[Poppins-Medium] tracking-[-0.3px]">
+          Versión {Constants.expoConfig?.version || 'N/D'}
+        </Text>
+      </View>
     </View>
   )
 }

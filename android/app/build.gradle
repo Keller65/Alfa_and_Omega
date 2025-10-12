@@ -87,9 +87,9 @@ android {
     buildToolsVersion "36.0.0"
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.aerley_adkins2.alfaOmegaExpoRouter'
+    namespace 'com.aerley_adkins.iSync_alfaOmega'
     defaultConfig {
-        applicationId 'com.aerley_adkins2.alfaOmegaExpoRouter'
+        applicationId 'com.aerley_adkins.iSync_alfaOmega'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

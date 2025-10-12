@@ -633,9 +633,9 @@ export default function BottomSheetCart() {
 
         {editMode.isEditing && (
           <View className="px-4 bg-red-200 mb-4 p-2 flex-row justify-between items-center gap-4">
-            <Text className="text-sm text-red-500 font-[Poppins-SemiBold]">Cancelar edición de pedido</Text>
+            <Text className="text-base text-red-500 font-[Poppins-SemiBold]">Cancelar edición de pedido</Text>
             <TouchableOpacity onPress={CancelEdit} className='bg-red-500 px-3 py-1 rounded-full items-center justify-center'>
-              <Text className="text-xs text-white font-[Poppins-SemiBold]">Cancelar</Text>
+              <Text className="text-base text-white font-[Poppins-SemiBold]">Cancelar</Text>
             </TouchableOpacity>
           </View>
         )}
