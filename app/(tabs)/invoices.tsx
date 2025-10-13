@@ -140,7 +140,7 @@ const Invoices = () => {
 
         {/* Cliente */}
         <View className="flex-row items-center gap-3">
-          <View className="w-[36px] h-[36px] bg-indigo-500 rounded-full items-center justify-center">
+          <View className="w-[36px] h-[36px] bg-primary rounded-full items-center justify-center">
             <ClientIcon size={30} color="white" />
           </View>
           <View>
@@ -155,7 +155,7 @@ const Invoices = () => {
       </View>
 
       {/* Footer */}
-      <View style={{ backgroundColor: item.cancelled === 'tYES' ? '#f87171' : '#4f46e5' }} className="px-4 py-2 flex-row justify-between items-center">
+      <View style={{ backgroundColor: item.cancelled === 'tYES' ? '#f87171' : '#1A3D59' }} className="px-4 py-2 flex-row justify-between items-center">
         <View className="flex-row items-center gap-2">
           <FontAwesome name="credit-card" size={18} color="#fff" />
           <Text className="text-md font-[Poppins-Medium] text-white">

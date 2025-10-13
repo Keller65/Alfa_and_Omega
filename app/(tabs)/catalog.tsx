@@ -279,7 +279,7 @@ const ProductScreen = () => {
 
             <TouchableOpacity
               onPress={() => bottomSheetRef.current?.present()}
-              className="bg-primary py-2 px-4 rounded-full w-[110px] h-fit items-center justify-center"
+              className="bg-primary py-2 px-4 rounded-full w-[120px] h-fit items-center justify-center"
             >
               <Text className="text-sm text-white font-[Poppins-SemiBold] tracking-[-0.4px]">
                 Exportar PDF

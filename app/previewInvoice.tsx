@@ -102,6 +102,7 @@ const generateInvoiceHTML = async (
       .col-date, .col-invoice, .col-balance, .col-payment { width:25%; }
       .col-balance, .col-payment { text-align:right; }
       .foot { margin-top:24px; text-align:center; font-size:11px; }
+      .foot_company { margin-top:12px; text-align:center; font-size:10px; color:#555; position:absolute; bottom:8px; left:50%; transform:translateX(-50%); }
     </style></head><body>
     <div class="ticket">
       <div class="center">
@@ -134,6 +135,8 @@ const generateInvoiceHTML = async (
       <div class="row bold"><span>Saldo pendiente</span><span>L. ${formatMoney(totalPendiente)}</span></div>
       <div class="divider"></div>
       <div class="foot">¡Gracias por su pago!<br/>Dudas o reclamos llamar al 9458-7168</div>
+
+      <div class="foot_company">Powered By <b>iSync</b></div>
     </div>
     </body></html>`;
 };

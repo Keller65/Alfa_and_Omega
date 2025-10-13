@@ -3,13 +3,14 @@ import { PaymentData } from '@/types/types';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Feather from '@expo/vector-icons/Feather';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useMemo } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 const InvoicesDetails = () => {
   const { item } = useLocalSearchParams<{ item?: string | string[] }>();
+  const [refreshing, setRefreshing] = useState(false);
 
   const invoiceDetails = useMemo<PaymentData | null>(() => {
     const raw = Array.isArray(item) ? item[0] : item;
@@ -28,6 +29,13 @@ const InvoicesDetails = () => {
     return safe.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    // Simular una pequeña pausa para mostrar el refresh
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setRefreshing(false);
+  }, []);
+
   if (!invoiceDetails) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-white">
@@ -37,7 +45,18 @@ const InvoicesDetails = () => {
   }
 
   return (
-    <ScrollView style={{ paddingHorizontal: 16, position: 'relative', backgroundColor: 'white' }} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={{ paddingHorizontal: 16, position: 'relative', backgroundColor: 'white' }} 
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={['#000']}
+          tintColor="#000"
+        />
+      }
+    >
       <View className='flex-row justify-between items-center w-full'>
         <Text className="text-xl font-[Poppins-SemiBold] tracking-[-0.3px] mt-4 mb-2">Cliente</Text>
 

@@ -13,7 +13,7 @@ import * as Print from 'expo-print';
 import { useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View, } from 'react-native';
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View, } from 'react-native';
 
 const OrderDetails = () => {
   const route = useRoute();
@@ -22,6 +22,7 @@ const OrderDetails = () => {
   const [loading, setLoading] = useState(true);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isLoadingEdit, setIsLoadingEdit] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const { fetchUrl, loadOrderForEdit, clearEditMode } = useAppStore();
   const router = useRouter();
   const { user } = useAuth();
@@ -80,6 +81,30 @@ const OrderDetails = () => {
   const totalItems = useMemo(() => {
     return orderData?.lines?.reduce((sum, line) => sum + (line.quantity ?? 0), 0) || 0;
   }, [orderData]);
+
+  const onRefresh = useCallback(async () => {
+    if (!docEntryParam) return;
+    
+    setRefreshing(true);
+    try {
+      const response = await axios.get(
+        `/api/Quotations/${docEntryParam}`,
+        {
+          baseURL: fetchUrl,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${user?.token}`,
+          }
+        }
+      );
+      setOrderData(response.data);
+    } catch (error) {
+      console.error('Error refreshing order details:', error);
+      Alert.alert('Error', 'No se pudieron actualizar los detalles del pedido.');
+    } finally {
+      setRefreshing(false);
+    }
+  }, [docEntryParam, fetchUrl, user?.token]);
 
   const handleEditOrder = useCallback(async () => {
     if (!orderData || !user?.token) {
@@ -384,7 +409,17 @@ const OrderDetails = () => {
   }
 
   return (
-    <ScrollView className="flex-1 p-4 bg-white">
+    <ScrollView 
+      className="flex-1 p-4 bg-white"
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={['#000']}
+          tintColor="#000"
+        />
+      }
+    >
       <View className="p-5 bg-white rounded-b-[36px] border border-gray-100">
         <View className="flex-row justify-between items-center mb-5">
           <View className="flex-row items-center gap-2">
