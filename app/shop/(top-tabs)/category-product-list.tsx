@@ -120,6 +120,8 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
         if (groupCode) url += `&groupCode=${groupCode}`;
       }
 
+      console.log("Fetching URL:", url);
+      
       const itemsResponse = await axios.get(url, { headers });
       const newItems = itemsResponse.data.items;
 

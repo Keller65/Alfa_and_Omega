@@ -8,6 +8,7 @@ import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, RefreshControl, Text, TextInput, TouchableOpacity, View, } from 'react-native';
+import axios from 'axios';
 
 const PAGE_SIZE = 1000;
 
@@ -35,7 +36,7 @@ const ClientScreen = memo(function ClientScreen() {
       if (pageNumber === 1 && !refreshing) setLoading(true);
       if (pageNumber > 1) setLoadingMore(true);
 
-      const res = await api.get(
+      const res = await axios.get(
         `by-sales-emp?slpCode=${user.salesPersonCode}&page=${pageNumber}&pageSize=${PAGE_SIZE}`,
         {
           baseURL: FETCH_URL,
@@ -43,13 +44,8 @@ const ClientScreen = memo(function ClientScreen() {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${user.token}`,
           },
-          cache: {
-            ttl: 1000 * 60 * 60 * 24,
-          }
         }
       );
-
-      console.info(res.cached ? 'Clientes cargados desde cache' : 'Clientes cargados desde red');
 
       const newCustomers = res.data.items || [];
 
@@ -171,22 +167,16 @@ const ClientScreen = memo(function ClientScreen() {
     try {
       setLoading(true);
 
-      const res = await api.get(
+      const res = await axios.get(
         `by-sales-emp?slpCode=${user.salesPersonCode}&page=1&pageSize=${PAGE_SIZE}`,
         {
           baseURL: FETCH_URL,
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${user.token}`,
-          },
-          cache: {
-            ttl: 1000 * 60 * 60 * 24,
-            override: true,
           }
         }
       );
-
-      console.info(res.cached ? 'Clientes cargados desde cache (refresh)' : 'Clientes cargados desde red (refresh)');
 
       const newCustomers = res.data.items || [];
 
