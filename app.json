@@ -1,12 +1,12 @@
 {
   "expo": {
     "name": "iSync",
-    "slug": "iSync",
+    "slug": "alfaOmegaExpoRouter",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "alfaomegaexporouter",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,

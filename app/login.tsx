@@ -1,3 +1,4 @@
+import 'react-native-gesture-handler';
 import { useAppStore } from '@/state';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -8,8 +9,6 @@ import * as Notifications from 'expo-notifications';
 import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Image, Text, TextInput, TouchableOpacity, View } from "react-native";
-import 'react-native-gesture-handler';
-import 'react-native-reanimated';
 import Animated, { useAnimatedKeyboard, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useAuth } from "../context/auth";
 import { usePushNotificationsFCM } from '@/hooks/usePushNotificationsFCM'
@@ -67,7 +66,7 @@ export default function Login() {
         }
       }
     })();
-  }, [user]);
+  }, [user, setUser]);
 
   useEffect(() => {
     (async () => {
@@ -221,7 +220,7 @@ export default function Login() {
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
-                keyboardType="default"
+                keyboardType="numeric"
                 editable={!loading}
                 placeholderTextColor={'#9ca3af'}
               />
