@@ -151,7 +151,6 @@ const MemoizedCommentInput = memo(({ comments, onCommentsChange }: { comments: s
 
 MemoizedCommentInput.displayName = 'MemoizedCommentInput';
 
-
 export default function BottomSheetCart() {
   const router = useRouter();
   const products = useAppStore((s) => s.products);
@@ -223,13 +222,6 @@ export default function BottomSheetCart() {
     // Resetear dirección seleccionada cuando cambie el cliente
     setSelectedAddress('');
   }, [customerSelected?.cardCode, fetchCustomerAddresses]);
-
-  // Comentado: No seleccionar automáticamente la primera dirección
-  // useEffect(() => {
-  //   if (customerAddresses.length > 0 && !selectedAddress) {
-  //     setSelectedAddress(customerAddresses[0].addressName);
-  //   }
-  // }, [customerAddresses, selectedAddress]);
 
   // Función para obtener la dirección seleccionada completa
   const getSelectedAddressData = useCallback((): CustomerAddress | null => {
@@ -499,6 +491,11 @@ export default function BottomSheetCart() {
           <Text className='font-[Poppins-Bold] text-black tracking-[-0.3px]'>{customerSelected?.cardName}</Text>
         </View>
 
+        <View className="flex-row justify-between items-center">
+          <Text className='text-base text-gray-700 font-[Poppins-Medium] tracking-[-0.3px]'>Lista de Precios</Text>
+          <Text className='font-[Poppins-Bold] text-black tracking-[-0.3px]'>{customerSelected?.priceListNum}</Text>
+        </View>
+
         <View className="flex-row justify-between items-center mb-3">
           <Text className="text-base text-gray-700 font-[Poppins-Medium] tracking-[-0.3px]">Total</Text>
           <Text className="text-xl font-[Poppins-Bold] text-black tracking-[-0.3px]">
@@ -509,8 +506,8 @@ export default function BottomSheetCart() {
         <View className='flex-row w-full gap-2 justify-between'>
           <TouchableOpacity
             className={`flex-row flex-1 items-center justify-center h-[50px] rounded-full ${isLoading || (customerAddresses.length > 0 && !selectedAddress)
-                ? 'bg-gray-300'
-                : 'bg-primary'
+              ? 'bg-gray-300'
+              : 'bg-primary'
               }`}
             onPress={handleSubmitOrder}
             disabled={isLoading || (customerAddresses.length > 0 && !selectedAddress)}
@@ -570,7 +567,7 @@ export default function BottomSheetCart() {
         </View>
       </View>
     </BottomSheetFooter>
-  ), [total, customerSelected?.cardName, handleSubmitOrder, isLoading, router, closeCart, editMode.isEditing, handleLocationPress, customerAddresses.length, selectedAddress, loadingAddresses]);
+  ), [total, customerSelected?.cardName, handleSubmitOrder, isLoading, router, closeCart, editMode.isEditing, handleLocationPress, customerAddresses.length, selectedAddress, loadingAddresses, customerSelected?.priceListNum]);
 
   const CancelEdit = useCallback(() => {
     Alert.alert(

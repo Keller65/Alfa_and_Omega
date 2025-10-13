@@ -1,6 +1,5 @@
 import ClientIcon from '@/assets/icons/ClientIcon';
 import { useAuth } from '@/context/auth';
-import api from '@/lib/api';
 import { useAppStore } from '@/state/index';
 import { Customer } from '@/types/types';
 import Feather from '@expo/vector-icons/Feather';
