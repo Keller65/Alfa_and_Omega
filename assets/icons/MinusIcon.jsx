@@ -3,7 +3,7 @@ const SvgComponent = (props) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
-    stroke="currentColor"
+    stroke={props.color || "currentColor"}
     strokeWidth={2}
     className="size-6"
     viewBox="0 0 24 24"

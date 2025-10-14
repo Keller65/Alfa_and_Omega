@@ -76,7 +76,7 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const FETCH_URL = fetchUrl + "/sap/items/";
   const FETCH_URL_DISCOUNT = fetchUrl + "/sap/items/discounted";
-  const snapPoints = useMemo(() => ['85%', '100%'], []);
+  // const snapPoints = useMemo(() => ['85%', '100%'], []);
   const [footerHeight, setFooterHeight] = useState(0);
 
   const handleSheetChanges = useCallback((index: number) => {
@@ -121,7 +121,7 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
       }
 
       console.log("Fetching URL:", url);
-      
+
       const itemsResponse = await axios.get(url, { headers });
       const newItems = itemsResponse.data.items;
 
@@ -277,7 +277,7 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
     selectedItem ? (
       <BottomSheetFooter {...props}>
         <View
-          className='w-full px-4 pt-4 pb-2 bg-white border-t border-gray-200'
+          className='w-full px-4 pt-4 pb-2 bg-white'
           onLayout={(e) => setFooterHeight(e.nativeEvent.layout.height)}
         >
           <View className="w-full flex-row justify-between items-end">
@@ -380,7 +380,8 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
       <BottomSheetModal
         ref={bottomSheetModalRef}
         onChange={handleSheetChanges}
-        snapPoints={snapPoints}
+        // snapPoints={snapPoints}
+        enableDynamicSizing={true}
         enablePanDownToClose={true}
         backdropComponent={(props) => (<BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} opacity={0.5} pressBehavior="close" />)}
         footerComponent={renderFooter}
@@ -397,8 +398,6 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
                 <Image
                   source={{ uri: `https://pub-266f56f2e24d4d3b8e8abdb612029f2f.r2.dev/${selectedItem.itemCode}.jpg` }}
                   style={{ height: 230, width: 230, aspectRatio: 1, objectFit: "contain" }}
-                // contentFit="contain"
-                // transition={500}
                 />
               </View>
 
@@ -433,7 +432,7 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
 
                   <View className="flex-row items-center">
                     <TouchableOpacity className="bg-gray-200 rounded-full p-2" onPress={() => setQuantity(q => Math.max(1, q - 1))}>
-                      <MinusIcon size={20} />
+                      <MinusIcon size={20} color="#4b5563" />
                     </TouchableOpacity>
                     <TextInput
                       value={quantity.toString()}
@@ -442,7 +441,7 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
                       className="mx-4 text-center text-lg text-black w-12"
                     />
                     <TouchableOpacity className="bg-gray-200 rounded-full p-2" onPress={() => setQuantity(q => q + 1)}>
-                      <PlusIcon size={20} />
+                      <PlusIcon size={20} color="#4b5563" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -464,7 +463,7 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
                       className='flex-row justify-between items-center mb-3'
                     >
                       <Text className="font-[Poppins-Bold] text-base tracking-[-0.3px] text-gray-800">Precios por Cantidad:</Text>
-                      <Text className='font-[Poppins-SemiBold] text-blue-500'>{applyTierDiscounts ? 'Desactivar' : 'Activar'}</Text>
+                      <Text className='font-[Poppins-SemiBold] text-primary'>{applyTierDiscounts ? 'Desactivar' : 'Activar'}</Text>
                     </TouchableOpacity>
                     {editableTiers.map((tier, index) => {
                       return (
@@ -473,6 +472,7 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
                             <View className='items-start'>
                               <Text className="font-[Poppins-SemiBold] text-sm tracking-[-0.3px] text-gray-700">Desde {tier.qty} unidades:</Text>
                               {tier.percent > 0 && <Text className="text-green-600 text-xs">({tier.percent}% desc)</Text>}
+                              {tier.expiry && <Text className="text-green-600 text-xs">{tier.expiry}</Text>}
                             </View>
                             <View className="flex-row items-center">
                               <Text className="font-[Poppins-Bold] text-base text-black mr-1">L.</Text>

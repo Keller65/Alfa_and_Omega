@@ -491,11 +491,6 @@ export default function BottomSheetCart() {
           <Text className='font-[Poppins-Bold] text-black tracking-[-0.3px]'>{customerSelected?.cardName}</Text>
         </View>
 
-        <View className="flex-row justify-between items-center">
-          <Text className='text-base text-gray-700 font-[Poppins-Medium] tracking-[-0.3px]'>Lista de Precios</Text>
-          <Text className='font-[Poppins-Bold] text-black tracking-[-0.3px]'>{customerSelected?.priceListNum}</Text>
-        </View>
-
         <View className="flex-row justify-between items-center mb-3">
           <Text className="text-base text-gray-700 font-[Poppins-Medium] tracking-[-0.3px]">Total</Text>
           <Text className="text-xl font-[Poppins-Bold] text-black tracking-[-0.3px]">
@@ -567,7 +562,7 @@ export default function BottomSheetCart() {
         </View>
       </View>
     </BottomSheetFooter>
-  ), [total, customerSelected?.cardName, handleSubmitOrder, isLoading, router, closeCart, editMode.isEditing, handleLocationPress, customerAddresses.length, selectedAddress, loadingAddresses, customerSelected?.priceListNum]);
+  ), [total, customerSelected?.cardName, handleSubmitOrder, isLoading, router, closeCart, editMode.isEditing, handleLocationPress, customerAddresses.length, selectedAddress, loadingAddresses]);
 
   const CancelEdit = useCallback(() => {
     Alert.alert(
@@ -606,7 +601,7 @@ export default function BottomSheetCart() {
         snapPoints={snapPoints}
         onChange={handleSheetChanges}
         footerComponent={renderFooter}
-        backgroundStyle={{ borderRadius: 30 }}
+        // backgroundStyle={{ borderRadius: 30 }}
         enableDynamicSizing={false}
         keyboardBehavior="interactive"
         keyboardBlurBehavior="restore"

@@ -202,10 +202,10 @@ export default function TopTabNavigatorLayout() {
         <Tab.Navigator
           initialRouteName={categories[0]?.slug || 'todas'}
           screenOptions={{
-            tabBarActiveTintColor: '#000',
+            tabBarActiveTintColor: '#1A3D59',
             tabBarInactiveTintColor: 'gray',
             tabBarIndicatorStyle: {
-              backgroundColor: '#000',
+              backgroundColor: '#1A3D59',
               height: 2
             },
             tabBarStyle: {

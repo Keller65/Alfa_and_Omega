@@ -291,7 +291,8 @@ const ProductScreen = () => {
 
       <BottomSheetModal
         ref={bottomSheetRef}
-        backgroundStyle={{ borderRadius: 30 }}
+        // backgroundStyle={{ borderRadius: 30 }}
+        enableDynamicSizing={true}
         backdropComponent={(props) => (
           <BottomSheetBackdrop
             {...props}
