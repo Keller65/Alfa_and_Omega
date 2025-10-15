@@ -85,6 +85,7 @@ const PaymentScreen = () => {
         },
         cache: {
           ttl: Infinity,
+          override: true,
         },
       })));
 

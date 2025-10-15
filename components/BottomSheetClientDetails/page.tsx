@@ -44,7 +44,7 @@ const BottomSheetClientDetails: FC<BottomSheetClientDetailsProps> = ({ mapRef })
     const fetchCustomerAddresses = async () => {
       if (selectedCustomerLocation?.cardCode) {
         try {
-          const response = await api.get<CustomerAddress[]>(
+          const response = await axios.get<CustomerAddress[]>(
             `/api/Customers/${selectedCustomerLocation.cardCode}/addresses`,
             {
               baseURL: fetchUrl,
@@ -52,10 +52,6 @@ const BottomSheetClientDetails: FC<BottomSheetClientDetailsProps> = ({ mapRef })
                 Authorization: `Bearer ${user?.token}`,
                 'Content-Type': 'application/json',
               },
-              cache: {
-                ttl: 3600 * 24,
-                override: true,
-              }
             }
           );
           setCustomerAddresses(response.data);
