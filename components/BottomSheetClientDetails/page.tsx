@@ -1,7 +1,6 @@
 import ClientIcon from '@/assets/icons/ClientIcon';
 import LocationIcon from '@/assets/icons/Locations';
 import { useAuth } from '@/context/auth';
-import api from '@/lib/api';
 import { useAppStore } from '@/state';
 import { CustomerAddress } from '@/types/types';
 import AntDesign from '@expo/vector-icons/AntDesign';
