@@ -37,7 +37,7 @@ interface CartItemProps {
   onRemove: (code: string, name: string) => void;
 }
 
-const snapPoints: string[] = ['60%', '95%'];
+const snapPoints: string[] = ['60%', '100%'];
 
 const areEqual = (prev: CartItemProps, next: CartItemProps) =>
   prev.item.itemCode === next.item.itemCode &&
@@ -64,9 +64,10 @@ const CartItem = memo(({ item, onRemove }: CartItemProps) => {
         <View className="size-[120px] bg-white border overflow-hidden border-gray-200 rounded-lg items-center justify-center">
           <Image
             source={{ uri: `https://pub-266f56f2e24d4d3b8e8abdb612029f2f.r2.dev/${item.itemCode}.jpg` }}
-            style={{ height: 120, width: 120, objectFit: "contain" }}
+            style={{ height: 120, width: 120, objectFit: "contain", aspectRatio: 1 }}
             contentFit="contain"
-            transition={500}
+            placeholder={require('@/assets/images/placeholder.png')}
+            transition={150}
           />
         </View>
 
@@ -132,18 +133,18 @@ const MemoizedCommentInput = memo(({ comments, onCommentsChange }: { comments: s
   }, [inputText, onCommentsChange]);
 
   return (
-    <View className='px-2'>
+    <View className='px-2 mb-4 mx-2'>
       <TextInput
+        className="bg-gray-200 rounded-2xl min-h-[50px] px-5 font-[Poppins-Regular] tracking-[-0.3px] text-gray-700 text-base"
         placeholder='Enviar comentarios'
         value={inputText}
         onChangeText={setInputText}
-        className="border border-gray-300 rounded-3xl px-5 mb-4 mx-2"
         multiline={true}
-        numberOfLines={4}
-        textAlignVertical="top"
+        numberOfLines={3}
+        textAlignVertical="center"
         autoCorrect={false}
         autoCapitalize="none"
-        placeholderTextColor={"#999"}
+        placeholderTextColor={"#6b7280"}
       />
     </View>
   );

@@ -9,7 +9,8 @@ import { useRoute } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import axios from 'axios';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Image, RefreshControl, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, RefreshControl, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image } from 'expo-image';
 
 const PAGE_SIZE = 20;
 
@@ -26,6 +27,9 @@ const ProductItem = memo(function ProductItem({ item, onPress }: { item: Product
           source={{ uri: `https://pub-266f56f2e24d4d3b8e8abdb612029f2f.r2.dev/${item.itemCode}.jpg` }}
           style={{ height: 180, width: 180, objectFit: "contain", borderRadius: 16 }}
           onError={() => console.log("Error loading image for item:", item.itemCode)}
+          placeholder={require('@/assets/images/placeholder.png')}
+          contentFit="contain"
+          transition={150}
         />
       </View>
 
@@ -416,6 +420,9 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
                 <Image
                   source={{ uri: `https://pub-266f56f2e24d4d3b8e8abdb612029f2f.r2.dev/${selectedItem.itemCode}.jpg` }}
                   style={{ height: 230, width: 230, aspectRatio: 1, objectFit: "contain" }}
+                  placeholder={require('@/assets/images/placeholder.png')}
+                  contentFit="contain"
+                  transition={150}
                 />
               </View>
 

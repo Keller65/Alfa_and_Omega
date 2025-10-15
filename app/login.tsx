@@ -54,7 +54,7 @@ export default function Login() {
           const biometricAuth = await LocalAuthentication.authenticateAsync({
             promptMessage: 'Inicia sesión con tu huella o Face ID',
             fallbackLabel: 'Ingresar manualmente',
-            biometricsSecurityLevel: 'strong',
+            biometricsSecurityLevel: 'weak',
             cancelLabel: 'Ingresar manualmente',
           });
 
@@ -94,12 +94,9 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const deviceToken = "";
-
       const response = await axios.post(FETCH_URL, {
         employeeCode: Number(salesPersonCode),
         password: password,
-        token: deviceToken,
         salesPersonCode: Number(salesPersonCode)
       }, {
         headers: { 'Content-Type': 'application/json' }
@@ -153,7 +150,7 @@ export default function Login() {
       const biometricAuth = await LocalAuthentication.authenticateAsync({
         promptMessage: 'Inicia sesión con tu huella o Face ID',
         fallbackLabel: 'Ingresar manualmente',
-        biometricsSecurityLevel: 'strong',
+        biometricsSecurityLevel: 'weak',
         cancelLabel: 'Ingresar manualmente',
       });
 
@@ -185,7 +182,7 @@ export default function Login() {
 
       <View className='bg-primary h-[40%] p-4 items-center justify-center'>
         <Image
-          source={require('@/assets/images/icon.png')}
+          source={require('@/assets/images/icon-login.png')}
           height={200}
           width={200}
           className="h-[200px] w-[200px] self-center aspect-square"

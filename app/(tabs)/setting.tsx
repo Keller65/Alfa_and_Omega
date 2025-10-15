@@ -36,6 +36,7 @@ const SettingsScreen = () => {
   const [exportingLogs, setExportingLogs] = useState(false);
   const [locationServicesEnabled, setLocationServicesEnabled] = useState(false);
   const [macAddress, setMacAddress] = useState<string | null>(null);
+  const [cacheSize, setCacheSize] = useState('0 MB');
   const { uuid } = useLicense();
   const { fetchUrl } = useAppStore();
   const API_BASE_URL = fetchUrl;
@@ -59,6 +60,7 @@ const SettingsScreen = () => {
         console.warn('Error cargando settings', e);
       }
       checkLocationServicesStatus();
+      calculateCacheSize();
     };
     loadData();
   }, []);
@@ -323,6 +325,17 @@ const SettingsScreen = () => {
     Alert.alert('Información del dispositivo', info);
   };
 
+  const calculateCacheSize = async () => {
+    try {
+      const keys = await AsyncStorage.getAllKeys();
+      const pairs = await AsyncStorage.multiGet(keys);
+      const totalSize = pairs.reduce((acc, [, value]) => acc + (value?.length || 0), 0);
+      const sizeInMB = (totalSize / (1024 * 1024)).toFixed(2);
+      setCacheSize(`${sizeInMB} MB`);
+    } catch (e) {
+      setCacheSize('Error');
+    }
+  };
 
   return (
     <ScrollView className="flex-1 bg-gray-50" contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
@@ -404,6 +417,22 @@ const SettingsScreen = () => {
         />
       </SettingsSection>
 
+      <SettingsSection title="Almacenamiento">
+        <SettingItem
+          kind="info"
+          title="Tamaño de caché"
+          subtitle={`Datos temporales: ${cacheSize}`}
+          iconLeft={<Feather name="hard-drive" size={18} color="#4B5563" style={{ marginRight: 12 }} />}
+        />
+        <SettingItem
+          kind="action"
+          title="Recalcular tamaño"
+          subtitle="Actualizar información de almacenamiento"
+          onPress={calculateCacheSize}
+          iconLeft={<Feather name="refresh-ccw" size={18} color="#4B5563" style={{ marginRight: 12 }} />}
+        />
+      </SettingsSection>
+
       <SettingsSection title="Soporte">
         <SettingItem
           kind="action"
@@ -453,9 +482,33 @@ const SettingsScreen = () => {
         <SettingItem
           kind="action"
           title="Limpiar caché"
-          subtitle="Elimina datos temporales"
+          subtitle={`Elimina datos temporales (${cacheSize})`}
           onPress={handleClearCacheSelective}
           iconLeft={<Feather name="database" size={18} color="#4B5563" style={{ marginRight: 12 }} />}
+        />
+        <SettingItem
+          kind="action"
+          title="Resetear configuraciones"
+          subtitle="Restaurar valores por defecto"
+          onPress={() => {
+            Alert.alert('Confirmar', '¿Restaurar todas las configuraciones a valores por defecto?', [
+              { text: 'Cancelar', style: 'cancel' },
+              {
+                text: 'Restaurar', style: 'destructive', onPress: async () => {
+                  try {
+                    const configKeys = [
+                      'settings:biometricEnabled', 'settings:pushEnabled', 'settings:soundEnabled'
+                    ];
+                    await AsyncStorage.multiRemove(configKeys);
+                    Alert.alert('Listo', 'Configuraciones restauradas. Reinicia la app.');
+                  } catch (e) {
+                    Alert.alert('Error', 'No se pudieron restaurar las configuraciones.');
+                  }
+                }
+              }
+            ]);
+          }}
+          iconLeft={<Feather name="rotate-ccw" size={18} color="#4B5563" style={{ marginRight: 12 }} />}
         />
         <SettingItem
           kind="action"
