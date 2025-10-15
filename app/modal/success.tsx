@@ -64,7 +64,7 @@ const Success = () => {
 
       {message ?
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => router.push('/explore')}
           className='rounded-full'
           style={{ backgroundColor: '#28a745', width: '100%', height: 50, alignItems: 'center', justifyContent: 'center', marginBottom: 15 }}
         >
