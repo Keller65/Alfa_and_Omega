@@ -140,6 +140,7 @@ const Settings = () => {
           onChangeText={setIp}
           placeholder="Ej: 192.168.0.1"
           keyboardAppearance="light"
+          keyboardType='numeric'
           placeholderTextColor={'#9CA3AF'}
           className="flex-1 border border-gray-300 rounded-xl px-4 py-2 text-base h-[50px] bg-white"
         />

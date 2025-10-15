@@ -361,6 +361,7 @@ export const useAppStore = create<AppStoreState>()(
                 salesUnit: null,
                 salesItemsPerUnit: 0,
                 categoryCode: '',
+                ws: [],
               });
             });
           }

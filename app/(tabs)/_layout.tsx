@@ -65,7 +65,7 @@ export default function Layout() {
               name="index"
               component={IndexScreen}
               options={{
-                title: 'Dashboard',
+                title: 'Analiticas',
                 drawerIcon: ({ focused }) => (
                   <HomeIcon size={26} color={focused ? ActiveColor : InActiveColor} />
                 ),
