@@ -85,16 +85,15 @@ export default function RootLayout() {
                   options={{
                     headerShown: true,
                     headerTitle: () => (
-                      <View className='flex-row items-center bg-[#f0f0f0] rounded-[16px] relative overflow-hidden'>
+                      <View className='flex-row items-center bg-[#f0f0f0] rounded-[12px] relative overflow-hidden'>
                         <TextInput
                           placeholder="Buscar Producto"
                           style={{
                             backgroundColor: '#f0f0f0',
                             paddingHorizontal: 18,
                             paddingVertical: 4,
-                            borderRadius: 8,
                             width: 300,
-                            height: 36,
+                            height: 40,
                             fontSize: 14,
                             fontFamily: 'Poppins-Regular',
                             paddingRight: 30,
@@ -102,7 +101,6 @@ export default function RootLayout() {
                           placeholderTextColor="#888"
                           value={rawSearchText}
                           onChangeText={setRawSearchText}
-                          clearButtonMode="never"
                         />
                         {rawSearchText.length > 0 && (
                           <TouchableOpacity
