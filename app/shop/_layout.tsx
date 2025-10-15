@@ -1,8 +1,8 @@
 import NavigateOrder from '@/components/NavigateOrder/page';
 import { useAuth } from '@/context/auth';
-import api from '@/lib/api';
 import { useAppStore } from '@/state';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import axios from 'axios';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Button, StyleSheet, Text, View } from 'react-native';
 import slugify from 'slugify';
@@ -24,7 +24,10 @@ export default function TopTabNavigatorLayout() {
   const [error, setError] = useState<string | null>(null);
   const { fetchUrl, editMode } = useAppStore();
 
-  const priceListNum = selectedCustomer?.priceListNum?.toString() || '1';
+  // Usar la lista de precios del pedido en edición o la del cliente seleccionado
+  const priceListNum = editMode.isEditing && editMode.orderData?.priceListNum 
+    ? editMode.orderData.priceListNum.toString()
+    : selectedCustomer?.priceListNum?.toString() || '1';
 
   const headers = useMemo(() => ({
     Authorization: `Bearer ${user?.token}`,
@@ -43,19 +46,15 @@ export default function TopTabNavigatorLayout() {
     setError(null);
 
     try {
-      const response = await api.get<{ code: string, name: string }[]>(
+      const response = await axios.get<{ code: string, name: string }[]>(
         '/sap/items/categories',
         {
           baseURL: fetchUrl,
           headers,
-          cache: {
-            ttl: 1000 * 60 * 60 * 24, // 24 horas
-          },
         }
       );
 
       console.log(response.headers['content-encoding']);
-      console.log(response.cached ? 'Categorias cargadas desde CACHE' : 'Categorias cargadas desde RED');
 
       const formattedCategories: ProductCategory[] = response.data.map(category => ({
         code: category.code,

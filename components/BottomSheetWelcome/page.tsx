@@ -5,7 +5,6 @@ import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useEffect, useRef } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import "../../global.css";
 
 export default function BottomSheetWelcome() {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
@@ -30,6 +29,7 @@ export default function BottomSheetWelcome() {
       <BottomSheetModal
         ref={bottomSheetRef}
         // backgroundStyle={{ borderRadius: 30 }}
+        enableDynamicSizing={true}
         backdropComponent={(props) => (
           <BottomSheetBackdrop
             {...props}

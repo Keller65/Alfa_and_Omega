@@ -76,7 +76,7 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const FETCH_URL = fetchUrl + "/sap/items/";
   const FETCH_URL_DISCOUNT = fetchUrl + "/sap/items/discounted";
-  // const snapPoints = useMemo(() => ['85%', '100%'], []);
+  const snapPoints = useMemo(() => ['85%', '100%'], []);
   const [footerHeight, setFooterHeight] = useState(0);
 
   const handleSheetChanges = useCallback((index: number) => {
@@ -113,7 +113,8 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
       let url: string;
 
       if (groupCode === '0000') {
-        url = `${FETCH_URL_DISCOUNT}?page=${currentPage}&pageSize=${PAGE_SIZE}`;
+        url = `${FETCH_URL_DISCOUNT}?page=${currentPage}&pageSize=${PAGE_SIZE}&priceList=${priceListNum}`;
+        console.log("Using discount URL", url);
       } else {
         url = `${FETCH_URL}active?page=${currentPage}&pageSize=${PAGE_SIZE}`;
         if (priceListNum) url += `&priceList=${priceListNum}`;
@@ -360,6 +361,23 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
     );
   }
 
+  // Mostrar mensaje cuando no hay productos en ofertas
+  if (!loading && !error && groupCode === '0000' && filteredItems.length === 0) {
+    return (
+      <View className="flex-1 bg-white items-center justify-center p-4">
+        <Text className="text-gray-500 text-center text-lg font-[Poppins-SemiBold] tracking-[-0.3px] mb-2">
+          Actualmente este cliente no cuenta con ofertas activas.
+        </Text>
+        <Text className="text-gray-400 text-center text-sm font-[Poppins-Regular] tracking-[-0.3px]">
+          No se encontraron productos con descuentos disponibles
+        </Text>
+        <TouchableOpacity onPress={onRefresh} className="mt-4 px-4 py-2 bg-blue-500 rounded-full">
+          <Text className="text-white text-base font-[Poppins-SemiBold] tracking-[-0.3px]">Actualizar</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 bg-white relative">
       <FlashList
@@ -380,8 +398,8 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
       <BottomSheetModal
         ref={bottomSheetModalRef}
         onChange={handleSheetChanges}
-        // snapPoints={snapPoints}
-        enableDynamicSizing={true}
+        snapPoints={snapPoints}
+        // enableDynamicSizing={true}
         enablePanDownToClose={true}
         backdropComponent={(props) => (<BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} opacity={0.5} pressBehavior="close" />)}
         footerComponent={renderFooter}
@@ -485,8 +503,8 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
                   </View>
                 )}
 
-                <View className="flex-1 mt-2">
-                  <View className="">
+                <View className="flex-1 mt-2 gap-4">
+                  <View>
                     <Text className="font-[Poppins-SemiBold] text-base tracking-[-0.3px] text-gray-800 mb-1">Inventario</Text>
 
                     <View className='flex-row gap-2 items-center justify-between'>
@@ -504,6 +522,28 @@ const CategoryProductScreen = memo(function CategoryProductScreen() {
                         <Text className="font-[Poppins-Bold] text-sm text-gray-600 tracking-[-0.3px]">Comprometido</Text>
                         <Text className="font-[Poppins-Regular] text-xl text-gray-900 tracking-[-0.3px]">{selectedItem.committed.toLocaleString()}</Text>
                       </View>
+                    </View>
+                  </View>
+
+                  <View>
+                    <Text className="font-[Poppins-SemiBold] text-base tracking-[-0.3px] text-gray-800 mb-1">
+                      Inventario por almacén
+                    </Text>
+
+                    <View className="gap-2 bg-gray-100 px-3 py-2 rounded-lg">
+                      {(selectedItem.ws ?? []).map((warehouse, idx) => (
+                        <View
+                          key={idx}
+                          className="flex-1 flex-row items-center justify-between border-b border-gray-300"
+                        >
+                          <Text className="font-[Poppins-SemiBold] text-sm text-gray-600 tracking-[-0.3px]">
+                            {warehouse.warehouseName}
+                          </Text>
+                          <Text className="font-[Poppins-SemiBold] text-sm text-gray-900 tracking-[-0.3px]">
+                            {warehouse.inStock.toLocaleString()}
+                          </Text>
+                        </View>
+                      ))}
                     </View>
                   </View>
                 </View>

@@ -2,7 +2,12 @@ export type Tier = {
   qty: number;
   price: number;
   percent: number;
-  expiry: string
+  expiry: string;
+};
+
+export type WarehouseStock = {
+  warehouseName: string;
+  inStock: number;
 };
 
 export type ProductDiscount = {
@@ -15,16 +20,17 @@ export type ProductDiscount = {
   ordered: number;
   price: number;
   hasDiscount: boolean;
+  taxType: string; // Cambiado a string para aceptar "ISV15"
   barCode: string | null;
   salesUnit: string | null;
   salesItemsPerUnit: number;
-  imageUrl: string | null;
-  taxType: "EXE" | "INA";
+  imageUrl?: string | null;
   tiers: Tier[];
-  quantity: number;
-  unitPrice: number;
-  originalPrice: number;
-  categoryCode: string; // Código de la categoría del producto
+  quantity?: number;
+  unitPrice?: number;
+  originalPrice?: number;
+  categoryCode?: string;
+  ws: WarehouseStock[];
 };
 
 export type CreateOrder = {

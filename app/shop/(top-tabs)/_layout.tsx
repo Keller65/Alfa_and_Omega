@@ -1,5 +1,5 @@
 import { useAuth } from '@/context/auth';
-import api from '@/lib/api';
+import axios from 'axios';
 import { useAppStore } from '@/state';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
@@ -94,19 +94,15 @@ export default function TopTabNavigatorLayout() {
         return;
       }
 
-      const response = await api.get<{ code: string, name: string }[]>(
+      const response = await axios.get<{ code: string, name: string }[]>(
         '/sap/items/categories',
         {
           baseURL: fetchUrl,
           headers,
-          cache: {
-            ttl: 1000 * 60 * 60 * 24, // 24 horas
-          },
         }
       );
 
       console.log(response.headers['content-encoding']);
-      console.log(response.cached ? 'Categorias cargadas desde CACHE' : 'Categorias cargadas desde RED');
 
       const formattedCategories: ProductCategory[] = response.data.map(category => ({
         code: category.code,
@@ -229,7 +225,7 @@ export default function TopTabNavigatorLayout() {
         </Tab.Navigator>
       ) : (
         <View style={styles.fullScreenCenter}>
-          <ActivityIndicator size="large" color="#000" />
+          <ActivityIndicator size="large" color="#333" />
           <Text style={styles.loadingText}>Cargando datos del cliente y categorías...</Text>
         </View>
       )}

@@ -12,6 +12,7 @@ export interface OrderDetailsResponse {
   docTotal: number;
   comments: string;
   salesPersonCode: number;
+  priceListNum: number | string;
   lines: {
     itemCode: string;
     itemDescription: string;
@@ -37,7 +38,7 @@ export const fetchOrderDetails = async (
         },
       }
     );
-    // console.log(response.cached ? 'Detalles del pedido cargados desde CACHE' : 'Detalles del pedido cargados desde RED');
+    console.log('Fetched order details for edit:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching order details for edit:', error);

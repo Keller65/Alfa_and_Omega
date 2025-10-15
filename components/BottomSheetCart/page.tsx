@@ -17,7 +17,7 @@ import { ActivityIndicator, Alert, Keyboard, Modal, Platform, ScrollView, Text, 
 import Animated, { Easing, interpolate, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
 interface CartItemType {
-  imageUrl: string | null;
+  imageUrl?: string | null;
   itemCode: string;
   itemName: string;
   unitPrice: number;
@@ -199,7 +199,6 @@ export default function BottomSheetCart() {
       });
 
       setCustomerAddresses(response.data);
-      console.log('Direcciones del cliente obtenidas:', response.data);
     } catch (error) {
       console.error('Error al obtener direcciones del cliente:', error);
       if (isAxiosError(error)) {
