@@ -25,6 +25,11 @@ interface AppStoreState {
   // Flag bienvenida aceptada
   userClickAcceptWelcome: boolean;
   setUserClickAcceptWelcome: (value: boolean) => void;
+  // Configuraciones de la app
+  mapStyle: 'color' | 'minimalista';
+  setMapStyle: (style: 'color' | 'minimalista') => void;
+  showTraffic: boolean;
+  setShowTraffic: (show: boolean) => void;
   // Estado NO persistente para datos del formulario de pago
   paymentForm: {
     method: string | null;
@@ -138,6 +143,11 @@ export const useAppStore = create<AppStoreState>()(
       selectedCustomerInvoices: null,
       userClickAcceptWelcome: false,
       setUserClickAcceptWelcome: (value: boolean) => set({ userClickAcceptWelcome: value }),
+      // Configuraciones de la app
+      mapStyle: 'color',
+      setMapStyle: (style: 'color' | 'minimalista') => set({ mapStyle: style }),
+      showTraffic: false,
+      setShowTraffic: (show: boolean) => set({ showTraffic: show }),
       // Estado NO persistente para datos del formulario de pago
       paymentForm: {
         method: null,

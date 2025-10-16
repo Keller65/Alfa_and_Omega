@@ -1,4 +1,5 @@
 import PlusIcon from '@/assets/icons/PlusIcon';
+import STYLE_MAP_MONO from '@/assets/map/STYLE_MAP_MONO.json';
 import BottomSheetClientDetails from '@/components/BottomSheetClientDetails/page';
 import BottomSheetSearchClients, { BottomSheetSearchClientsHandle } from '@/components/BottomSheetSearchClients/page';
 import { useAppStore } from '@/state';
@@ -38,11 +39,10 @@ function decodePolyline(encoded: string) {
 }
 
 const LocationsScreen = () => {
-  const { updateCustomerLocation, setUpdateCustomerLocation } = useAppStore();
+  const { updateCustomerLocation, setUpdateCustomerLocation, showTraffic, mapStyle } = useAppStore();
   const clearSelectedCustomerLocation = useAppStore((s) => s.clearSelectedCustomerLocation);
   const bottomSheetRef = useRef<BottomSheetSearchClientsHandle>(null);
   const mapRef = useRef<MapView | null>(null);
-
   const [query] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [selectedPlace, setSelectedPlace] = useState<{ lat: number; lon: number; display_name: string } | null>(null);
@@ -341,9 +341,9 @@ const LocationsScreen = () => {
         initialRegion={region ?? undefined}
         region={region ?? undefined}
         style={styles.map}
+        customMapStyle={mapStyle === 'minimalista' ? STYLE_MAP_MONO : undefined}
         zoomControlEnabled={true}
         onPress={handleMapPress}
-        //nuevas opciones
         showsUserLocation={true}
         showsMyLocationButton={true}
         showsCompass={true}
@@ -358,15 +358,13 @@ const LocationsScreen = () => {
         mapType="standard"
         googleRenderer='LATEST'
         renderToHardwareTextureAndroid={true}
-        // Actualizaciones frecuentes de ubicación
         followsUserLocation={true}
         userLocationAnnotationTitle="Mi ubicación"
         userLocationCalloutEnabled={true}
         userLocationPriority='high'
         showsScale={true}
-        // userLocationUpdateInterval={3000}
         userLocationFastestInterval={2000}
-        // showsTraffic={true}
+        showsTraffic={showTraffic}
       >
         {/* Ubicación buscada → marcador verde */}
         {selectedPlace && !updateCustomerLocation.updateLocation && (

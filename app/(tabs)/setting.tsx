@@ -17,7 +17,7 @@ import * as Notifications from 'expo-notifications';
 import * as Sharing from 'expo-sharing';
 import * as Updates from 'expo-updates';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 const SettingsScreen = () => {
   const { logout, user } = useAuth();
@@ -38,9 +38,8 @@ const SettingsScreen = () => {
   const [macAddress, setMacAddress] = useState<string | null>(null);
   const [cacheSize, setCacheSize] = useState('0 MB');
   const { uuid } = useLicense();
-  const { fetchUrl } = useAppStore();
+  const { fetchUrl, mapStyle, setMapStyle, showTraffic, setShowTraffic } = useAppStore();
   const API_BASE_URL = fetchUrl;
-
   const { fcmToken } = usePushNotificationsFCM();
 
   useEffect(() => {
@@ -334,11 +333,89 @@ const SettingsScreen = () => {
       setCacheSize(`${sizeInMB} MB`);
     } catch (e) {
       setCacheSize('Error');
+      console.warn('Error calculando tamaño de caché', e);
     }
+  };
+
+  const handleMapStyleChange = (style: 'color' | 'minimalista') => {
+    setMapStyle(style);
   };
 
   return (
     <ScrollView className="flex-1 bg-gray-50" contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+      <SettingsSection title="Mapas">
+        <View className="py-3">
+          <Text className="text-sm text-gray-600 mb-3 font-[Poppins-Regular]">Selecciona el estilo de los mapas</Text>
+          <View className="flex-row gap-3">
+            {/* Card Estilo Color */}
+            <TouchableOpacity
+              className={`flex-1 p-4 rounded-xl border-2 ${mapStyle === 'color'
+                ? 'border-[#1A3D59] bg-[#1A3D59]/5'
+                : 'border-gray-200 bg-white'
+                }`}
+              onPress={() => handleMapStyleChange('color')}
+              activeOpacity={0.7}
+            >
+              <View className="items-center">
+                <Feather
+                  name="map"
+                  size={32}
+                  color={mapStyle === 'color' ? '#1A3D59' : '#6B7280'}
+                  style={{ marginBottom: 8 }}
+                />
+                <Text className={`text-sm font-[Poppins-SemiBold] text-center ${mapStyle === 'color' ? 'text-[#1A3D59]' : 'text-gray-700'
+                  }`}>
+                  Color
+                </Text>
+                <Text className={`text-xs font-[Poppins-Regular] text-center mt-1 ${mapStyle === 'color' ? 'text-[#1A3D59]/70' : 'text-gray-500'
+                  }`}>
+                  Mapas con colores completos
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Card Estilo Minimalista */}
+            <TouchableOpacity
+              className={`flex-1 p-4 rounded-xl border-2 ${mapStyle === 'minimalista'
+                ? 'border-[#1A3D59] bg-[#1A3D59]/5'
+                : 'border-gray-200 bg-white'
+                }`}
+              onPress={() => handleMapStyleChange('minimalista')}
+              activeOpacity={0.7}
+            >
+              <View className="items-center">
+                <Feather
+                  name="navigation"
+                  size={32}
+                  color={mapStyle === 'minimalista' ? '#1A3D59' : '#6B7280'}
+                  style={{ marginBottom: 8 }}
+                />
+                <Text className={`text-sm font-[Poppins-SemiBold] text-center ${mapStyle === 'minimalista' ? 'text-[#1A3D59]' : 'text-gray-700'
+                  }`}>
+                  Minimalista
+                </Text>
+                <Text className={`text-xs font-[Poppins-Regular] text-center mt-1 ${mapStyle === 'minimalista' ? 'text-[#1A3D59]/70' : 'text-gray-500'
+                  }`}>
+                  Mapas en escala de grises
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <SettingItem
+          kind="toggle"
+          title="Mostrar tráfico"
+          subtitle="Mostrar información de tráfico en los mapas"
+          value={showTraffic}
+          onChange={(value) => {
+            console.log('Toggle tráfico cambiado a:', value);
+            setShowTraffic(value);
+          }}
+          iconLeft={<Feather name="navigation-2" size={18} color="#4B5563" style={{ marginRight: 12 }} />}
+        />
+      </SettingsSection>
+
       <SettingsSection title="Sistema">
         <SettingItem
           kind="info"
@@ -499,10 +576,14 @@ const SettingsScreen = () => {
                     const configKeys = [
                       'settings:biometricEnabled', 'settings:pushEnabled', 'settings:soundEnabled'
                     ];
+                    // Resetear configuraciones de mapas a valores por defecto
+                    setMapStyle('color');
+                    setShowTraffic(false);
                     await AsyncStorage.multiRemove(configKeys);
                     Alert.alert('Listo', 'Configuraciones restauradas. Reinicia la app.');
                   } catch (e) {
                     Alert.alert('Error', 'No se pudieron restaurar las configuraciones.');
+                    console.warn('Error restaurando configuraciones', e);
                   }
                 }
               }
