@@ -66,8 +66,8 @@ export default function GoalDonut({
     );
   }
 
-  const outerRadius = 70;
-  const strokeWidth = 20;
+  const outerRadius = 80;
+  const strokeWidth = 22;
   const size = outerRadius * 2;
   const r = outerRadius - strokeWidth / 2;
   const circumference = 2 * Math.PI * r;
