@@ -1,11 +1,11 @@
 import ClientIcon from '@/assets/icons/ClientIcon';
 import PlusIcon from '@/assets/icons/PlusIcon';
 import { useAuth } from '@/context/auth';
-import api from '@/lib/api';
 import { useAppStore } from '@/state';
 import { PaymentData } from '@/types/types';
 import { FontAwesome } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
+import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
@@ -36,18 +36,13 @@ const Invoices = () => {
 
     setLoading(true);
     try {
-      const response = await api.get<PaymentData[]>(`/api/Payments/received/${salesPersonCode}?page=${page}&pageSize=${PAGE_SIZE}`, {
+      const response = await axios.get<PaymentData[]>(`/api/Payments/received/${salesPersonCode}?page=${page}&pageSize=${PAGE_SIZE}`, {
         baseURL: fetchUrl,
         headers: {
           Authorization: `Bearer ${user?.token}`,
           'Content-Encoding': 'gzip'
-        },
-        cache: {
-          ttl: Infinity,
         }
       });
-
-      console.log(response.cached ? 'Datos cargados desde cache' : 'Datos cargados desde red');
 
       if (response.data.length < PAGE_SIZE) {
         setHasMore(false);
@@ -69,19 +64,13 @@ const Invoices = () => {
     setPage(1);
     setHasMore(true);
     try {
-      const response = await api.get<PaymentData[]>(`/api/Payments/received/${salesPersonCode}?page=1&pageSize=${PAGE_SIZE}`, {
+      const response = await axios.get<PaymentData[]>(`/api/Payments/received/${salesPersonCode}?page=1&pageSize=${PAGE_SIZE}`, {
         baseURL: fetchUrl,
         headers: {
           Authorization: `Bearer ${user?.token}`,
           'Content-Encoding': 'gzip'
         },
-        cache: {
-          ttl: 1000 * 60 * 60 * 24,
-          override: true,
-        }
       });
-
-      console.log(response.cached ? 'Datos cargados desde cache' : 'Datos cargados desde red');
 
       setData(response.data);
 
@@ -190,7 +179,7 @@ const Invoices = () => {
 
       <FlashList
         data={data}
-        keyExtractor={(item) => item.docEntry.toString()}
+        keyExtractor={(item, index) => `${item.docEntry}-${item.docNum}-${index}`}
         renderItem={renderItem}
         estimatedItemSize={120}
         onEndReached={fetchInvoices}
