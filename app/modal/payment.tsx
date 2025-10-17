@@ -337,13 +337,19 @@ const PaymentScreen = () => {
         {selectedMethod && (
           <View className="p-5 bg-white rounded-2xl">
             {/* Encabezado */}
-            <Text className="text-lg font-[Poppins-Bold] mb-5 tracking-[-0.3px] text-gray-800">
+            <Text
+              className="text-lg mb-5 tracking-[-0.3px] text-gray-800"
+              style={{ fontFamily: 'Poppins-Medium' }}
+            >
               Detalles de {selectedMethod}
             </Text>
 
             {/* Monto */}
             <View className="mb-5">
-              <Text className="text-sm font-[Poppins-Medium] mb-2 text-gray-600">
+              <Text
+                className="text-sm mb-2 text-gray-600"
+                style={{ fontFamily: 'Poppins-Regular' }}
+              >
                 Monto a pagar
               </Text>
               <TextInput
@@ -351,6 +357,7 @@ const PaymentScreen = () => {
                 keyboardType="numeric"
                 placeholder="0.00"
                 placeholderTextColor="#A0AEC0"
+                style={{ fontFamily: 'Poppins-Regular' }}
                 value={paymentAmount}
                 onChangeText={value => {
                   setPaymentAmount(value);
@@ -364,14 +371,22 @@ const PaymentScreen = () => {
                 }}
               />
               {amountError && (
-                <Text className="text-red-500 text-xs mt-1 font-[Poppins-Regular] tracking-[-0.3px]">{amountError}</Text>
+                <Text
+                  className="text-red-500 text-xs mt-1 tracking-[-0.3px]"
+                  style={{ fontFamily: 'Poppins-Regular' }}
+                >
+                  {amountError}
+                </Text>
               )}
             </View>
 
             {/* Referencia */}
             {selectedMethod !== 'Efectivo' && (
               <View className="mb-5">
-                <Text className="text-sm font-[Poppins-Medium] mb-2 text-gray-600">
+                <Text
+                  className="text-sm mb-2 text-gray-600"
+                  style={{ fontFamily: 'Poppins-Regular' }}
+                >
                   Número de {paymentForm.method === 'Cheque' ? 'Cheque' : 'Referencia'}
                 </Text>
                 <TextInput
@@ -379,6 +394,7 @@ const PaymentScreen = () => {
                   keyboardType='numeric'
                   placeholder="Ej: 123456789"
                   placeholderTextColor="#A0AEC0"
+                  style={{ fontFamily: 'Poppins-Regular' }}
                   value={referenceNumber}
                   onChangeText={value => {
                     setReferenceNumber(value);
@@ -391,14 +407,20 @@ const PaymentScreen = () => {
             {/* Fecha */}
             {selectedMethod !== 'Efectivo' && (
               <View className="mb-5">
-                <Text className="text-sm font-[Poppins-Medium] mb-2 text-gray-600">
+                <Text
+                  className="text-sm mb-2 text-gray-600"
+                  style={{ fontFamily: 'Poppins-Regular' }}
+                >
                   Fecha de Pago
                 </Text>
                 <TouchableOpacity
                   onPress={() => setShowDatePicker(true)}
                   className="flex-row justify-between items-center px-4 py-3 rounded-xl bg-white border border-gray-200"
                 >
-                  <Text className="text-base tracking-[-0.3px] text-gray-800">
+                  <Text
+                    className="text-base tracking-[-0.3px] text-gray-800"
+                    style={{ fontFamily: 'Poppins-Regular' }}
+                  >
                     {paymentDate.toLocaleDateString()}
                   </Text>
                   <Ionicons name="calendar-outline" size={20} color="#A0AEC0" />
@@ -420,11 +442,14 @@ const PaymentScreen = () => {
             {/* Banco */}
             {selectedMethod !== 'Efectivo' && (
               <View className="mb-2">
-                <Text className="text-sm font-[Poppins-Medium] mb-2 text-gray-600">
+                <Text className="text-sm font-[Poppins-Regular] mb-2 text-gray-600">
                   Banco
                 </Text>
-                <View className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <View className="bg-white px-2 border border-gray-200 rounded-xl overflow-hidden">
                   <Picker
+                    style={{ fontFamily: 'Poppins-Regular' }}
+                    itemStyle={{ fontFamily: 'Poppins-Regular' }}
+                    mode='dropdown'
                     selectedValue={selectedBank}
                     onValueChange={itemValue => {
                       setSelectedBank(itemValue);
