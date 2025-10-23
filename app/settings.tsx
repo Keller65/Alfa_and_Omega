@@ -70,7 +70,6 @@ const Settings = () => {
         `${API_BASE_URL}/api/BankAccounts/PayEfectivo`,
         `${API_BASE_URL}/api/BankAccounts/PayTranferencia`,
         `${API_BASE_URL}/api/BankAccounts/PayCreditCards`,
-        `${API_BASE_URL}/sap/items/categories`
       ];
       const results = await Promise.allSettled(urls.map(url => api.get(url, {
         baseURL: API_BASE_URL,
@@ -142,7 +141,7 @@ const Settings = () => {
           keyboardAppearance="light"
           keyboardType='numeric'
           placeholderTextColor={'#9CA3AF'}
-          className="flex-1 border border-gray-300 rounded-xl px-4 py-2 text-base h-[50px] bg-white"
+          className="flex-1 border border-gray-300 rounded-xl px-4 py-2 text-base h-[50px] bg-white font-[Poppins-Medium]"
         />
       </View>
 
@@ -154,12 +153,12 @@ const Settings = () => {
         keyboardAppearance="light"
         placeholderTextColor={'#9CA3AF'}
         keyboardType="numeric"
-        className="border border-gray-300 rounded-xl px-4 py-2 text-base h-[50px] bg-white"
+        className="border border-gray-300 rounded-xl px-4 py-2 text-base h-[50px] bg-white font-[Poppins-Medium]"
       />
 
       {/* Vista previa */}
       <View className="border border-dashed border-gray-300 rounded-xl px-4 py-2 bg-gray-50">
-        <Text className="text-gray-600 text-sm">{fullUrl || 'Vista previa'}</Text>
+        <Text className="text-gray-600 text-sm font-[Poppins-Regular]">{fullUrl || 'Vista previa'}</Text>
       </View>
 
       {/* Botón de Guardar */}
