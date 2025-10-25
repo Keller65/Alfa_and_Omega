@@ -354,6 +354,7 @@ export default function BottomSheetCart() {
         quantity: p.quantity,
         priceList: p.originalPrice, // es el precio real de la lista
         priceAfterVAT: price, // precio de descuento si existe
+        taxCode: p.taxType,
       };
     });
 
@@ -430,11 +431,15 @@ export default function BottomSheetCart() {
         const action = editMode.isEditing ? 'actualizar' : 'enviar';
         Alert.alert('Error', `No se pudo ${action} el pedido. Intenta nuevamente.`);
       }
+
+      closeCart();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+
       router.push({
         pathname: '/modal/error',
         params: {
-          errorCode: '401',
-          errorMessage: 'Sesión expirada',
+          errorCode: isAxiosError(err) && err.response?.status ? String(err.response.status) : 'Desconocido',
+          errorMessage: 'No se pudo procesar el pedido. Por favor, intenta nuevamente más tarde.',
         }
       });
     } finally {
